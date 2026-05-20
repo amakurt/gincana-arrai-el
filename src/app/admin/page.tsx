@@ -157,6 +157,26 @@ export default function AdminPage() {
         >
           <Trophy size={16} /> Lançar Notas (Júri)
         </button>
+        <button 
+          onClick={() => router.push('/admin/jurados')}
+          className="nav-btn"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '0.6rem 1.2rem',
+            borderRadius: '10px',
+            color: 'white',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontSize: '0.95rem',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+        >
+          <ShieldAlert size={16} /> Gerenciar Jurados
+        </button>
 
         <button 
           onClick={() => router.push('/vote')}
@@ -209,7 +229,7 @@ export default function AdminPage() {
               style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--border-light)' }}
             >
               <option value="">Selecione uma prova...</option>
-              {data.provas.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              {(data.provas || []).map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
 
@@ -286,7 +306,7 @@ export default function AdminPage() {
           </div>
 
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {data.teams.map((t: any) => (
+            {(data.teams || []).map((t: any) => (
               <li key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-card)', borderRadius: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ width: '15px', height: '15px', borderRadius: '50%', background: t.color }} />
@@ -329,7 +349,7 @@ export default function AdminPage() {
           </div>
 
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {data.provas.map((p: any) => (
+            {(data.provas || []).map((p: any) => (
               <li key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-card)', borderRadius: '8px' }}>
                 {p.name}
                 <button 

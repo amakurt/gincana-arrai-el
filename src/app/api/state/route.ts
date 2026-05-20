@@ -63,6 +63,16 @@ export async function GET() {
       };
     });
 
+    // 6. Obter Jurados
+    const { data: jurados, error: juradosError } = await supabase
+      .from('jurados')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (juradosError || !jurados) {
+      return NextResponse.json({ error: 'Erro ao obter jurados.' }, { status: 500 });
+    }
+
     // Retorna o estado perfeitamente compatível
     return NextResponse.json({
       status: config.status,
@@ -71,6 +81,7 @@ export async function GET() {
       message: config.message,
       teams: teams.map((t: any) => ({ id: t.id, name: t.name, color: t.color })),
       provas: provas.map((p: any) => ({ id: p.id, name: p.name })),
+      jurados: jurados.map((j: any) => ({ id: j.id, name: j.name })),
       scores
     });
   } catch (e) {
@@ -180,6 +191,37 @@ export async function POST(request: Request) {
               id: team.id,
               name: team.name,
               color: team.color
+            });
+          }
+        }
+      }
+
+      // Sincronizar jurados se enviados
+      if (body.jurados !== undefined) {
+        const { data: dbJurados } = await supabase.from('jurados').select('id');
+        const dbJuradoIds = dbJurados?.map(j => j.id) || [];
+        const receivedJurados = body.jurados || [];
+        const receivedJuradoIds = receivedJurados.map((j: any) => j.id);
+
+        // Deletar jurados removidos
+        const juradosToDelete = dbJuradoIds.filter(id => !receivedJuradoIds.includes(id));
+        if (juradosToDelete.length > 0) {
+          await supabase.from('jurados').delete().in('id', juradosToDelete);
+        }
+
+        // Inserir novos ou atualizar existentes
+        for (const jurado of receivedJurados) {
+          const isNew = jurado.id.startsWith('j'); // ids novos criados no admin começam com 'j'
+          if (isNew) {
+            await supabase.from('jurados').insert({
+              name: jurado.name,
+              pin: jurado.pin || ''
+            });
+          } else {
+            await supabase.from('jurados').upsert({
+              id: jurado.id,
+              name: jurado.name,
+              pin: jurado.pin || ''
             });
           }
         }

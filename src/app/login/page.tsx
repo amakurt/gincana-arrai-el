@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock, User, ShieldAlert } from 'lucide-react';
+import { Lock, User, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,8 +10,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -22,7 +23,6 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-
       const result = await response.json();
 
       if (response.ok && result.success) {
@@ -42,13 +42,11 @@ export default function LoginPage() {
   return (
     <div className="mobile-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80vh' }}>
       <form onSubmit={handleLogin} className="glass" style={{ padding: '3rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1.5rem', border: '1px solid var(--team-d)' }}>
-        
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
           <div style={{ padding: '1rem', borderRadius: '50%', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid var(--team-d)' }}>
             <Lock size={40} color="var(--team-d)" />
           </div>
         </div>
-        
         <h2 style={{ fontSize: '1.8rem', fontWeight: 900 }}>Acesso Restrito</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Área restrita aos organizadores. Faça login para acessar o Painel Administrativo:</p>
 
@@ -57,18 +55,18 @@ export default function LoginPage() {
           <div style={{ position: 'absolute', left: '1rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
             <User size={20} />
           </div>
-          <input 
-            type="text" 
-            placeholder="Usuário (Ex: admin)" 
+          <input
+            type="text"
+            placeholder="Usuário (Ex: admin)"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            style={{ 
-              width: '100%', 
-              padding: '1rem 1rem 1rem 3rem', 
-              borderRadius: '12px', 
-              fontSize: '1.1rem', 
-              background: 'var(--bg-dark)', 
-              color: 'white', 
+            style={{
+              width: '100%',
+              padding: '1rem 1rem 1rem 3rem',
+              borderRadius: '12px',
+              fontSize: '1.1rem',
+              background: 'var(--bg-dark)',
+              color: 'white',
               border: '1px solid var(--border-light)',
               outline: 'none',
               transition: 'border-color 0.2s'
@@ -83,24 +81,39 @@ export default function LoginPage() {
           <div style={{ position: 'absolute', left: '1rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
             <Lock size={20} />
           </div>
-          <input 
-            type="password" 
-            placeholder="Senha" 
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Senha"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{ 
-              width: '100%', 
-              padding: '1rem 1rem 1rem 3rem', 
-              borderRadius: '12px', 
-              fontSize: '1.1rem', 
-              background: 'var(--bg-dark)', 
-              color: 'white', 
+            style={{
+              width: '100%',
+              padding: '1rem 3rem 1rem 3rem',
+              borderRadius: '12px',
+              fontSize: '1.1rem',
+              background: 'var(--bg-dark)',
+              color: 'white',
               border: '1px solid var(--border-light)',
               outline: 'none',
               transition: 'border-color 0.2s'
             }}
             required
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            style={{
+              position: 'absolute',
+              right: '1rem',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--text-secondary)'
+            }}
+            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
         </div>
 
         {error && (
@@ -110,9 +123,9 @@ export default function LoginPage() {
           </div>
         )}
 
-        <button 
-          type="submit" 
-          className="btn" 
+        <button
+          type="submit"
+          className="btn"
           style={{ background: 'var(--team-d)', fontWeight: 'bold', marginTop: '0.5rem' }}
           disabled={loading}
         >
