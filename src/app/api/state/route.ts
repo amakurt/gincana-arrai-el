@@ -25,7 +25,15 @@ function getState() {
       fs.writeFileSync(stateFile, JSON.stringify(defaultState));
       return defaultState;
     }
-    return JSON.parse(fs.readFileSync(stateFile, 'utf-8'));
+    const fileState = JSON.parse(fs.readFileSync(stateFile, 'utf-8'));
+    
+    // Se o banco for da versão antiga (sem provas), reseta para o default
+    if (!fileState.provas || !fileState.teams) {
+      fs.writeFileSync(stateFile, JSON.stringify(defaultState));
+      return defaultState;
+    }
+    
+    return fileState;
   } catch (e) {
     return defaultState;
   }

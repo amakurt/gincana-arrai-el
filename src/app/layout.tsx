@@ -11,9 +11,25 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // 40 bandeirinhas garantem que a tela toda seja coberta (resoluções ultra-wide)
+  const bandeiras = Array.from({ length: 40 });
+
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        {/* Bordas Rústicas (Festa Junina) */}
+        <div className="plaid-border-left" />
+        <div className="plaid-border-right" />
+        
+        {/* Bandeirinhas Copa do Mundo (Verde, Amarelo, Azul, Branco) */}
+        <div className="bandeirinhas-container">
+          {bandeiras.map((_, i) => (
+            <div key={i} className={`bandeirinha color-${i % 4}`} />
+          ))}
+        </div>
+
+        {children}
+      </body>
     </html>
   );
 }
