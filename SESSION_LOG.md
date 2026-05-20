@@ -14,8 +14,9 @@
    - A página inicial (`/`) foi atualizada para expor apenas links públicos livres (Voto dos Alunos e Telão de Resultados).
    - Adicionado botão elegante "Área Restrita" para redirecionamento ao `/login`.
    - Implementação de autenticação otimizada double-session: ao fazer login com credenciais administrativas, o navegador armazena tanto a credencial `admin_verified` quanto a de `jurado_verified` no `sessionStorage`. Isso permite acesso transparente às telas `/admin` e `/jurado` (júri técnico) sem requisição redundante de PINs.
+   - **[Melhoria de UX]**: Adição de uma **Barra de Atalhos Rápidos integrada no topo do painel `/admin`**, permitindo acesso de 1 clique à Home (`/`), Telão (`/screen`), Painel de Notas (`/jurado`) e Votação (`/vote`) com transições suaves e layout responsivo.
 5. **Garantia de Qualidade**:
-   - Verificação completa de TypeScript (`tsc --noEmit`) e teste de build de produção Next.js finalizados com 100% de sucesso (0 erros).
+   - Verificação completa de TypeScript (`tsc --noEmit`) e teste de build de produção Next.js finalizados com 100% de sucesso (0 erros) após a adição da barra de navegação integrada.
 
 ## [2026-05-20] - Migração para Supabase na Nuvem com Realtime e PIN de Segurança
 

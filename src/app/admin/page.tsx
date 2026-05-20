@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from 'swr';
-import { Play, Square, RotateCcw, AlertTriangle, Users, Trophy, Monitor, Lock, ShieldAlert } from 'lucide-react';
+import { Play, Square, RotateCcw, AlertTriangle, Users, Trophy, Monitor, Lock, ShieldAlert, Home } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -80,6 +80,119 @@ export default function AdminPage() {
         >
           Sair do Painel
         </button>
+      </div>
+
+      {/* Barra de Navegação Rápida (Atalhos do Administrador) */}
+      <div className="glass" style={{ 
+        display: 'flex', 
+        gap: '1rem', 
+        padding: '1rem 1.5rem', 
+        marginBottom: '2.5rem', 
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'rgba(255, 255, 255, 0.02)'
+      }}>
+        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 800, textTransform: 'uppercase', marginRight: '0.5rem' }}>Atalhos Rápidos:</span>
+        
+        <button 
+          onClick={() => router.push('/')}
+          className="nav-btn"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '0.6rem 1.2rem',
+            borderRadius: '10px',
+            color: 'white',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontSize: '0.95rem',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+        >
+          <Home size={16} /> Voltar ao Início
+        </button>
+
+        <button 
+          onClick={() => window.open('/screen', '_blank')}
+          className="nav-btn"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '0.6rem 1.2rem',
+            borderRadius: '10px',
+            color: 'white',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontSize: '0.95rem',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+        >
+          <Monitor size={16} /> Abrir Telão
+        </button>
+
+        <button 
+          onClick={() => router.push('/jurado')}
+          className="nav-btn"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '0.6rem 1.2rem',
+            borderRadius: '10px',
+            color: 'white',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontSize: '0.95rem',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+        >
+          <Trophy size={16} /> Lançar Notas (Júri)
+        </button>
+
+        <button 
+          onClick={() => router.push('/vote')}
+          className="nav-btn"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '0.6rem 1.2rem',
+            borderRadius: '10px',
+            color: 'white',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontSize: '0.95rem',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+        >
+          <Users size={16} /> Tela de Votos
+        </button>
+
+        <style dangerouslySetInnerHTML={{ __html: `
+          .nav-btn {
+            outline: none;
+          }
+          .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.12) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          }
+          .nav-btn:active {
+            transform: translateY(0);
+          }
+        ` }} />
       </div>
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
