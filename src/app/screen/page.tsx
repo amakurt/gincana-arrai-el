@@ -2,6 +2,7 @@
 
 import useSWR from 'swr';
 import { motion } from 'framer-motion';
+import { BookOpen } from 'lucide-react';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -68,8 +69,17 @@ export default function ScreenPage() {
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4rem' }}>
         <div>
-          <h1 className="gradient-text" style={{ fontSize: '4rem', marginBottom: '0' }}>Placar ao Vivo</h1>
-          <p style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '2px' }}>Arrai-el: O Arraiá do Povo de Deus</p>
+          <h1 className="gradient-text" style={{ fontSize: '4.5rem', marginBottom: '0' }}>ARRAI-EL <span style={{ color: 'var(--glow-yellow)' }}>2026</span></h1>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
+            <div className="glass" style={{ padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <BookOpen size={24} color="var(--glow-blue)" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'white', letterSpacing: '1px' }}>INSTITUTO EDUCACIONAL LOGOS</div>
+              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>REDENÇÃO - CE</div>
+            </div>
+          </div>
         </div>
 
         <div className="glass" style={{ padding: '2rem 4rem', textAlign: 'center', background: data.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.05)', border: data.status === 'active' ? '1px solid var(--team-c)' : undefined }}>

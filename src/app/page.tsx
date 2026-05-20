@@ -4,7 +4,7 @@ import { MonitorPlay, Smartphone, Settings } from "lucide-react";
 export default function Home() {
   return (
     <div className="container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      <h1 className="gradient-text" style={{ textAlign: 'center', marginBottom: '3rem' }}>Arrai-el<br/><span style={{ fontSize: '1.5rem', color: 'var(--text-secondary)' }}>O Arraiá do Povo de Deus</span></h1>
+      <h1 className="gradient-text" style={{ textAlign: 'center', marginBottom: '3rem', fontSize: '5rem' }}>Arrai-el<br/><span style={{ fontSize: '2rem', color: 'var(--glow-yellow)' }}>2026</span></h1>
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', width: '100%', maxWidth: '1000px' }}>
         

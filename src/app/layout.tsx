@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Arrai-el - O Arraiá do Povo de Deus",
-  description: "Placar e votação em tempo real",
+  title: "Arrai-el 2026 - Instituto Educacional Logos",
+  description: "Gincana 2026 - Redenção-CE",
 };
 
 export default function RootLayout({

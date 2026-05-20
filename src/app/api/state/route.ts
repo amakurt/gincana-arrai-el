@@ -8,7 +8,7 @@ const defaultState = {
   status: 'waiting', // waiting, active, finished
   viewMode: 'prova', // 'prova', 'geral'
   currentProvaId: '',
-  message: 'O Arrai-el vai começar!',
+  message: 'Arrai-el 2026 vai começar!',
   teams: [
     { id: 't1', name: 'Azul', color: '#3b82f6' },
     { id: 't2', name: 'Vermelha', color: '#ef4444' }
