@@ -1,35 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap');
 
 :root {
-  /* Copa do Mundo Palette */
-  --copa-verde: #009c3b;
-  --copa-amarelo: #ffdf00;
-  --copa-azul: #002776;
-  --copa-branco: #ffffff;
-
-  /* Rústico Festa Junina */
-  --madeira-escura: #3e2723;
-  --madeira-clara: rgba(139, 69, 19, 0.4);
-  --xadrez-vermelho: #c93a18;
-
-  /* App Variables */
-  --bg-dark: #001a0a; /* Fundo base gramado escuro */
-  --bg-card: rgba(62, 39, 35, 0.5); /* Madeira escura translúcida */
-  --bg-card-hover: rgba(62, 39, 35, 0.8);
-  --border-light: rgba(0, 156, 59, 0.5); /* Borda verde Brasil */
+  /* Modern Premium Palette */
+  --bg-dark: #050b14; /* Deep midnight blue/green */
+  --glow-green: #00e676;
+  --glow-yellow: #ffea00;
+  --glow-blue: #2979ff;
+  
+  --bg-card: rgba(255, 255, 255, 0.03); /* Sleek transparent glass */
+  --bg-card-hover: rgba(255, 255, 255, 0.06);
+  --border-light: rgba(255, 255, 255, 0.08); 
   
   --text-primary: #ffffff;
-  --text-secondary: #ffdf00; /* Textos secundários em amarelo para contraste com verde */
+  --text-secondary: #94a3b8;
   
-  /* Teams (Deixar dinâmico ou usar base) */
-  --team-a: #3b82f6; /* Blue */
-  --team-a-glow: rgba(59, 130, 246, 0.5);
-  --team-b: #ef4444; /* Red */
-  --team-b-glow: rgba(239, 68, 68, 0.5);
-  --team-c: #10b981; /* Green */
-  --team-c-glow: rgba(16, 185, 129, 0.5);
-  --team-d: #f59e0b; /* Yellow */
-  --team-d-glow: rgba(245, 158, 11, 0.5);
+  /* Teams */
+  --team-a: #3b82f6; 
+  --team-b: #ef4444; 
+  --team-c: #10b981; 
+  --team-d: #f59e0b; 
 }
 
 * {
@@ -45,17 +34,13 @@ html, body {
   color: var(--text-primary);
   min-height: 100vh;
   
-  /* Gramado de Estádio */
+  /* Modern Mesh Gradient Background */
   background-color: var(--bg-dark);
   background-image: 
-    linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.8)),
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 100px,
-      rgba(255,255,255,0.03) 100px,
-      rgba(255,255,255,0.03) 200px
-    );
+    radial-gradient(circle at 15% 50%, rgba(0, 230, 118, 0.15), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(255, 234, 0, 0.15), transparent 25%),
+    radial-gradient(circle at 50% 80%, rgba(41, 121, 255, 0.1), transparent 40%);
+  background-attachment: fixed;
 }
 
 a {
@@ -63,32 +48,22 @@ a {
   text-decoration: none;
 }
 
-/* Glassmorphism Rústico/Estádio */
+/* Premium Glassmorphism */
 .glass {
   background: var(--bg-card);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 2px solid var(--border-light);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
 }
 
-/* Borda Xadrez (Arraiá) */
-.plaid-border-left, .plaid-border-right {
-  position: fixed;
-  top: 0; bottom: 0; width: 12px;
-  background-color: var(--xadrez-vermelho);
-  background-image: 
-    repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(255,255,255,0.3) 6px, rgba(255,255,255,0.3) 12px),
-    repeating-linear-gradient(0deg, transparent, transparent 6px, rgba(255,255,255,0.3) 6px, rgba(255,255,255,0.3) 12px);
-  z-index: 5;
-  pointer-events: none;
-  opacity: 0.8;
+.glass:hover {
+  background: var(--bg-card-hover);
 }
-.plaid-border-left { left: 0; }
-.plaid-border-right { right: 0; }
 
-/* Bandeirinhas */
+/* Bandeirinhas - Modernized (Neon / Minimal) */
 .bandeirinhas-container {
   display: flex;
   width: 100%;
@@ -98,34 +73,41 @@ a {
   left: 0;
   z-index: 10;
   pointer-events: none;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
 }
 
 .bandeirinha {
   min-width: 5vw;
-  height: 5vw;
-  max-height: 80px;
-  min-height: 50px;
+  height: 4vw;
+  max-height: 60px;
+  min-height: 40px;
   clip-path: polygon(0 0, 100% 0, 50% 100%);
-  margin-right: -2px;
+  margin-right: 4px;
   transform-origin: top center;
-  animation: balanco 3s ease-in-out infinite alternate;
+  animation: balanco 4s ease-in-out infinite alternate;
 }
 
-.bandeirinha.color-0 { background: var(--copa-amarelo); animation-delay: 0s; }
-.bandeirinha.color-1 { background: var(--copa-verde); animation-delay: 0.5s; }
-.bandeirinha.color-2 { background: var(--copa-azul); animation-delay: 1s; }
-.bandeirinha.color-3 { background: var(--copa-branco); animation-delay: 1.5s; }
+.bandeirinha.color-0 { background: var(--glow-yellow); animation-delay: 0s; }
+.bandeirinha.color-1 { background: var(--glow-green); animation-delay: 0.5s; }
+.bandeirinha.color-2 { background: var(--glow-blue); animation-delay: 1s; }
+.bandeirinha.color-3 { background: rgba(255,255,255,0.8); animation-delay: 1.5s; }
 
 @keyframes balanco {
-  0% { transform: rotate(-8deg); }
-  100% { transform: rotate(8deg); }
+  0% { transform: rotate(-5deg); }
+  100% { transform: rotate(5deg); }
+}
+
+/* Hide Plaid completely for modern look */
+.plaid-border-left, .plaid-border-right {
+  display: none;
 }
 
 /* Common Layout */
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 4rem 2rem 2rem 2rem; /* padding-top para não chocar com as bandeirinhas */
+  padding: 5rem 2rem 2rem 2rem;
 }
 
 .mobile-container {
@@ -139,19 +121,17 @@ a {
 
 /* Typography */
 h1 {
-  font-size: 3rem;
+  font-size: 3.5rem;
   font-weight: 900;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.04em;
   text-transform: uppercase;
   margin-bottom: 1rem;
-  text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
 }
 
 .gradient-text {
-  background: linear-gradient(to bottom, var(--copa-amarelo), #d97706);
+  background: linear-gradient(135deg, #ffffff, var(--text-secondary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.8));
 }
 
 /* Buttons */
@@ -166,12 +146,11 @@ h1 {
   font-size: 1.25rem;
   font-weight: 800;
   text-transform: uppercase;
-  border: 2px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.1);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   color: white;
   width: 100%;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
 
 .btn:active {
@@ -181,24 +160,25 @@ h1 {
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  filter: grayscale(1);
 }
 
-.btn-team-a { background: var(--team-a); box-shadow: 0 0 20px var(--team-a-glow); }
-.btn-team-a:hover { background: #2563eb; box-shadow: 0 0 30px var(--team-a-glow); }
+.btn-team-a { background: var(--team-a); }
+.btn-team-a:hover { background: #2563eb; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
 
-.btn-team-b { background: var(--team-b); box-shadow: 0 0 20px var(--team-b-glow); }
-.btn-team-b:hover { background: #dc2626; box-shadow: 0 0 30px var(--team-b-glow); }
+.btn-team-b { background: var(--team-b); }
+.btn-team-b:hover { background: #dc2626; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
 
-.btn-team-c { background: var(--team-c); box-shadow: 0 0 20px var(--team-c-glow); }
-.btn-team-c:hover { background: #059669; box-shadow: 0 0 30px var(--team-c-glow); }
+.btn-team-c { background: var(--team-c); }
+.btn-team-c:hover { background: #059669; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
 
-.btn-team-d { background: var(--team-d); box-shadow: 0 0 20px var(--team-d-glow); }
-.btn-team-d:hover { background: #d97706; box-shadow: 0 0 30px var(--team-d-glow); }
+.btn-team-d { background: var(--team-d); }
+.btn-team-d:hover { background: #d97706; box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
 
 /* Animation Utils */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50% { opacity: 0.7; }
 }
 
 .animate-pulse {
