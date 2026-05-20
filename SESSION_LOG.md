@@ -1,5 +1,22 @@
 # Session Log - Gincana Arrai-el 2026
 
+## [2026-05-20] - Autenticação por Usuário/Senha e Área Restrita Administrativa
+
+### Mudanças Técnicas:
+1. **Credenciais Seguras (`.env.local`)**:
+   - Adicionadas variáveis de ambiente `ADMIN_USERNAME=admin` e `ADMIN_PASSWORD=arraiel2026` para controle administrativo.
+2. **Endpoint de Login (`/api/auth/login`)**:
+   - Criação da API server-side para validação das credenciais administrativas sem expor dados confidenciais no front-end.
+3. **Página de Login Premium (`/login`)**:
+   - Desenvolvimento de tela de autenticação estilizada com o tema visual "Arraiá Campeão" (efeitos glassmorphism quente e contornos em tons amarelados).
+   - Validações de estado ativo de carregamento e feedback visual preciso de erros de credenciais.
+4. **Navegação Inteligente e Divisão de Acesso**:
+   - A página inicial (`/`) foi atualizada para expor apenas links públicos livres (Voto dos Alunos e Telão de Resultados).
+   - Adicionado botão elegante "Área Restrita" para redirecionamento ao `/login`.
+   - Implementação de autenticação otimizada double-session: ao fazer login com credenciais administrativas, o navegador armazena tanto a credencial `admin_verified` quanto a de `jurado_verified` no `sessionStorage`. Isso permite acesso transparente às telas `/admin` e `/jurado` (júri técnico) sem requisição redundante de PINs.
+5. **Garantia de Qualidade**:
+   - Verificação completa de TypeScript (`tsc --noEmit`) e teste de build de produção Next.js finalizados com 100% de sucesso (0 erros).
+
 ## [2026-05-20] - Migração para Supabase na Nuvem com Realtime e PIN de Segurança
 
 ### Mudanças Técnicas:
