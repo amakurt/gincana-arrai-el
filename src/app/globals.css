@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap');
+
+:root {
+  --bg-dark: #09090b;
+  --bg-card: rgba(255, 255, 255, 0.03);
+  --bg-card-hover: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.1);
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  
+  /* Teams */
+  --team-a: #3b82f6; /* Blue */
+  --team-a-glow: rgba(59, 130, 246, 0.5);
+  --team-b: #ef4444; /* Red */
+  --team-b-glow: rgba(239, 68, 68, 0.5);
+  --team-c: #10b981; /* Green */
+  --team-c-glow: rgba(16, 185, 129, 0.5);
+  --team-d: #f59e0b; /* Yellow */
+  --team-d-glow: rgba(245, 158, 11, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Glassmorphism utilities */
+.glass {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+}
+
+/* Common Layout */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.mobile-container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography */
+h1 {
+  font-size: 3rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.gradient-text {
+  background: linear-gradient(to right, #fff, #a1a1aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: white;
+  width: 100%;
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-team-a { background: var(--team-a); box-shadow: 0 0 20px var(--team-a-glow); }
+.btn-team-a:hover { background: #2563eb; box-shadow: 0 0 30px var(--team-a-glow); }
+
+.btn-team-b { background: var(--team-b); box-shadow: 0 0 20px var(--team-b-glow); }
+.btn-team-b:hover { background: #dc2626; box-shadow: 0 0 30px var(--team-b-glow); }
+
+.btn-team-c { background: var(--team-c); box-shadow: 0 0 20px var(--team-c-glow); }
+.btn-team-c:hover { background: #059669; box-shadow: 0 0 30px var(--team-c-glow); }
+
+.btn-team-d { background: var(--team-d); box-shadow: 0 0 20px var(--team-d-glow); }
+.btn-team-d:hover { background: #d97706; box-shadow: 0 0 30px var(--team-d-glow); }
+
+/* Animation Utils */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
