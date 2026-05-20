@@ -28,6 +28,15 @@ export default function RootLayout({
           ))}
         </div>
 
+        {/* 5 Estrelas (Brasil Hexa) flutuando no topo */}
+        <div style={{ position: 'fixed', top: '5.5vw', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '0.8rem', zIndex: 1, opacity: 0.8, pointerEvents: 'none' }}>
+          {Array.from({length: 5}).map((_, i) => (
+            <svg key={i} width="24" height="24" viewBox="0 0 24 24" fill="rgba(255, 234, 0, 0.8)" stroke="none" style={{ filter: 'drop-shadow(0 0 8px rgba(255, 234, 0, 0.6))' }}>
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          ))}
+        </div>
+
         {children}
       </body>
     </html>
