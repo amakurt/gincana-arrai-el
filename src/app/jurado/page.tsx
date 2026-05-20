@@ -11,11 +11,29 @@ export default function JuradoPage() {
   const [jurado, setJurado] = useState<'j1' | 'j2' | null>(null);
   const [loadingTeam, setLoadingTeam] = useState<string | null>(null);
 
+  // Notas locais no estado do React para movimento a 60fps sem lag
+  const [localScores, setLocalScores] = useState<{ [teamId: string]: number }>({});
+
   // Estados de Segurança por PIN
   const [pinVerified, setPinVerified] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [verifyingPin, setVerifyingPin] = useState(false);
+
+  // Identificar a prova ativa
+  const activeProva = data?.provas?.find((p: any) => p.id === data.currentProvaId);
+  const activeProvaId = activeProva?.id;
+
+  // Sincronizar o estado de notas local sempre que os dados mudarem no banco ou trocar de jurado/prova
+  useEffect(() => {
+    if (data && activeProvaId && jurado) {
+      const initialScores: any = {};
+      data.teams.forEach((team: any) => {
+        initialScores[team.id] = data.scores[activeProvaId]?.[team.id]?.[jurado] || 0;
+      });
+      setLocalScores(initialScores);
+    }
+  }, [data, activeProvaId, jurado]);
 
   // Verificar se o jurado já está autenticado nesta sessão do navegador
   useEffect(() => {
@@ -54,15 +72,23 @@ export default function JuradoPage() {
     }
   };
 
-  const handleVote = async (teamId: string, score: number) => {
+  // Enviar a nota final para o banco de dados (chamado apenas ao soltar o slider)
+  const handleVoteSubmit = async (teamId: string, score: number) => {
     setLoadingTeam(teamId);
-    await fetch('/api/state', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'juryVote', teamId, jurado, score })
-    });
-    mutate();
-    setTimeout(() => setLoadingTeam(null), 500);
+    try {
+      await fetch('/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'juryVote', teamId, jurado, score })
+      });
+      // Revalida a SWR para sincronizar com o banco
+      mutate();
+    } catch (err) {
+      console.error('Erro ao enviar nota:', err);
+    } finally {
+      // Pequeno feedback de "Salvo!"
+      setTimeout(() => setLoadingTeam(null), 1000);
+    }
   };
 
   if (!data) return <div className="mobile-container glass"><div style={{padding: '2rem', textAlign: 'center'}}>Carregando...</div></div>;
@@ -146,8 +172,6 @@ export default function JuradoPage() {
     );
   }
 
-  const activeProva = data.provas.find((p: any) => p.id === data.currentProvaId);
-
   return (
     <div className="mobile-container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -177,7 +201,10 @@ export default function JuradoPage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
             {data.teams.map((team: any) => {
-              const currentScore = data.scores[activeProva.id]?.[team.id]?.[jurado] || 0;
+              // Pegar o valor do estado local se houver, senão usar o valor padrão vindo do banco
+              const currentScore = localScores[team.id] !== undefined 
+                ? localScores[team.id] 
+                : (data.scores[activeProva.id]?.[team.id]?.[jurado] || 0);
               
               return (
                 <div key={team.id} className="glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -193,7 +220,14 @@ export default function JuradoPage() {
                       max="10" 
                       step="0.5"
                       value={currentScore}
-                      onChange={(e) => handleVote(team.id, Number(e.target.value))}
+                      // Atualiza na hora na tela local para ser 100% responsivo e fluído
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setLocalScores(prev => ({ ...prev, [team.id]: val }));
+                      }}
+                      // Dispara para o banco apenas quando o jurado solta o clique do mouse ou tira o dedo do celular
+                      onMouseUp={() => handleVoteSubmit(team.id, currentScore)}
+                      onTouchEnd={() => handleVoteSubmit(team.id, currentScore)}
                       style={{ flex: 1, accentColor: team.color, height: '8px', cursor: 'pointer' }}
                     />
                     <div style={{ fontSize: '2rem', fontWeight: 900, width: '60px', textAlign: 'center', color: team.color }}>
