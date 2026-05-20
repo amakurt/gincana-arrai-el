@@ -1,8 +1,8 @@
 "use client";
 
 import useSWR from 'swr';
-import { Play, Square, RotateCcw, AlertTriangle, Users, Trophy, Monitor } from 'lucide-react';
-import { useState } from 'react';
+import { Play, Square, RotateCcw, AlertTriangle, Users, Trophy, Monitor, Lock, ShieldAlert } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -10,9 +10,52 @@ export default function AdminPage() {
   const { data, mutate } = useSWR('/api/state', fetcher, { refreshInterval: 1000 });
   const [loading, setLoading] = useState(false);
 
+  // Estados de Segurança por PIN
+  const [pinVerified, setPinVerified] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [verifyingPin, setVerifyingPin] = useState(false);
+
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamColor, setNewTeamColor] = useState('#3b82f6');
   const [newProvaName, setNewProvaName] = useState('');
+
+  // Verificar se o admin já está autenticado nesta sessão do navegador
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isVerified = sessionStorage.getItem('admin_verified');
+      if (isVerified === 'true') {
+        setPinVerified(true);
+      }
+    }
+  }, []);
+
+  const handleVerifyPin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setVerifyingPin(true);
+    setPinError('');
+
+    try {
+      const response = await fetch('/api/auth/pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pinInput, type: 'admin' })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        sessionStorage.setItem('admin_verified', 'true');
+        setPinVerified(true);
+      } else {
+        setPinError(result.error || 'PIN incorreto! Tente novamente.');
+      }
+    } catch (err) {
+      setPinError('Erro ao comunicar com o servidor.');
+    } finally {
+      setVerifyingPin(false);
+    }
+  };
 
   const updateState = async (updates: any) => {
     setLoading(true);
@@ -26,7 +69,7 @@ export default function AdminPage() {
   };
 
   const resetGame = async () => {
-    if (!confirm('TEM CERTEZA? Isso vai apagar todos os votos e provas cadastradas!')) return;
+    if (!confirm('TEM CERTEZA? Isso vai apagar todos os votos e provas cadastradas no banco de dados!')) return;
     setLoading(true);
     await fetch('/api/state', {
       method: 'POST',
@@ -37,11 +80,79 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  if (!data) return <div className="container">Carregando painel admin...</div>;
+  if (!data) return <div className="container" style={{ textAlign: 'center', padding: '5rem' }}><h2 className="animate-pulse">Carregando painel admin...</h2></div>;
+
+  // Tela de Bloqueio por PIN
+  if (!pinVerified) {
+    return (
+      <div className="mobile-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80vh' }}>
+        <form onSubmit={handleVerifyPin} className="glass" style={{ padding: '3rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1.5rem', border: '1px solid var(--team-d)' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+            <div style={{ padding: '1rem', borderRadius: '50%', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid var(--team-d)' }}>
+              <Lock size={40} color="var(--team-d)" />
+            </div>
+          </div>
+          
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 900 }}>Painel Admin</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Área restrita aos organizadores. Por favor, insira o PIN de acesso:</p>
+
+          <input 
+            type="password" 
+            pattern="[0-9]*" 
+            inputMode="numeric" 
+            placeholder="Digite o PIN (Padrão: 1234)" 
+            value={pinInput}
+            onChange={(e) => setPinInput(e.target.value)}
+            style={{ 
+              width: '100%', 
+              padding: '1rem', 
+              borderRadius: '12px', 
+              fontSize: '1.5rem', 
+              textAlign: 'center', 
+              letterSpacing: '8px', 
+              background: 'var(--bg-dark)', 
+              color: 'white', 
+              border: '1px solid var(--border-light)' 
+            }}
+            required
+            autoFocus
+          />
+
+          {pinError && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444', justifyContent: 'center', fontSize: '0.9rem' }}>
+              <ShieldAlert size={16} />
+              <span>{pinError}</span>
+            </div>
+          )}
+
+          <button 
+            type="submit" 
+            className="btn" 
+            style={{ background: 'var(--team-d)', fontWeight: 'bold' }}
+            disabled={verifyingPin}
+          >
+            {verifyingPin ? 'VERIFICANDO...' : 'ENTRAR NO PAINEL'}
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="container" style={{ maxWidth: '1400px' }}>
-      <h1 className="gradient-text">Painel de Controle</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <h1 className="gradient-text" style={{ margin: 0 }}>Painel de Controle</h1>
+        <button 
+          onClick={() => {
+            sessionStorage.removeItem('admin_verified');
+            setPinVerified(false);
+            setPinInput('');
+          }} 
+          style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold' }}
+        >
+          Sair do Painel
+        </button>
+      </div>
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
         

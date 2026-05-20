@@ -3,13 +3,55 @@
 import useSWR from 'swr';
 import { motion } from 'framer-motion';
 import { BookOpen } from 'lucide-react';
+import { useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function ScreenPage() {
-  const { data } = useSWR('/api/state', fetcher, { refreshInterval: 500 });
+  // SWR para carregar dados iniciais e lidar com mutações, desabilitamos o polling rápido por tempo (refreshInterval)
+  const { data, mutate } = useSWR('/api/state', fetcher);
 
-  if (!data) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><h1 className="animate-pulse">CARREGANDO...</h1></div>;
+  // Escuta em tempo real para mudanças nas tabelas do banco no Supabase
+  useEffect(() => {
+    const channel = supabase
+      .channel('db-all-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'config' },
+        () => {
+          mutate(); // Força o SWR a recarregar as informações imediatamente
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'scores' },
+        () => {
+          mutate();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'teams' },
+        () => {
+          mutate();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'provas' },
+        () => {
+          mutate();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [mutate]);
+
+  if (!data) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><h1 className="animate-pulse">CARREGANDO PLACAR...</h1></div>;
 
   const isGeral = data.viewMode === 'geral';
   const activeProva = data.provas.find((p: any) => p.id === data.currentProvaId);
@@ -20,7 +62,7 @@ export default function ScreenPage() {
     return Number(((votes / maxVotes) * 10).toFixed(1));
   };
 
-  // Calcular Scores
+  // Calcular Scores das Equipes
   let calculatedTeams = data.teams.map((team: any) => {
     let publicVotes = 0;
     let publicScore = 0;
@@ -33,7 +75,7 @@ export default function ScreenPage() {
       data.provas.forEach((prova: any) => {
         const pScores = data.scores[prova.id];
         if (pScores) {
-          // Find max public votes for this specific prova to normalize
+          // Achar a quantidade máxima de votos do público nesta prova para normalizar
           const maxPubVotes = Math.max(...Object.values(pScores).map((s: any) => s.publicVotes || 0), 0);
           
           const teamScore = pScores[team.id] || { publicVotes: 0, j1: 0, j2: 0 };

@@ -2,14 +2,40 @@
 
 import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckCircle2, ShieldAlert } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function VotePage() {
-  const { data, error } = useSWR('/api/state', fetcher, { refreshInterval: 1000 });
+  const { data, error, mutate } = useSWR('/api/state', fetcher);
   const [votedFor, setVotedFor] = useState<string | null>(null);
+
+  // Escuta mudanças de status/equipes em tempo real
+  useEffect(() => {
+    const channel = supabase
+      .channel('db-vote-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'config' },
+        () => {
+          mutate(); // Atualiza o status/prova ativa no celular na hora
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'teams' },
+        () => {
+          mutate(); // Atualiza a lista de equipes se for alterada
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [mutate]);
 
   const handleVote = async (teamId: string) => {
     if (data?.status !== 'active') return;
