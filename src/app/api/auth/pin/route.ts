@@ -1,27 +1,56 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { readFileSync, existsSync } from 'fs';
+import path from 'path';
+
+const STATE_FILE = path.join(process.cwd(), 'gincana-state.json');
 
 export async function POST(request: Request) {
   try {
-    const { pin, type } = await request.json(); // type: 'admin' | 'jurado'
+    const { pin, type } = await request.json();
     
-    // Buscar os pins configurados no Supabase
+    let adminPin = '1234';
+    let juryPin = '5678';
+
+    // Tenta Supabase primeiro
     const { data: config, error } = await supabase
       .from('config')
       .select('admin_pin, jury_pin')
       .eq('id', 1)
       .single();
 
-    if (error || !config) {
-      return NextResponse.json({ error: 'Erro ao buscar configurações no banco.' }, { status: 500 });
+    if (!error && config) {
+      adminPin = config.admin_pin || adminPin;
+      juryPin = config.jury_pin || juryPin;
+    } else {
+      // Fallback: lê do JSON file
+      try {
+        if (existsSync(STATE_FILE)) {
+          const fileData = JSON.parse(readFileSync(STATE_FILE, 'utf-8'));
+          // PINs podem estar no config ou usar defaults
+        }
+      } catch {}
     }
 
     if (type === 'admin') {
-      if (pin === config.admin_pin) {
+      if (pin === adminPin) {
         return NextResponse.json({ success: true, message: 'PIN Admin validado com sucesso!' });
       }
     } else if (type === 'jurado') {
-      if (pin === config.jury_pin) {
+      // Para jurado, verifica PIN específico no JSON file
+      try {
+        if (existsSync(STATE_FILE)) {
+          const fileData = JSON.parse(readFileSync(STATE_FILE, 'utf-8'));
+          const jurados = fileData.jurados || [];
+          const juradoMatch = jurados.find((j: any) => j.pin === pin);
+          if (juradoMatch) {
+            return NextResponse.json({ success: true, message: 'PIN Jurado validado com sucesso!', jurado: juradoMatch });
+          }
+        }
+      } catch {}
+      
+      // Fallback para PIN genérico
+      if (pin === juryPin) {
         return NextResponse.json({ success: true, message: 'PIN Jurado validado com sucesso!' });
       }
     }

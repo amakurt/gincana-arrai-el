@@ -1,250 +1,406 @@
 "use client";
 
 import useSWR from 'swr';
-import { useState, useEffect } from 'react';
-import { CheckCircle, Lock, ShieldAlert } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { Lock, ShieldAlert, LogOut, Star, Award, Activity, ClipboardList, RefreshCw } from 'lucide-react';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
+function ScoreCircle({ score, color }: { score: number; color: string }) {
+  const radius = 24;
+  const circumference = 2 * Math.PI * radius;
+  const progress = score / 10;
+
+  return (
+    <svg width="64" height="64" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
+      <motion.circle
+        cx="32" cy="32" r={radius}
+        fill="none" stroke={color} strokeWidth="5"
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        initial={{ strokeDashoffset: circumference }}
+        animate={{ strokeDashoffset: circumference * (1 - progress) }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        transform="rotate(-90 32 32)"
+      />
+      <text x="32" y="38" textAnchor="middle" fill="white" fontSize="16" fontWeight="800">
+        {score.toFixed(1)}
+      </text>
+    </svg>
+  );
+}
+
 export default function JuradoPage() {
-  const { data, mutate } = useSWR('/api/state', fetcher, { refreshInterval: 2000 });
-  const [jurado, setJurado] = useState<'j1' | 'j2' | null>(null);
-  const [loadingTeam, setLoadingTeam] = useState<string | null>(null);
-
-  // Notas locais no estado do React para movimento a 60fps sem lag
+  const { data, mutate, error: swrError } = useSWR('/api/state', fetcher, { refreshInterval: 2000 });
+  const [jurado, setJurado] = useState<any>(null);
+  const [savingTeam, setSavingTeam] = useState<string | null>(null);
   const [localScores, setLocalScores] = useState<{ [teamId: string]: number }>({});
-
-  // Estados de Segurança por PIN
   const [pinVerified, setPinVerified] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [verifyingPin, setVerifyingPin] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-  // Identificar a prova ativa
-  const activeProva = data?.provas?.find((p: any) => p.id === data.currentProvaId);
-  const activeProvaId = activeProva?.id;
-
-  // Sincronizar o estado de notas local sempre que os dados mudarem no banco ou trocar de jurado/prova
   useEffect(() => {
-    if (data && activeProvaId && jurado) {
-      const initialScores: any = {};
-      data.teams.forEach((team: any) => {
-        initialScores[team.id] = data.scores[activeProvaId]?.[team.id]?.[jurado] || 0;
-      });
-      setLocalScores(initialScores);
+    if (!data && !swrError) {
+      const t = setTimeout(() => setLoadingTimeout(true), 8000);
+      return () => clearTimeout(t);
     }
-  }, [data, activeProvaId, jurado]);
+    setLoadingTimeout(false);
+  }, [data, swrError]);
 
-  // Verificar se o jurado já está autenticado nesta sessão do navegador
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const isVerified = sessionStorage.getItem('jurado_verified');
-      if (isVerified === 'true') {
-        setPinVerified(true);
+      const stored = sessionStorage.getItem('jurado_data');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setJurado(parsed);
+          setPinVerified(true);
+        } catch {}
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (!data || !jurado) return;
+    const t = data.teams || [];
+    const s = data.scores || {};
+    const p = data.provas || [];
+    const ap = p.find((p: any) => p.id === data.currentProvaId);
+    const apId = ap?.id;
+    if (t.length > 0 && apId) {
+      const initialScores: any = {};
+      t.forEach((team: any) => {
+        initialScores[team.id] = s[apId]?.[team.id]?.[jurado.id] || 0;
+      });
+      setLocalScores(initialScores);
+    }
+  }, [data, jurado]);
 
   const handleVerifyPin = async (e: React.FormEvent) => {
     e.preventDefault();
     setVerifyingPin(true);
     setPinError('');
-
     try {
       const response = await fetch('/api/auth/pin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin: pinInput, type: 'jurado' })
       });
-
       const result = await response.json();
-
-      if (response.ok && result.success) {
+      if (response.ok && result.success && result.jurado) {
         sessionStorage.setItem('jurado_verified', 'true');
+        sessionStorage.setItem('jurado_data', JSON.stringify(result.jurado));
+        setJurado(result.jurado);
         setPinVerified(true);
       } else {
-        setPinError(result.error || 'PIN incorreto! Tente novamente.');
+        setPinError(result.error || 'PIN incorreto!');
       }
-    } catch (err) {
+    } catch {
       setPinError('Erro ao comunicar com o servidor.');
     } finally {
       setVerifyingPin(false);
     }
   };
 
-  // Enviar a nota final para o banco de dados (chamado apenas ao soltar o slider)
-  const handleVoteSubmit = async (teamId: string, score: number) => {
-    setLoadingTeam(teamId);
+  const handleVoteSubmit = useCallback(async (teamId: string, score: number) => {
+    if (!jurado) return;
+    setSavingTeam(teamId);
     try {
       await fetch('/api/state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'juryVote', teamId, jurado, score })
+        body: JSON.stringify({ action: 'juryVote', teamId, jurado: jurado.id, score })
       });
-      // Revalida a SWR para sincronizar com o banco
       mutate();
-    } catch (err) {
-      console.error('Erro ao enviar nota:', err);
+    } catch {
+      console.error('Erro ao enviar nota');
     } finally {
-      // Pequeno feedback de "Salvo!"
-      setTimeout(() => setLoadingTeam(null), 1000);
+      setTimeout(() => setSavingTeam(null), 1200);
     }
+  }, [jurado, mutate]);
+
+  const handleExit = () => {
+    sessionStorage.removeItem('jurado_verified');
+    sessionStorage.removeItem('jurado_data');
+    setJurado(null);
+    setPinVerified(false);
+    setPinInput('');
   };
 
-  if (!data) return <div className="mobile-container glass"><div style={{padding: '2rem', textAlign: 'center'}}>Carregando...</div></div>;
+  if (!data) {
+    const stalled = swrError || loadingTimeout;
+    return (
+      <div className="mobile-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+        {stalled ? (
+          <div style={{ textAlign: 'center' }}>
+            <ShieldAlert size={48} style={{ color: '#ef4444', margin: '0 auto 1rem' }} />
+            <h2 style={{ color: '#ef4444', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
+              {swrError ? 'Erro de conexão' : 'Servidor lento'}
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+              {swrError ? 'Não foi possível conectar ao servidor.' : 'O servidor está demorando para responder.'}
+            </p>
+            <button onClick={() => { setLoadingTimeout(false); mutate(); }} className="btn" style={{ background: 'var(--glow-yellow)', color: 'black', fontSize: '1rem', padding: '0.8rem 2rem', width: 'auto' }}>
+              <RefreshCw size={18} style={{ marginRight: '0.4rem' }} /> Tentar novamente
+            </button>
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center' }}>
+            <Activity size={48} className="animate-pulse" style={{ color: 'var(--glow-green)', margin: '0 auto 1rem' }} />
+            <p style={{ color: 'var(--text-secondary)' }}>Carregando...</p>
+          </div>
+        )}
+      </div>
+    );
+  }
 
-  // Tela de Bloqueio por PIN
+  if (data.error) {
+    return (
+      <div className="mobile-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '5rem', textAlign: 'center' }}>
+        <ShieldAlert size={48} style={{ color: '#ef4444', margin: '0 auto 1rem' }} />
+        <h2 style={{ color: '#ef4444', fontSize: '1rem' }}>Erro no servidor: {data.error}</h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.5rem' }}>Tente recarregar a página ou contate o administrador.</p>
+      </div>
+    );
+  }
+
+  const teams = data.teams || [];
+  const scores = data.scores || {};
+  const provas = data.provas || [];
+  const activeProva = provas.find((p: any) => p.id === data.currentProvaId);
+
   if (!pinVerified) {
     return (
-      <div className="mobile-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80vh' }}>
-        <form onSubmit={handleVerifyPin} className="glass" style={{ padding: '3rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1.5rem', border: '1px solid #8b5cf6' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-            <div style={{ padding: '1rem', borderRadius: '50%', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid #8b5cf6' }}>
-              <Lock size={40} color="#8b5cf6" />
+      <div className="mobile-container" style={{ justifyContent: 'center' }}>
+        <div>
+          <form onSubmit={handleVerifyPin} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+              <img
+                src="/logologos.png"
+                alt="Logo"
+                style={{ width: 140, height: 140, objectFit: 'contain', margin: '0 auto 1.5rem', borderRadius: 20, background: 'rgba(255,255,255,0.08)', padding: 12, boxShadow: '0 0 30px rgba(255,255,255,0.15)' }}
+              />
+              <h2 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.5rem' }}>Painel do Jurado</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                Área restrita. Insira o PIN de acesso para continuar.
+              </p>
             </div>
-          </div>
-          
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 900 }}>Painel do Jurado</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Área restrita aos jurados oficiais. Por favor, insira o seu PIN de acesso:</p>
 
-          <input 
-            type="password" 
-            pattern="[0-9]*" 
-            inputMode="numeric" 
-            placeholder="Digite o PIN (Padrão: 5678)" 
-            value={pinInput}
-            onChange={(e) => setPinInput(e.target.value)}
-            style={{ 
-              width: '100%', 
-              padding: '1rem', 
-              borderRadius: '12px', 
-              fontSize: '1.5rem', 
-              textAlign: 'center', 
-              letterSpacing: '8px', 
-              background: 'var(--bg-dark)', 
-              color: 'white', 
-              border: '1px solid var(--border-light)' 
-            }}
-            required
-            autoFocus
-          />
+            <div className="glass" style={{ padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              <input
+                type="password"
+                pattern="[0-9]*"
+                inputMode="numeric"
+                placeholder="PIN de acesso"
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value)}
+                style={{
+                  width: '100%', padding: '1rem', borderRadius: '12px', fontSize: '1.5rem',
+                  textAlign: 'center', letterSpacing: '12px', fontWeight: 800,
+                  background: 'var(--bg-dark)', color: 'var(--glow-green)',
+                  border: pinError ? '1px solid #ef4444' : '1px solid var(--border-light)',
+                  outline: 'none', caretColor: 'var(--glow-green)'
+                }}
+                required
+                autoFocus
+              />
 
-          {pinError && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444', justifyContent: 'center', fontSize: '0.9rem' }}>
-              <ShieldAlert size={16} />
-              <span>{pinError}</span>
+              {pinError && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444', fontSize: '0.85rem', justifyContent: 'center' }}>
+                  <ShieldAlert size={14} />
+                  <span>{pinError}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="btn"
+                style={{
+                  background: 'linear-gradient(135deg, var(--glow-green), #00c853)',
+                  fontWeight: 900, fontSize: '1rem', opacity: pinInput.length < 4 ? 0.5 : 1
+                }}
+                disabled={verifyingPin || pinInput.length < 4}
+              >
+                {verifyingPin ? 'VERIFICANDO...' : 'ENTRAR'}
+              </button>
             </div>
-          )}
-
-          <button 
-            type="submit" 
-            className="btn" 
-            style={{ background: '#8b5cf6', fontWeight: 'bold' }}
-            disabled={verifyingPin}
-          >
-            {verifyingPin ? 'VERIFICANDO...' : 'ENTRAR NO PAINEL'}
-          </button>
-        </form>
+          </form>
+        </div>
       </div>
     );
   }
 
   if (!jurado) {
-    return (
-      <div className="mobile-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80vh' }}>
-        <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>Identificação</h1>
-        <p style={{ textAlign: 'center', marginBottom: '2rem', color: 'var(--text-secondary)' }}>Selecione quem você é para o lançamento das notas:</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <button className="btn" style={{ background: '#3b82f6' }} onClick={() => setJurado('j1')}>Sou o Jurado 1</button>
-          <button className="btn" style={{ background: '#8b5cf6' }} onClick={() => setJurado('j2')}>Sou o Jurado 2</button>
-          <button 
-            onClick={() => {
-              sessionStorage.removeItem('jurado_verified');
-              setPinVerified(false);
-              setPinInput('');
-            }}
-            style={{ marginTop: '1.5rem', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}
-          >
-            Sair do Painel
-          </button>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
     <div className="mobile-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Acesso Autorizado</span>
-          <h2 style={{ margin: 0 }}>Olá, {jurado === 'j1' ? 'Jurado 1' : 'Jurado 2'}</h2>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <img src="/logologos.png" alt="Logo" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 10, boxShadow: '0 0 12px rgba(255,255,255,0.2)' }} />
+            <div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Acesso Autorizado</div>
+              <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{jurado.name}</div>
+            </div>
+          </div>
+          <button
+            onClick={handleExit}
+            style={{
+              background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-light)',
+              padding: '0.5rem 0.8rem', borderRadius: '8px', color: 'var(--text-secondary)',
+              cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem',
+              fontFamily: 'inherit'
+            }}
+          >
+            <LogOut size={14} /> Sair
+          </button>
         </div>
-        <button 
-          onClick={() => setJurado(null)} 
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-light)', padding: '0.5rem 1rem', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer' }}
-        >
-          Voltar
-        </button>
+
+        {!activeProva ? (
+          <div
+            className="glass"
+            style={{ padding: '3rem 2rem', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <div style={{ marginBottom: '1.5rem' }}>
+              <ClipboardList size={48} style={{ color: 'var(--glow-yellow)', opacity: 0.6 }} />
+            </div>
+            <h3 style={{ marginBottom: '0.5rem', fontSize: '1.3rem' }}>Nenhuma Prova Ativa</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+              Aguarde o administrador iniciar a próxima prova no painel de controle.
+            </p>
+          </div>
+        ) : (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <div
+              className="glass"
+              style={{
+                padding: '1rem 1.5rem', textAlign: 'center', marginBottom: '1.2rem',
+                background: 'linear-gradient(135deg, rgba(0, 230, 118, 0.08), rgba(0, 200, 83, 0.03))',
+                border: '1px solid rgba(0, 230, 118, 0.2)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                <Award size={16} style={{ color: 'var(--glow-green)' }} />
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Prova em Andamento</span>
+              </div>
+              <h3 style={{ color: 'var(--glow-green)', fontSize: '1.3rem', fontWeight: 900 }}>
+                {activeProva.name}
+              </h3>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+              {teams.length === 0 && (
+                <div className="glass" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  Nenhuma equipe cadastrada para pontuar.
+                </div>
+              )}
+              {teams.map((team: any) => {
+                const currentScore = localScores[team.id] !== undefined
+                  ? localScores[team.id]
+                  : (scores[activeProva.id]?.[team.id]?.[jurado] || 0);
+
+                return (
+                  <div
+                    key={team.id}
+                    className="glass"
+                    style={{
+                      padding: '1.2rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.8rem',
+                      borderLeft: `4px solid ${team.color}`
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+                        <div style={{
+                          width: 14, height: 14, borderRadius: '50%',
+                          background: team.color,
+                          boxShadow: `0 0 8px ${team.color}`
+                        }} />
+                        <span style={{ fontWeight: 700, fontSize: '1rem' }}>Equipe {team.name}</span>
+                      </div>
+                      <ScoreCircle score={currentScore} color={team.color} />
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', minWidth: 28 }}>0</span>
+                      <div style={{ flex: 1, position: 'relative' }}>
+                        <input
+                          type="range"
+                          min="0"
+                          max="10"
+                          step="0.5"
+                          value={currentScore}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setLocalScores(prev => ({ ...prev, [team.id]: val }));
+                          }}
+                          onMouseUp={() => handleVoteSubmit(team.id, currentScore)}
+                          onTouchEnd={() => handleVoteSubmit(team.id, currentScore)}
+                          style={{
+                            width: '100%',
+                            accentColor: team.color,
+                            height: 6,
+                            cursor: 'pointer',
+                            WebkitAppearance: 'none',
+                            appearance: 'none',
+                            outline: 'none',
+                            background: `linear-gradient(to right, ${team.color} ${currentScore * 10}%, rgba(255,255,255,0.08) ${currentScore * 10}%)`,
+                            borderRadius: 3
+                          }}
+                        />
+                      </div>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', minWidth: 28, textAlign: 'right' }}>10</span>
+                    </div>
+
+                    {savingTeam === team.id && (
+                      <div
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '0.4rem',
+                          color: 'var(--glow-green)', fontSize: '0.8rem'
+                        }}
+                      >
+                        <Award size={14} />
+                        Nota salva com sucesso!
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
-      {!activeProva ? (
-        <div className="glass" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
-          <h3 style={{ marginBottom: '0.5rem' }}>Nenhuma prova ativa</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Aguarde o administrador iniciar a prova no painel de controle.</p>
-        </div>
-      ) : (
-        <>
-          <div className="glass" style={{ padding: '1.2rem', textAlign: 'center', marginBottom: '2rem', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid var(--team-c)' }}>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Prova em Andamento</p>
-            <h3 style={{ color: 'var(--team-c)', fontSize: '1.5rem', fontWeight: 900 }}>{activeProva.name}</h3>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-            {data.teams.map((team: any) => {
-              // Pegar o valor do estado local se houver, senão usar o valor padrão vindo do banco
-              const currentScore = localScores[team.id] !== undefined 
-                ? localScores[team.id] 
-                : (data.scores[activeProva.id]?.[team.id]?.[jurado] || 0);
-              
-              return (
-                <div key={team.id} className="glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                    <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: team.color, boxShadow: `0 0 10px ${team.color}` }} />
-                    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>Equipe {team.name}</h3>
-                  </div>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                    <input 
-                      type="range" 
-                      min="0" 
-                      max="10" 
-                      step="0.5"
-                      value={currentScore}
-                      // Atualiza na hora na tela local para ser 100% responsivo e fluído
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setLocalScores(prev => ({ ...prev, [team.id]: val }));
-                      }}
-                      // Dispara para o banco apenas quando o jurado solta o clique do mouse ou tira o dedo do celular
-                      onMouseUp={() => handleVoteSubmit(team.id, currentScore)}
-                      onTouchEnd={() => handleVoteSubmit(team.id, currentScore)}
-                      style={{ flex: 1, accentColor: team.color, height: '8px', cursor: 'pointer' }}
-                    />
-                    <div style={{ fontSize: '2rem', fontWeight: 900, width: '60px', textAlign: 'center', color: team.color }}>
-                      {currentScore.toFixed(1)}
-                    </div>
-                  </div>
-                  {loadingTeam === team.id && (
-                    <span style={{ color: 'var(--team-c)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '-0.3rem' }}>
-                      <CheckCircle size={14}/> Nota salva no Supabase!
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
+      <style jsx>{`
+        input[type='range']::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: white;
+          border: 3px solid currentColor;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+          cursor: pointer;
+          transition: transform 0.15s ease;
+        }
+        input[type='range']::-webkit-slider-thumb:hover {
+          transform: scale(1.15);
+        }
+        input[type='range']::-moz-range-thumb {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: white;
+          border: 3px solid currentColor;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+          cursor: pointer;
+        }
+      `}</style>
     </div>
   );
 }

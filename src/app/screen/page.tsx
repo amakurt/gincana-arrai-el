@@ -2,59 +2,65 @@
 
 import useSWR from 'swr';
 import { motion } from 'framer-motion';
-import { BookOpen } from 'lucide-react';
-import { useEffect } from 'react';
+import { BookOpen, RefreshCw } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function ScreenPage() {
-  // SWR para carregar dados iniciais e lidar com mutações, desabilitamos o polling rápido por tempo (refreshInterval)
-  const { data, mutate } = useSWR('/api/state', fetcher);
+  const { data, mutate, error: swrError } = useSWR('/api/state', fetcher, { refreshInterval: 3000 });
+  const [showTimeout, setShowTimeout] = useState(false);
 
-  // Escuta em tempo real para mudanças nas tabelas do banco no Supabase
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!data && !swrError) setShowTimeout(true);
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [data, swrError]);
+
   useEffect(() => {
     const channel = supabase
       .channel('db-all-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'config' },
-        () => {
-          mutate(); // Força o SWR a recarregar as informações imediatamente
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'scores' },
-        () => {
-          mutate();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'teams' },
-        () => {
-          mutate();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'provas' },
-        () => {
-          mutate();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'config' }, () => mutate())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'scores' }, () => mutate())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => mutate())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'provas' }, () => mutate())
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [mutate]);
 
-  if (!data) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><h1 className="animate-pulse">CARREGANDO PLACAR...</h1></div>;
+  if (!data) {
+    const hasError = swrError || showTimeout;
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1.5rem' }}>
+        {hasError ? (
+          <>
+            <h2 style={{ color: '#ef4444', fontSize: '1.2rem' }}>Não foi possível carregar os dados.</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+              {swrError ? 'Erro de conexão com o servidor.' : 'O servidor está demorando para responder.'}
+            </p>
+            <button onClick={() => { setShowTimeout(false); mutate(); }} className="btn" style={{ background: 'var(--glow-yellow)', color: 'black', fontSize: '1rem', padding: '0.8rem 2rem', width: 'auto' }}>
+              <RefreshCw size={18} /> Tentar novamente
+            </button>
+          </>
+        ) : (
+          <h1 className="animate-pulse">CARREGANDO PLACAR...</h1>
+        )}
+      </div>
+    );
+  }
+
+  if (data.error) {
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><h1 style={{ color: '#ef4444' }}>ERRO: {data.error}</h1></div>;
+  }
+
+  const teams = data.teams || [];
+  const provas = data.provas || [];
+  const scores = data.scores || {};
 
   const isGeral = data.viewMode === 'geral';
-  const activeProva = data.provas.find((p: any) => p.id === data.currentProvaId);
+  const activeProva = provas.find((p: any) => p.id === data.currentProvaId);
 
   // Helper para calcular a nota de 0 a 10 baseada nos votos do público
   const calcPublicScore = (votes: number, maxVotes: number) => {
@@ -63,7 +69,7 @@ export default function ScreenPage() {
   };
 
   // Calcular Scores das Equipes
-  let calculatedTeams = data.teams.map((team: any) => {
+  let calculatedTeams = teams.map((team: any) => {
     let publicVotes = 0;
     let publicScore = 0;
     let j1 = 0;
@@ -71,11 +77,9 @@ export default function ScreenPage() {
     let totalScore = 0;
 
     if (isGeral) {
-      // Soma de todas as provas
-      data.provas.forEach((prova: any) => {
-        const pScores = data.scores[prova.id];
+      provas.forEach((prova: any) => {
+        const pScores = scores[prova.id];
         if (pScores) {
-          // Achar a quantidade máxima de votos do público nesta prova para normalizar
           const maxPubVotes = Math.max(...Object.values(pScores).map((s: any) => s.publicVotes || 0), 0);
           
           const teamScore = pScores[team.id] || { publicVotes: 0, j1: 0, j2: 0 };
@@ -85,8 +89,7 @@ export default function ScreenPage() {
         }
       });
     } else if (activeProva) {
-      // Apenas prova atual
-      const pScores = data.scores[activeProva.id];
+      const pScores = scores[activeProva.id];
       if (pScores) {
         const maxPubVotes = Math.max(...Object.values(pScores).map((s: any) => s.publicVotes || 0), 0);
         const teamScore = pScores[team.id] || { publicVotes: 0, j1: 0, j2: 0 };
@@ -111,7 +114,10 @@ export default function ScreenPage() {
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4rem' }}>
         <div>
-          <h1 className="gradient-text" style={{ fontSize: '4.5rem', marginBottom: '0' }}>ARRAI-EL <span style={{ color: 'var(--glow-yellow)' }}>2026</span></h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1rem' }}>
+            <img src="/logologos.png" alt="Logo" style={{ width: 100, height: 100, objectFit: 'contain', borderRadius: 18, background: 'rgba(255,255,255,0.08)', padding: 8, boxShadow: '0 0 30px rgba(255,255,255,0.2)' }} />
+            <h1 className="gradient-text" style={{ fontSize: '4.5rem', marginBottom: 0 }}>ARRAI-EL <span style={{ color: 'var(--glow-yellow)' }}>2026</span></h1>
+          </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
             <div className="glass" style={{ padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -129,7 +135,7 @@ export default function ScreenPage() {
             {isGeral ? 'RANKING GERAL' : `PROVA: ${activeProva?.name || 'Nenhuma'}`}
           </h2>
           <div style={{ fontSize: '2.5rem', fontWeight: 900, color: data.status === 'active' ? 'var(--team-c)' : 'white' }} className={data.status === 'active' ? 'animate-pulse' : ''}>
-            {data.status === 'active' ? 'VOTAÇÃO ABERTA' : data.message.toUpperCase()}
+            {data.status === 'active' ? 'VOTAÇÃO ABERTA' : (data.message || '').toUpperCase()}
           </div>
         </div>
       </div>

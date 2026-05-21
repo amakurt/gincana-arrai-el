@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from 'swr';
-import { Play, Square, RotateCcw, AlertTriangle, Users, Trophy, Monitor, Lock, ShieldAlert, Home } from 'lucide-react';
+import { Play, Square, RotateCcw, AlertTriangle, Users, Trophy, Monitor, Lock, ShieldAlert, Home, RefreshCw, Edit2, Save, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -9,8 +9,9 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function AdminPage() {
   const router = useRouter();
-  const { data, mutate } = useSWR('/api/state', fetcher, { refreshInterval: 1000 });
+  const { data, mutate, error: swrError } = useSWR('/api/state', fetcher, { refreshInterval: 1000 });
   const [loading, setLoading] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   // Estado de Segurança por Sessão
   const [adminVerified, setAdminVerified] = useState(false);
@@ -18,6 +19,11 @@ export default function AdminPage() {
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamColor, setNewTeamColor] = useState('#3b82f6');
   const [newProvaName, setNewProvaName] = useState('');
+  const [editingTeam, setEditingTeam] = useState<string | null>(null);
+  const [editingProva, setEditingProva] = useState<string | null>(null);
+  const [editTeamName, setEditTeamName] = useState('');
+  const [editTeamColor, setEditTeamColor] = useState('');
+  const [editProvaName, setEditProvaName] = useState('');
 
   // Verificar se o admin já está autenticado nesta sessão do navegador
   useEffect(() => {
@@ -31,30 +37,120 @@ export default function AdminPage() {
     }
   }, [router]);
 
+  const [error, setError] = useState('');
+
   const updateState = async (updates: any) => {
     setLoading(true);
-    await fetch('/api/state', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'updateState', ...updates })
-    });
-    mutate();
-    setLoading(false);
+    setError('');
+    try {
+      const res = await fetch('/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateState', ...updates })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Erro ao atualizar');
+      }
+      mutate();
+    } catch (e: any) {
+      setError(e.message || 'Erro de conexão com o servidor');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const resetGame = async () => {
     if (!confirm('TEM CERTEZA? Isso vai apagar todos os votos e provas cadastradas no banco de dados!')) return;
     setLoading(true);
-    await fetch('/api/state', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'reset' })
-    });
-    mutate();
-    setLoading(false);
+    try {
+      const res = await fetch('/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reset' })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Erro ao resetar');
+      }
+      mutate();
+    } catch (e: any) {
+      setError(e.message || 'Erro de conexão com o servidor');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (!data) return <div className="container" style={{ textAlign: 'center', padding: '5rem' }}><h2 className="animate-pulse">Carregando painel admin...</h2></div>;
+  const startEditTeam = (team: any) => {
+    setEditingTeam(team.id);
+    setEditTeamName(team.name);
+    setEditTeamColor(team.color);
+  };
+
+  const saveEditTeam = (teamId: string) => {
+    if (!editTeamName) return;
+    const updated = data.teams.map((t: any) =>
+      t.id === teamId ? { ...t, name: editTeamName, color: editTeamColor } : t
+    );
+    updateState({ teams: updated });
+    setEditingTeam(null);
+  };
+
+  const cancelEditTeam = () => {
+    setEditingTeam(null);
+  };
+
+  const startEditProva = (prova: any) => {
+    setEditingProva(prova.id);
+    setEditProvaName(prova.name);
+  };
+
+  const saveEditProva = (provaId: string) => {
+    if (!editProvaName) return;
+    const updated = data.provas.map((p: any) =>
+      p.id === provaId ? { ...p, name: editProvaName } : p
+    );
+    updateState({ provas: updated });
+    setEditingProva(null);
+  };
+
+  const cancelEditProva = () => {
+    setEditingProva(null);
+  };
+
+  useEffect(() => {
+    if (!data && !swrError) {
+      const t = setTimeout(() => setLoadingTimeout(true), 8000);
+      return () => clearTimeout(t);
+    }
+    setLoadingTimeout(false);
+  }, [data, swrError]);
+
+  if (!data) {
+    const stalled = swrError || loadingTimeout;
+    return (
+      <div className="container" style={{ textAlign: 'center', padding: '5rem' }}>
+        {stalled ? (
+          <div>
+            <AlertTriangle size={48} style={{ color: '#ef4444', margin: '0 auto 1rem' }} />
+            <h2 style={{ color: '#ef4444', fontSize: '1.2rem', marginBottom: '0.5rem' }}>
+              {swrError ? 'Erro de conexão' : 'Servidor lento'}
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+              {swrError ? 'Não foi possível conectar ao servidor.' : 'O servidor está demorando para responder.'}
+            </p>
+            <button onClick={() => { setLoadingTimeout(false); mutate(); }} className="btn" style={{ background: 'var(--glow-yellow)', color: 'black', fontSize: '1rem', padding: '0.8rem 2rem', width: 'auto' }}>
+              <RefreshCw size={18} style={{ marginRight: '0.4rem' }} /> Tentar novamente
+            </button>
+          </div>
+        ) : (
+          <h2 className="animate-pulse">Carregando painel admin...</h2>
+        )}
+      </div>
+    );
+  }
+
+  if (data.error) return <div className="container" style={{ textAlign: 'center', padding: '5rem' }}><h2 style={{ color: '#ef4444' }}>Erro no servidor: {data.error}</h2></div>;
 
   // Tela de redirecionamento temporário
   if (!adminVerified) {
@@ -68,7 +164,10 @@ export default function AdminPage() {
   return (
     <div className="container" style={{ maxWidth: '1400px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <h1 className="gradient-text" style={{ margin: 0 }}>Painel de Controle</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <img src="/logologos.png" alt="Logo" style={{ width: 56, height: 56, objectFit: 'contain', borderRadius: 12, boxShadow: '0 0 16px rgba(255,255,255,0.2)' }} />
+          <h1 className="gradient-text" style={{ margin: 0 }}>Painel de Controle</h1>
+        </div>
         <button 
           onClick={() => {
             sessionStorage.removeItem('admin_verified');
@@ -81,6 +180,13 @@ export default function AdminPage() {
           Sair do Painel
         </button>
       </div>
+
+      {error && (
+        <div style={{ padding: '1rem 1.5rem', marginBottom: '1.5rem', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <AlertTriangle size={18} />
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Barra de Navegação Rápida (Atalhos do Administrador) */}
       <div className="glass" style={{ 
@@ -255,6 +361,32 @@ export default function AdminPage() {
 
           <hr style={{ borderColor: 'var(--border-light)', margin: '2rem 0' }} />
           
+          <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Users size={20} /> Configuração de Votos do Público</h3>
+          <div className="glass" style={{ padding: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '1rem' }}>Voto Único por Pessoa</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                {data.singleVoteMode ? 'Cada pessoa vota apenas 1 vez por prova' : 'Cada pessoa pode votar quantas vezes quiser'}
+              </div>
+            </div>
+            <button
+              onClick={() => updateState({ singleVoteMode: !data.singleVoteMode })}
+              style={{
+                width: 56, height: 30, borderRadius: 15, border: 'none', cursor: 'pointer',
+                background: data.singleVoteMode ? '#10b981' : 'rgba(255,255,255,0.15)',
+                position: 'relative', transition: 'background 0.2s'
+              }}
+            >
+              <div style={{
+                width: 24, height: 24, borderRadius: '50%', background: 'white',
+                position: 'absolute', top: 3, left: data.singleVoteMode ? 29 : 3,
+                transition: 'left 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+              }} />
+            </button>
+          </div>
+
+          <hr style={{ borderColor: 'var(--border-light)', margin: '2rem 0' }} />
+          
           <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Monitor size={20} /> Controle do Telão</h3>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <button 
@@ -295,29 +427,67 @@ export default function AdminPage() {
             <button 
               onClick={() => {
                 if(newTeamName) {
-                  updateState({ teams: [...data.teams, { id: 't'+Date.now(), name: newTeamName, color: newTeamColor }] });
+                  updateState({ teams: [...(data.teams || []), { id: 't'+Date.now(), name: newTeamName, color: newTeamColor }] });
                   setNewTeamName('');
                 }
               }}
-              style={{ padding: '0 1rem', borderRadius: '8px', background: 'white', color: 'black', fontWeight: 'bold', cursor: 'pointer', border: 'none' }}
+              disabled={loading}
+              style={{ padding: '0 1rem', borderRadius: '8px', background: 'white', color: 'black', fontWeight: 'bold', cursor: loading ? 'not-allowed' : 'pointer', border: 'none', opacity: loading ? 0.5 : 1 }}
             >
-              Add
+              {loading ? '...' : 'Add'}
             </button>
           </div>
 
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {(data.teams || []).map((t: any) => (
               <li key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-card)', borderRadius: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '15px', height: '15px', borderRadius: '50%', background: t.color }} />
-                  {t.name}
-                </div>
-                <button 
-                  onClick={() => updateState({ teams: data.teams.filter((team: any) => team.id !== t.id) })}
-                  style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer' }}
-                >
-                  Remover
-                </button>
+                {editingTeam === t.id ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flex: 1 }}>
+                    <input
+                      type="color"
+                      value={editTeamColor}
+                      onChange={(e) => setEditTeamColor(e.target.value)}
+                      style={{ width: '36px', height: '36px', padding: 0, cursor: 'pointer', background: 'transparent', border: 'none' }}
+                    />
+                    <input
+                      type="text"
+                      value={editTeamName}
+                      onChange={(e) => setEditTeamName(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && saveEditTeam(t.id)}
+                      style={{ flex: 1, padding: '0.5rem', borderRadius: '6px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--border-light)', fontSize: '0.95rem' }}
+                      autoFocus
+                    />
+                    <button onClick={() => saveEditTeam(t.id)} style={{ background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      <Save size={18} />
+                    </button>
+                    <button onClick={cancelEditTeam} style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      <X size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ width: '15px', height: '15px', borderRadius: '50%', background: t.color }} />
+                      {t.name}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => startEditTeam(t)}
+                        disabled={loading}
+                        style={{ background: 'transparent', color: '#f59e0b', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1, display: 'flex', alignItems: 'center' }}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => updateState({ teams: data.teams.filter((team: any) => team.id !== t.id) })}
+                        disabled={loading}
+                        style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1 }}
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  </>
+                )}
               </li>
             ))}
           </ul>
@@ -338,26 +508,58 @@ export default function AdminPage() {
             <button 
               onClick={() => {
                 if(newProvaName) {
-                  updateState({ provas: [...data.provas, { id: 'p'+Date.now(), name: newProvaName }] });
+                  updateState({ provas: [...(data.provas || []), { id: 'p'+Date.now(), name: newProvaName }] });
                   setNewProvaName('');
                 }
               }}
-              style={{ padding: '0 1rem', borderRadius: '8px', background: 'white', color: 'black', fontWeight: 'bold', cursor: 'pointer', border: 'none' }}
+              disabled={loading}
+              style={{ padding: '0 1rem', borderRadius: '8px', background: 'white', color: 'black', fontWeight: 'bold', cursor: loading ? 'not-allowed' : 'pointer', border: 'none', opacity: loading ? 0.5 : 1 }}
             >
-              Add
+              {loading ? '...' : 'Add'}
             </button>
           </div>
 
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {(data.provas || []).map((p: any) => (
               <li key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-card)', borderRadius: '8px' }}>
-                {p.name}
-                <button 
-                  onClick={() => updateState({ provas: data.provas.filter((prova: any) => prova.id !== p.id) })}
-                  style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer' }}
-                >
-                  Remover
-                </button>
+                {editingProva === p.id ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flex: 1 }}>
+                    <input
+                      type="text"
+                      value={editProvaName}
+                      onChange={(e) => setEditProvaName(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && saveEditProva(p.id)}
+                      style={{ flex: 1, padding: '0.5rem', borderRadius: '6px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--border-light)', fontSize: '0.95rem' }}
+                      autoFocus
+                    />
+                    <button onClick={() => saveEditProva(p.id)} style={{ background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      <Save size={18} />
+                    </button>
+                    <button onClick={cancelEditProva} style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      <X size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {p.name}
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => startEditProva(p)}
+                        disabled={loading}
+                        style={{ background: 'transparent', color: '#f59e0b', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1, display: 'flex', alignItems: 'center' }}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => updateState({ provas: data.provas.filter((prova: any) => prova.id !== p.id) })}
+                        disabled={loading}
+                        style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1 }}
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  </>
+                )}
               </li>
             ))}
           </ul>

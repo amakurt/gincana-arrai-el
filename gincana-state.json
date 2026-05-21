@@ -1,1 +1,55 @@
-{"status":"active","viewMode":"prova","currentProvaId":"p1","message":"Votação Aberta!","teams":[{"id":"t1","name":"Azul","color":"#3b82f6"},{"id":"t1779246392988","name":"Laranja","color":"#fa7900"}],"provas":[{"id":"p1","name":"Apresentação de Dança"},{"id":"p1779246412869","name":"Comidas Típicas"}],"scores":{"p1":{"t1":{"publicVotes":6,"j1":5,"j2":6},"t1779246392988":{"publicVotes":7,"j1":9,"j2":4}}}}
+{
+  "status": "active",
+  "viewMode": "prova",
+  "currentProvaId": "p1",
+  "message": "Votação Aberta!",
+  "singleVoteMode": false,
+  "teams": [
+    {
+      "id": "t1",
+      "name": "Azul",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "t1779246392988",
+      "name": "Laranja",
+      "color": "#fa7900"
+    }
+  ],
+  "provas": [
+    {
+      "id": "p1",
+      "name": "Apresentação de Dança"
+    },
+    {
+      "id": "p1779246412869",
+      "name": "Comidas Típicas"
+    }
+  ],
+  "scores": {
+    "p1": {
+      "t1": {
+        "publicVotes": 6,
+        "j1": 5,
+        "j2": 6
+      },
+      "t1779246392988": {
+        "publicVotes": 7,
+        "j1": 9,
+        "j2": 4
+      }
+    }
+  },
+  "jurados": [
+    {
+      "id": "j1779386899347",
+      "name": "Fulano",
+      "pin": "1234"
+    },
+    {
+      "id": "j1779386908249",
+      "name": "Ciclano",
+      "pin": "4321"
+    }
+  ]
+}

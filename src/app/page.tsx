@@ -4,7 +4,10 @@ import { MonitorPlay, Smartphone, Lock } from "lucide-react";
 export default function Home() {
   return (
     <div className="container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      <h1 className="gradient-text" style={{ textAlign: 'center', marginBottom: '3rem', fontSize: '5rem' }}>Arrai-el<br/><span style={{ fontSize: '2rem', color: 'var(--glow-yellow)' }}>2026</span></h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '3rem' }}>
+        <img src="/logologos.png" alt="Logo" style={{ width: 110, height: 110, objectFit: 'contain', borderRadius: 20, background: 'rgba(255,255,255,0.08)', padding: 10, boxShadow: '0 0 30px rgba(255,255,255,0.2)' }} />
+        <h1 className="gradient-text" style={{ textAlign: 'center', margin: 0, fontSize: '5rem' }}>Arrai-el<br/><span style={{ fontSize: '2rem', color: 'var(--glow-yellow)' }}>2026</span></h1>
+      </div>
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', width: '100%', maxWidth: '800px' }}>
         
