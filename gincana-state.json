@@ -51,5 +51,6 @@
       "name": "Ciclano",
       "pin": "4321"
     }
-  ]
+  ],
+  "showJuryScores": true
 }

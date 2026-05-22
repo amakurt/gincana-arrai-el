@@ -58,8 +58,10 @@ export default function ScreenPage() {
   const teams = data.teams || [];
   const provas = data.provas || [];
   const scores = data.scores || {};
+  const jurados = data.jurados || [];
 
   const isGeral = data.viewMode === 'geral';
+  const showJuryScores = data.showJuryScores !== false;
   const activeProva = provas.find((p: any) => p.id === data.currentProvaId);
 
   // Helper para calcular a nota de 0 a 10 baseada nos votos do público
@@ -84,8 +86,9 @@ export default function ScreenPage() {
           
           const teamScore = pScores[team.id] || { publicVotes: 0, j1: 0, j2: 0 };
           const pScore = calcPublicScore(teamScore.publicVotes, maxPubVotes);
+          const juryScore = showJuryScores ? (teamScore.j1 || 0) + (teamScore.j2 || 0) : 0;
           
-          totalScore += pScore + (teamScore.j1 || 0) + (teamScore.j2 || 0);
+          totalScore += pScore + juryScore;
         }
       });
     } else if (activeProva) {
@@ -96,8 +99,8 @@ export default function ScreenPage() {
         
         publicVotes = teamScore.publicVotes;
         publicScore = calcPublicScore(publicVotes, maxPubVotes);
-        j1 = teamScore.j1 || 0;
-        j2 = teamScore.j2 || 0;
+        j1 = showJuryScores ? (teamScore.j1 || 0) : 0;
+        j2 = showJuryScores ? (teamScore.j2 || 0) : 0;
         
         totalScore = publicScore + j1 + j2;
       }
@@ -175,8 +178,12 @@ export default function ScreenPage() {
                 {!isGeral && (
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-around', color: 'rgba(255,255,255,0.9)', textShadow: '0 2px 4px rgba(0,0,0,0.8)', fontWeight: 'bold' }}>
                     <span>Público: {team.publicScore} ({team.publicVotes} votos)</span>
-                    <span>Jurado 1: {team.j1}</span>
-                    <span>Jurado 2: {team.j2}</span>
+                    {showJuryScores && (
+                      <>
+                        <span>{jurados[0]?.name || 'Jurado 1'}: {team.j1}</span>
+                        <span>{jurados[1]?.name || 'Jurado 2'}: {team.j2}</span>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

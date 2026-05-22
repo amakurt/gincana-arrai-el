@@ -404,6 +404,29 @@ export default function AdminPage() {
               Mostrar Ranking Geral
             </button>
           </div>
+
+          <div className="glass" style={{ padding: '1.2rem', marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '1rem' }}>Mostrar Notas dos Jurados no Telão</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                {data.showJuryScores !== false ? 'Notas dos jurados visíveis no telão' : 'Apenas votos do público aparecem'}
+              </div>
+            </div>
+            <button
+              onClick={() => updateState({ showJuryScores: !(data.showJuryScores !== false) })}
+              style={{
+                width: 56, height: 30, borderRadius: 15, border: 'none', cursor: 'pointer',
+                background: data.showJuryScores !== false ? '#10b981' : 'rgba(255,255,255,0.15)',
+                position: 'relative', transition: 'background 0.2s'
+              }}
+            >
+              <div style={{
+                width: 24, height: 24, borderRadius: '50%', background: 'white',
+                position: 'absolute', top: 3, left: data.showJuryScores !== false ? 29 : 3,
+                transition: 'left 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+              }} />
+            </button>
+          </div>
         </div>
 
         {/* Cadastro de Equipes */}

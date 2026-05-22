@@ -68,6 +68,7 @@ export async function GET() {
           provas: fileData.provas || [],
           jurados: fileData.jurados || [],
           singleVoteMode: fileData.singleVoteMode !== undefined ? fileData.singleVoteMode : true,
+          showJuryScores: fileData.showJuryScores !== undefined ? fileData.showJuryScores : true,
           scores
         });
       }
@@ -91,6 +92,7 @@ export async function GET() {
         provas: [],
         jurados: [],
         singleVoteMode: config.single_vote_mode !== undefined ? config.single_vote_mode : (fileData?.singleVoteMode !== undefined ? fileData.singleVoteMode : true),
+        showJuryScores: config.show_jury_scores !== undefined ? config.show_jury_scores : (fileData?.showJuryScores !== undefined ? fileData.showJuryScores : true),
         scores: {}
       });
     }
@@ -112,6 +114,7 @@ export async function GET() {
         provas: fileData?.provas || [],
         jurados: [],
         singleVoteMode: config.single_vote_mode !== undefined ? config.single_vote_mode : (fileData?.singleVoteMode !== undefined ? fileData.singleVoteMode : true),
+        showJuryScores: config.show_jury_scores !== undefined ? config.show_jury_scores : (fileData?.showJuryScores !== undefined ? fileData.showJuryScores : true),
         scores: {}
       });
     }
@@ -157,6 +160,7 @@ export async function GET() {
       provas: provas.map((p: any) => ({ id: p.id, name: p.name })),
       jurados: juradosList,
       singleVoteMode: config.single_vote_mode !== undefined && config.single_vote_mode !== null ? config.single_vote_mode : (fileDataFallback?.singleVoteMode !== undefined ? fileDataFallback.singleVoteMode : true),
+      showJuryScores: config.show_jury_scores !== undefined && config.show_jury_scores !== null ? config.show_jury_scores : (fileDataFallback?.showJuryScores !== undefined ? fileDataFallback.showJuryScores : true),
       scores
     });
   } catch (e) {
@@ -172,6 +176,7 @@ export async function GET() {
         provas: fileData.provas || [],
         jurados: fileData.jurados || [],
         singleVoteMode: fileData.singleVoteMode !== undefined ? fileData.singleVoteMode : true,
+        showJuryScores: fileData.showJuryScores !== undefined ? fileData.showJuryScores : true,
         scores: fileData.scores || {}
       });
     }
@@ -212,8 +217,21 @@ export async function POST(request: Request) {
         const tId = body.teamId;
         const value = Number(body.score);
         
-        // Determina qual jurado atualizar
-        const scoreField = body.jurado === 'j1' ? 'j1' : 'j2';
+        // Mapeia o ID do jurado para a coluna j1/j2 baseado na posição na lista ordenada
+        let juradoIndex = -1;
+        const { data: dbJurados } = await supabase
+          .from('jurados')
+          .select('id')
+          .order('created_at', { ascending: true });
+        if (dbJurados) {
+          juradoIndex = dbJurados.findIndex((j: any) => j.id === body.jurado);
+        }
+        if (juradoIndex === -1) {
+          // Fallback: busca no JSON file
+          const fileJurados = readJuradosFromFile();
+          juradoIndex = fileJurados.findIndex((j: any) => j.id === body.jurado);
+        }
+        const scoreField = juradoIndex === 0 ? 'j1' : 'j2';
         
         // Verifica se a pontuação já existe para criar ou atualizar
         const { data: existing } = await supabase
@@ -244,10 +262,15 @@ export async function POST(request: Request) {
     
     // Ação: Atualizar Estado Global (Mestre de Cerimônias / Admin)
     if (body.action === 'updateState') {
-      // Salva singleVoteMode sempre no JSON file (garante persistência)
+      // Salva singleVoteMode e showJuryScores sempre no JSON file (garante persistência)
       if (body.singleVoteMode !== undefined) {
         const fileData = readStateFromFile() || {};
         fileData.singleVoteMode = body.singleVoteMode;
+        writeStateToFile(fileData);
+      }
+      if (body.showJuryScores !== undefined) {
+        const fileData = readStateFromFile() || {};
+        fileData.showJuryScores = body.showJuryScores;
         writeStateToFile(fileData);
       }
 
@@ -258,6 +281,7 @@ export async function POST(request: Request) {
         if (body.viewMode !== undefined) updateFields.view_mode = body.viewMode;
         if (body.currentProvaId !== undefined) updateFields.current_prova_id = body.currentProvaId || null;
         if (body.message !== undefined) updateFields.message = body.message;
+        if (body.showJuryScores !== undefined) updateFields.show_jury_scores = body.showJuryScores;
         
         if (Object.keys(updateFields).length > 0) {
           await supabase.from('config').update(updateFields).eq('id', 1);
@@ -270,6 +294,7 @@ export async function POST(request: Request) {
         if (body.currentProvaId !== undefined) fileData.currentProvaId = body.currentProvaId || null;
         if (body.message !== undefined) fileData.message = body.message;
         if (body.singleVoteMode !== undefined) fileData.singleVoteMode = body.singleVoteMode;
+        if (body.showJuryScores !== undefined) fileData.showJuryScores = body.showJuryScores;
         if (body.teams !== undefined) fileData.teams = body.teams;
         if (body.jurados !== undefined) fileData.jurados = body.jurados;
         if (body.provas !== undefined) fileData.provas = body.provas;
@@ -400,6 +425,7 @@ export async function POST(request: Request) {
         view_mode: 'prova',
         current_prova_id: null,
         message: 'Arrai-el 2026 vai começar!',
+        show_jury_scores: true,
         admin_pin: '1234',
         jury_pin: '5678'
       });
@@ -425,6 +451,8 @@ export async function POST(request: Request) {
       if (body.viewMode !== undefined) fileData.viewMode = body.viewMode;
       if (body.currentProvaId !== undefined) fileData.currentProvaId = body.currentProvaId || null;
       if (body.message !== undefined) fileData.message = body.message;
+      if (body.singleVoteMode !== undefined) fileData.singleVoteMode = body.singleVoteMode;
+      if (body.showJuryScores !== undefined) fileData.showJuryScores = body.showJuryScores;
       if (body.teams !== undefined) fileData.teams = body.teams;
       if (body.jurados !== undefined) fileData.jurados = body.jurados;
       if (body.provas !== undefined) fileData.provas = body.provas;

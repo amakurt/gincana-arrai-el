@@ -72,9 +72,13 @@ export default function JuradoPage() {
     const ap = p.find((p: any) => p.id === data.currentProvaId);
     const apId = ap?.id;
     if (t.length > 0 && apId) {
+      // Determina o slot (j1/j2) baseado na posição do jurado na lista ordenada
+      const jurados = data.jurados || [];
+      const juradoIndex = jurados.findIndex((j: any) => j.id === jurado.id);
+      const mySlot = juradoIndex === 0 ? 'j1' : 'j2';
       const initialScores: any = {};
       t.forEach((team: any) => {
-        initialScores[team.id] = s[apId]?.[team.id]?.[jurado.id] || 0;
+        initialScores[team.id] = s[apId]?.[team.id]?.[mySlot] || 0;
       });
       setLocalScores(initialScores);
     }
@@ -107,13 +111,16 @@ export default function JuradoPage() {
   };
 
   const handleVoteSubmit = useCallback(async (teamId: string, score: number) => {
-    if (!jurado) return;
+    if (!jurado || !data) return;
+    const jurados = data.jurados || [];
+    const juradoIndex = jurados.findIndex((j: any) => j.id === jurado.id);
+    const mySlot = juradoIndex === 0 ? 'j1' : 'j2';
     setSavingTeam(teamId);
     try {
       await fetch('/api/state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'juryVote', teamId, jurado: jurado.id, score })
+        body: JSON.stringify({ action: 'juryVote', teamId, jurado: mySlot, score })
       });
       mutate();
     } catch {
@@ -121,7 +128,7 @@ export default function JuradoPage() {
     } finally {
       setTimeout(() => setSavingTeam(null), 1200);
     }
-  }, [jurado, mutate]);
+  }, [jurado, data, mutate]);
 
   const handleExit = () => {
     sessionStorage.removeItem('jurado_verified');

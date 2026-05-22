@@ -37,7 +37,22 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, message: 'PIN Admin validado com sucesso!' });
       }
     } else if (type === 'jurado') {
-      // Para jurado, verifica PIN específico no JSON file
+      // Verifica PIN no Supabase primeiro
+      const { data: dbJurados } = await supabase
+        .from('jurados')
+        .select('*');
+      if (dbJurados) {
+        const juradoMatch = dbJurados.find((j: any) => j.pin === pin);
+        if (juradoMatch) {
+          return NextResponse.json({
+            success: true,
+            message: 'PIN Jurado validado com sucesso!',
+            jurado: { id: juradoMatch.id, name: juradoMatch.name, pin: juradoMatch.pin }
+          });
+        }
+      }
+      
+      // Fallback para JSON file
       try {
         if (existsSync(STATE_FILE)) {
           const fileData = JSON.parse(readFileSync(STATE_FILE, 'utf-8'));
