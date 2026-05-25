@@ -126,13 +126,13 @@ export default function JuradosPage() {
             <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem" }}>
               {swrError ? "Não foi possível conectar ao servidor." : "O servidor está demorando para responder."}
             </p>
-            <button onClick={() => { setLoadingTimeout(false); mutate(); }} className="btn" style={{ background: "var(--glow-yellow)", color: "black", fontSize: "1rem", padding: "0.8rem 2rem", width: "auto" }}>
+            <button onClick={() => { setLoadingTimeout(false); mutate(); }} className="btn" style={{ background: "var(--yellow-brazil)", color: "var(--text-primary)", fontSize: "1rem", padding: "0.8rem 2rem", width: "auto" }}>
               <RefreshCw size={18} style={{ marginRight: "0.4rem" }} /> Tentar novamente
             </button>
           </div>
         ) : (
           <div>
-            <Loader2 className="animate-spin" size={32} color="var(--glow-yellow)" />
+            <Loader2 className="animate-spin" size={32} color="var(--yellow-brazil)" />
             <p style={{ color: "var(--text-secondary)", marginTop: "1rem" }}>Carregando...</p>
           </div>
         )}
@@ -168,7 +168,7 @@ export default function JuradosPage() {
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="gradient-text" style={{ margin: 0, fontSize: "2.2rem" }}>
+        <h1 style={{ margin: 0, fontSize: "2.2rem", color: "var(--blue-brazil)" }}>
           <ShieldAlert size={28} style={{ verticalAlign: "middle", marginRight: "0.5rem" }} />
           Jurados
         </h1>
@@ -208,8 +208,8 @@ export default function JuradosPage() {
               flex: 1,
               padding: "0.8rem 1rem",
               borderRadius: "10px",
-              background: "var(--bg-dark)",
-              color: "white",
+              background: "rgba(255,255,255,0.5)",
+              color: "var(--text-primary)",
               border: "1px solid var(--border-light)",
               fontFamily: "inherit",
               fontSize: "1rem",
@@ -226,8 +226,8 @@ export default function JuradosPage() {
               width: "90px",
               padding: "0.8rem",
               borderRadius: "10px",
-              background: "var(--bg-dark)",
-              color: "white",
+              background: "rgba(255,255,255,0.5)",
+              color: "var(--text-primary)",
               border: "1px solid var(--border-light)",
               fontFamily: "inherit",
               fontSize: "1rem",
@@ -242,8 +242,8 @@ export default function JuradosPage() {
           onClick={addJurado}
           className="btn"
           style={{
-            background: loading ? "var(--text-secondary)" : "var(--glow-yellow)",
-            color: loading ? "white" : "black",
+            background: loading ? "var(--text-secondary)" : "var(--yellow-brazil)",
+            color: loading ? "white" : "var(--text-primary)",
             fontSize: "1rem",
             padding: "0.8rem",
             opacity: loading || !newName ? 0.5 : 1
@@ -276,8 +276,8 @@ export default function JuradosPage() {
                     flex: 1,
                     padding: "0.6rem 0.8rem",
                     borderRadius: "8px",
-                    background: "var(--bg-dark)",
-                    color: "white",
+                    background: "rgba(255,255,255,0.5)",
+                    color: "var(--text-primary)",
                     border: "1px solid var(--border-light)",
                     fontFamily: "inherit",
                     fontSize: "0.95rem",
@@ -295,8 +295,8 @@ export default function JuradosPage() {
                     width: "70px",
                     padding: "0.6rem",
                     borderRadius: "8px",
-                    background: "var(--bg-dark)",
-                    color: "white",
+                    background: "rgba(255,255,255,0.5)",
+                    color: "var(--text-primary)",
                     border: "1px solid var(--border-light)",
                     fontFamily: "inherit",
                     fontSize: "0.95rem",
@@ -314,7 +314,7 @@ export default function JuradosPage() {
             ) : (
               <>
                 <div>
-                  <div style={{ fontWeight: 600, color: "white" }}>{j.name}</div>
+                  <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{j.name}</div>
                   {j.pin && (
                     <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "0.2rem" }}>
                       PIN: {j.pin}

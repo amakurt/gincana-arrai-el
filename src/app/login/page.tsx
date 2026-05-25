@@ -43,14 +43,14 @@ export default function LoginPage() {
     <div className="mobile-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80vh' }}>
       <form onSubmit={handleLogin} className="glass" style={{ padding: '3rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1.5rem', border: '1px solid var(--team-d)' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-          <img src="/logologos.png" alt="Logo" style={{ width: 110, height: 110, objectFit: 'contain', borderRadius: 20, background: 'rgba(255,255,255,0.08)', padding: 10, boxShadow: '0 0 24px rgba(255,255,255,0.15)' }} />
+          <img src="/logologos.png" alt="Logo" style={{ width: 90, height: 90, objectFit: 'contain', borderRadius: 16, background: 'var(--logo-bg)', padding: 8, outline: '1px solid var(--logo-ring)' }} />
         </div>
         <h2 style={{ fontSize: '1.8rem', fontWeight: 900 }}>Acesso Restrito</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Área restrita aos organizadores. Faça login para acessar o Painel Administrativo:</p>
 
         {/* Campo Usuário */}
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <div style={{ position: 'absolute', left: '1rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+          <div style={{ position: 'absolute', left: '1rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', zIndex: 1 }}>
             <User size={20} />
           </div>
           <input
@@ -63,11 +63,9 @@ export default function LoginPage() {
               padding: '1rem 1rem 1rem 3rem',
               borderRadius: '12px',
               fontSize: '1.1rem',
-              background: 'var(--bg-dark)',
-              color: 'white',
-              border: '1px solid var(--border-light)',
-              outline: 'none',
-              transition: 'border-color 0.2s'
+              background: 'rgba(255,255,255,0.5)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-light)'
             }}
             required
             autoFocus
@@ -89,11 +87,9 @@ export default function LoginPage() {
               padding: '1rem 3rem 1rem 3rem',
               borderRadius: '12px',
               fontSize: '1.1rem',
-              background: 'var(--bg-dark)',
-              color: 'white',
-              border: '1px solid var(--border-light)',
-              outline: 'none',
-              transition: 'border-color 0.2s'
+              background: 'rgba(255,255,255,0.5)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-light)'
             }}
             required
           />
@@ -106,7 +102,8 @@ export default function LoginPage() {
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              color: 'var(--text-secondary)'
+              color: 'var(--text-secondary)',
+              zIndex: 1
             }}
             aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
           >

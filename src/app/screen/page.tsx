@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import ShareButton from '@/components/ShareButton';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -36,23 +37,23 @@ export default function ScreenPage() {
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1.5rem' }}>
         {hasError ? (
           <>
-            <h2 style={{ color: '#ef4444', fontSize: '1.2rem' }}>Não foi possível carregar os dados.</h2>
+            <h2 style={{ color: '#dc2626', fontSize: '1.2rem' }}>Não foi possível carregar os dados.</h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
               {swrError ? 'Erro de conexão com o servidor.' : 'O servidor está demorando para responder.'}
             </p>
-            <button onClick={() => { setShowTimeout(false); mutate(); }} className="btn" style={{ background: 'var(--glow-yellow)', color: 'black', fontSize: '1rem', padding: '0.8rem 2rem', width: 'auto' }}>
+            <button onClick={() => { setShowTimeout(false); mutate(); }} className="btn" style={{ background: 'var(--yellow-brazil)', color: 'var(--text-primary)', fontSize: '1rem', padding: '0.8rem 2rem', width: 'auto' }}>
               <RefreshCw size={18} /> Tentar novamente
             </button>
           </>
         ) : (
-          <h1 className="animate-pulse">CARREGANDO PLACAR...</h1>
+          <h1 className="animate-pulse" style={{ color: 'var(--blue-brazil)' }}>CARREGANDO PLACAR...</h1>
         )}
       </div>
     );
   }
 
   if (data.error) {
-    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><h1 style={{ color: '#ef4444' }}>ERRO: {data.error}</h1></div>;
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><h1 style={{ color: '#dc2626' }}>ERRO: {data.error}</h1></div>;
   }
 
   const teams = data.teams || [];
@@ -113,70 +114,66 @@ export default function ScreenPage() {
   const maxTotalScore = Math.max(...calculatedTeams.map((t: any) => t.totalScore), 1);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'radial-gradient(circle at top, #18181b, #09090b)', padding: '4rem' }}>
+    <div className="screen-padding" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '3rem 4rem' }}>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4rem' }}>
+      <div className="screen-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '3rem' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1rem' }}>
-            <img src="/logologos.png" alt="Logo" style={{ width: 100, height: 100, objectFit: 'contain', borderRadius: 18, background: 'rgba(255,255,255,0.08)', padding: 8, boxShadow: '0 0 30px rgba(255,255,255,0.2)' }} />
-            <h1 className="gradient-text" style={{ fontSize: '4.5rem', marginBottom: 0 }}>ARRAI-EL <span style={{ color: 'var(--glow-yellow)' }}>2026</span></h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '0.5rem' }}>
+            <img src="/logologos.png" alt="Logo" className="screen-logo" style={{ width: 80, height: 80, objectFit: 'contain', borderRadius: 14, background: 'var(--logo-bg)', padding: 6, outline: '1px solid var(--logo-ring)' }} />
+            <h1 className="screen-title" style={{ fontSize: '4rem', marginBottom: 0, color: 'var(--blue-brazil)' }}>ARRAI-EL <span style={{ color: 'var(--text-secondary)' }}>2026</span></h1>
           </div>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
-            <div className="glass" style={{ padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <BookOpen size={24} color="var(--glow-blue)" />
-            </div>
-            <div>
-              <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'white', letterSpacing: '1px' }}>INSTITUTO EDUCACIONAL LOGOS</div>
-              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>REDENÇÃO - CE</div>
-            </div>
+          <div className="screen-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-secondary)' }}>
+            <BookOpen size={20} color="var(--blue-brazil)" />
+            <span style={{ fontWeight: 700 }}>INSTITUTO EDUCACIONAL LOGOS</span>
+            <span style={{ opacity: 0.6 }}>—</span>
+            <span style={{ opacity: 0.7 }}>REDENÇÃO - CE</span>
           </div>
         </div>
 
-        <div className="glass" style={{ padding: '2rem 4rem', textAlign: 'center', background: data.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.05)', border: data.status === 'active' ? '1px solid var(--team-c)' : undefined }}>
-          <h2 style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-            {isGeral ? 'RANKING GERAL' : `PROVA: ${activeProva?.name || 'Nenhuma'}`}
-          </h2>
-          <div style={{ fontSize: '2.5rem', fontWeight: 900, color: data.status === 'active' ? 'var(--team-c)' : 'white' }} className={data.status === 'active' ? 'animate-pulse' : ''}>
-            {data.status === 'active' ? 'VOTAÇÃO ABERTA' : (data.message || '').toUpperCase()}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div className={`glass ${data.status === 'active' ? 'status-banner active' : 'status-banner waiting'} screen-status-card`} style={{ padding: '2rem 5rem', textAlign: 'center' }}>
+            <div className="screen-prova-detail" style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+              {isGeral ? 'RANKING GERAL' : `PROVA: ${activeProva?.name || 'Nenhuma'}`}
+            </div>
+            <div className={`screen-status-text${data.status === 'active' ? ' animate-pulse' : ''}`} style={{ fontSize: '2.8rem', fontWeight: 900, color: data.status === 'active' ? 'var(--blue-brazil)' : 'var(--team-d)' }}>
+              {data.status === 'active' ? 'VOTAÇÃO ABERTA' : (data.message || '').toUpperCase()}
+            </div>
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', flex: 1, justifyContent: 'center' }}>
+      <div className="screen-header-gap screen-bar-gap" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1, justifyContent: 'center' }}>
         {calculatedTeams.map((team: any, index: number) => {
-          // Progress bar baseada na maior nota (para a barra não ficar sempre em 100%)
           const percentage = (team.totalScore / (isGeral ? Math.max(maxTotalScore, 10) : 30)) * 100;
           
           return (
-            <div key={team.id} style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <div style={{ width: '80px', textAlign: 'right', fontSize: '2rem', fontWeight: 900, color: 'var(--text-secondary)' }}>
-                #{index + 1}
+            <div key={team.id} className="glass screen-bar-padding" style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '1rem 2rem' }}>
+              <div className="screen-rank" style={{ width: '70px', textAlign: 'center', fontSize: '1.8rem', fontWeight: 900, color: 'var(--blue-brazil)' }}>
+                {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
               </div>
               
-              <div style={{ width: '200px', fontSize: '2rem', fontWeight: 800 }}>
+              <div className="screen-team-name" style={{ width: '180px', fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                 {team.name}
               </div>
 
-              {/* Progress Bar Container */}
-              <div className="glass" style={{ flex: 1, height: '80px', overflow: 'hidden', position: 'relative', background: 'rgba(255,255,255,0.05)' }}>
+              <div className="screen-bar" style={{ flex: 1, height: '70px', overflow: 'hidden', position: 'relative', background: 'var(--warm-wood-border)', borderRadius: 12 }}>
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(percentage, 100)}%` }}
                   transition={{ type: 'spring', stiffness: 50, damping: 15 }}
                   style={{
                     height: '100%',
-                    background: team.color,
-                    boxShadow: `0 0 20px ${team.color}`,
-                    position: 'relative'
+                    background: `linear-gradient(135deg, ${team.color}, ${team.color}dd)`,
+                    position: 'relative',
+                    borderRadius: 12
                   }}
                 >
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to bottom, rgba(255,255,255,0.3), transparent)' }} />
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to bottom, rgba(255,255,255,0.25), transparent)' }} />
                 </motion.div>
                 
-                {/* Notas Detalhadas se for visão de Prova */}
                 {!isGeral && (
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-around', color: 'rgba(255,255,255,0.9)', textShadow: '0 2px 4px rgba(0,0,0,0.8)', fontWeight: 'bold' }}>
+                  <div className="screen-bar-detail" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-around', color: 'var(--text-primary)', fontWeight: 700, fontSize: '0.95rem' }}>
                     <span>Público: {team.publicScore} ({team.publicVotes} votos)</span>
                     {showJuryScores && (
                       <>
@@ -188,21 +185,25 @@ export default function ScreenPage() {
                 )}
               </div>
 
-              {/* Total Score */}
-              <div style={{ width: '150px', textAlign: 'right' }}>
+              <div className="screen-score-width" style={{ width: '130px', textAlign: 'right' }}>
                 <motion.span
                   key={team.totalScore}
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  style={{ fontSize: '3.5rem', fontWeight: 900, color: team.color }}
+                  className="screen-team-score"
+                  style={{ fontSize: '3rem', fontWeight: 900, color: team.color }}
                 >
                   {team.totalScore.toFixed(1)}
                 </motion.span>
-                <div style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>PTS</div>
+                <div style={{ color: 'var(--text-secondary)', fontWeight: 700, fontSize: '0.85rem' }}>PTS</div>
               </div>
             </div>
           );
         })}
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
+        <ShareButton url="/screen" label="Compartilhar Placar" />
       </div>
       
     </div>

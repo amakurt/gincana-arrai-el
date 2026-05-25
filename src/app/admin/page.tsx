@@ -139,7 +139,7 @@ export default function AdminPage() {
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
               {swrError ? 'Não foi possível conectar ao servidor.' : 'O servidor está demorando para responder.'}
             </p>
-            <button onClick={() => { setLoadingTimeout(false); mutate(); }} className="btn" style={{ background: 'var(--glow-yellow)', color: 'black', fontSize: '1rem', padding: '0.8rem 2rem', width: 'auto' }}>
+            <button onClick={() => { setLoadingTimeout(false); mutate(); }} className="btn" style={{ background: 'var(--yellow-brazil)', color: 'var(--text-primary)', fontSize: '1rem', padding: '0.8rem 2rem', width: 'auto' }}>
               <RefreshCw size={18} style={{ marginRight: '0.4rem' }} /> Tentar novamente
             </button>
           </div>
@@ -165,8 +165,8 @@ export default function AdminPage() {
     <div className="container" style={{ maxWidth: '1400px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <img src="/logologos.png" alt="Logo" style={{ width: 56, height: 56, objectFit: 'contain', borderRadius: 12, boxShadow: '0 0 16px rgba(255,255,255,0.2)' }} />
-          <h1 className="gradient-text" style={{ margin: 0 }}>Painel de Controle</h1>
+          <img src="/logologos.png" alt="Logo" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 10, background: 'var(--logo-bg)', padding: 4, outline: '1px solid var(--logo-ring)' }} />
+          <h1 style={{ margin: 0, color: 'var(--blue-brazil)' }}>Painel de Controle</h1>
         </div>
         <button 
           onClick={() => {
@@ -188,132 +188,42 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Barra de Navegação Rápida (Atalhos do Administrador) */}
       <div className="glass" style={{ 
         display: 'flex', 
-        gap: '1rem', 
-        padding: '1rem 1.5rem', 
-        marginBottom: '2.5rem', 
+        gap: '0.8rem', 
+        padding: '0.8rem 1.2rem', 
+        marginBottom: '2rem', 
         flexWrap: 'wrap',
-        alignItems: 'center',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        background: 'rgba(255, 255, 255, 0.02)'
+        alignItems: 'center'
       }}>
-        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 800, textTransform: 'uppercase', marginRight: '0.5rem' }}>Atalhos Rápidos:</span>
+        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 800, textTransform: 'uppercase', marginRight: '0.3rem' }}>Atalhos:</span>
         
-        <button 
-          onClick={() => router.push('/')}
-          className="nav-btn"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '0.6rem 1.2rem',
-            borderRadius: '10px',
-            color: 'white',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontSize: '0.95rem',
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-          }}
-        >
-          <Home size={16} /> Voltar ao Início
-        </button>
-
-        <button 
-          onClick={() => window.open('/screen', '_blank')}
-          className="nav-btn"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '0.6rem 1.2rem',
-            borderRadius: '10px',
-            color: 'white',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontSize: '0.95rem',
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-          }}
-        >
-          <Monitor size={16} /> Abrir Telão
-        </button>
-
-        <button 
-          onClick={() => router.push('/jurado')}
-          className="nav-btn"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '0.6rem 1.2rem',
-            borderRadius: '10px',
-            color: 'white',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontSize: '0.95rem',
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-          }}
-        >
-          <Trophy size={16} /> Lançar Notas (Júri)
-        </button>
-        <button 
-          onClick={() => router.push('/admin/jurados')}
-          className="nav-btn"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '0.6rem 1.2rem',
-            borderRadius: '10px',
-            color: 'white',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontSize: '0.95rem',
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-          }}
-        >
-          <ShieldAlert size={16} /> Gerenciar Jurados
-        </button>
-
-        <button 
-          onClick={() => router.push('/vote')}
-          className="nav-btn"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '0.6rem 1.2rem',
-            borderRadius: '10px',
-            color: 'white',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontSize: '0.95rem',
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-          }}
-        >
-          <Users size={16} /> Tela de Votos
-        </button>
+        <button onClick={() => router.push('/')} className="nav-btn"><Home size={16} /> Início</button>
+        <button onClick={() => window.open('/screen', '_blank')} className="nav-btn"><Monitor size={16} /> Telão</button>
+        <button onClick={() => router.push('/jurado')} className="nav-btn"><Trophy size={16} /> Júri</button>
+        <button onClick={() => router.push('/admin/jurados')} className="nav-btn"><ShieldAlert size={16} /> Jurados</button>
+        <button onClick={() => router.push('/vote')} className="nav-btn"><Users size={16} /> Votos</button>
 
         <style dangerouslySetInnerHTML={{ __html: `
           .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(255,255,255,0.4);
+            border: 1px solid var(--warm-wood-border);
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
             outline: none;
           }
           .nav-btn:hover {
-            background: rgba(255, 255, 255, 0.12) !important;
-            border-color: rgba(255, 255, 255, 0.25) !important;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            background: rgba(255,255,255,0.7);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px var(--grass-shadow);
           }
           .nav-btn:active {
             transform: translateY(0);
@@ -332,7 +242,7 @@ export default function AdminPage() {
             <select 
               value={data.currentProvaId || ''} 
               onChange={(e) => updateState({ currentProvaId: e.target.value })}
-              style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--border-light)' }}
+              style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
             >
               <option value="">Selecione uma prova...</option>
               {(data.provas || []).map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -391,14 +301,14 @@ export default function AdminPage() {
           <div style={{ display: 'flex', gap: '1rem' }}>
             <button 
               className="btn"
-              style={{ background: data.viewMode === 'prova' ? '#3b82f6' : 'var(--bg-dark)', border: '1px solid #3b82f6', fontSize: '1rem' }}
+              style={{ background: data.viewMode === 'prova' ? '#3b82f6' : 'rgba(255,255,255,0.5)', border: '1px solid #3b82f6', fontSize: '1rem' }}
               onClick={() => updateState({ viewMode: 'prova' })}
             >
               Mostrar Prova Atual
             </button>
             <button 
               className="btn"
-              style={{ background: data.viewMode === 'geral' ? '#f59e0b' : 'var(--bg-dark)', border: '1px solid #f59e0b', fontSize: '1rem' }}
+              style={{ background: data.viewMode === 'geral' ? '#f59e0b' : 'rgba(255,255,255,0.5)', border: '1px solid #f59e0b', fontSize: '1rem' }}
               onClick={() => updateState({ viewMode: 'geral' })}
             >
               Mostrar Ranking Geral
@@ -439,7 +349,7 @@ export default function AdminPage() {
               placeholder="Nome da Equipe" 
               value={newTeamName}
               onChange={(e) => setNewTeamName(e.target.value)}
-              style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--border-light)' }}
+              style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
             />
             <input 
               type="color" 
@@ -477,7 +387,7 @@ export default function AdminPage() {
                       value={editTeamName}
                       onChange={(e) => setEditTeamName(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && saveEditTeam(t.id)}
-                      style={{ flex: 1, padding: '0.5rem', borderRadius: '6px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--border-light)', fontSize: '0.95rem' }}
+                      style={{ flex: 1, padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.95rem' }}
                       autoFocus
                     />
                     <button onClick={() => saveEditTeam(t.id)} style={{ background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
@@ -526,7 +436,7 @@ export default function AdminPage() {
               placeholder="Nome da Prova (Ex: Dança)" 
               value={newProvaName}
               onChange={(e) => setNewProvaName(e.target.value)}
-              style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--border-light)' }}
+              style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
             />
             <button 
               onClick={() => {
@@ -552,7 +462,7 @@ export default function AdminPage() {
                       value={editProvaName}
                       onChange={(e) => setEditProvaName(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && saveEditProva(p.id)}
-                      style={{ flex: 1, padding: '0.5rem', borderRadius: '6px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--border-light)', fontSize: '0.95rem' }}
+                      style={{ flex: 1, padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.95rem' }}
                       autoFocus
                     />
                     <button onClick={() => saveEditProva(p.id)} style={{ background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>

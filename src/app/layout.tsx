@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "Arrai-el 2026 - Instituto Educacional Logos",
@@ -11,34 +12,56 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // 40 bandeirinhas garantem que a tela toda seja coberta (resoluções ultra-wide)
   const bandeiras = Array.from({ length: 40 });
 
+  const logos = Array.from({ length: 30 });
+  const screenW = 1920;
+  const screenH = 1080;
+
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <body>
-        {/* Bordas Rústicas (Festa Junina) */}
         <div className="plaid-border-left" />
         <div className="plaid-border-right" />
-        
-        {/* Bandeirinhas Copa do Mundo (Verde, Amarelo, Azul, Branco) */}
+
         <div className="bandeirinhas-container">
           {bandeiras.map((_, i) => (
             <div key={i} className={`bandeirinha color-${i % 4}`} />
           ))}
         </div>
 
-        {/* Logo Marca D'água (Fundo) */}
-        <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: -1, pointerEvents: 'none', opacity: 0.06 }}>
-          <img src="/logologos.png" alt="" style={{ width: '70vw', maxWidth: 800, height: 'auto', objectFit: 'contain' }} />
-        </div>
-
-        {/* Logo da Escola (Topo) */}
-        <div style={{ position: 'fixed', top: '0.5rem', left: '50%', transform: 'translateX(-50%)', zIndex: 20, pointerEvents: 'none' }}>
-          <img src="/logologos.png" alt="Instituto Educacional Logos" style={{ height: '8vw', maxHeight: 90, objectFit: 'contain', filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.5))' }} />
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            zIndex: 0, pointerEvents: 'none', overflow: 'hidden', opacity: 0.08,
+          }}
+        >
+          {logos.map((_, i) => {
+            const x = ((i * 137 + i * i * 11) % 85) / 100 * screenW;
+            const y = ((i * 97 + i * i * 7) % 85) / 100 * screenH;
+            return (
+              <img
+                key={i}
+                src="/logologos.png"
+                alt=""
+                className="logo-watermark"
+                style={{
+                  position: 'absolute',
+                  left: x,
+                  top: y,
+                  width: 100 + ((i * 31) % 40),
+                  height: 'auto',
+                  objectFit: 'contain',
+                  animationDelay: `${(i * 0.6) % 4}s`,
+                }}
+              />
+            );
+          })}
         </div>
 
         {children}
+
+        <ThemeToggle />
       </body>
     </html>
   );

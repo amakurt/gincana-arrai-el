@@ -14,7 +14,7 @@ function ScoreCircle({ score, color }: { score: number; color: string }) {
 
   return (
     <svg width="64" height="64" viewBox="0 0 64 64">
-      <circle cx="32" cy="32" r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
+      <circle cx="32" cy="32" r={radius} fill="none" stroke="var(--warm-wood-border)" strokeWidth="5" />
       <motion.circle
         cx="32" cy="32" r={radius}
         fill="none" stroke={color} strokeWidth="5"
@@ -25,7 +25,7 @@ function ScoreCircle({ score, color }: { score: number; color: string }) {
         transition={{ duration: 0.6, ease: "easeOut" }}
         transform="rotate(-90 32 32)"
       />
-      <text x="32" y="38" textAnchor="middle" fill="white" fontSize="16" fontWeight="800">
+      <text x="32" y="38" textAnchor="middle" fill="var(--text-primary)" fontSize="16" fontWeight="800">
         {score.toFixed(1)}
       </text>
     </svg>
@@ -151,13 +151,13 @@ export default function JuradoPage() {
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
               {swrError ? 'Não foi possível conectar ao servidor.' : 'O servidor está demorando para responder.'}
             </p>
-            <button onClick={() => { setLoadingTimeout(false); mutate(); }} className="btn" style={{ background: 'var(--glow-yellow)', color: 'black', fontSize: '1rem', padding: '0.8rem 2rem', width: 'auto' }}>
+            <button onClick={() => { setLoadingTimeout(false); mutate(); }} className="btn" style={{ background: 'var(--yellow-brazil)', color: 'var(--text-primary)', fontSize: '1rem', padding: '0.8rem 2rem', width: 'auto' }}>
               <RefreshCw size={18} style={{ marginRight: '0.4rem' }} /> Tentar novamente
             </button>
           </div>
         ) : (
           <div style={{ textAlign: 'center' }}>
-            <Activity size={48} className="animate-pulse" style={{ color: 'var(--glow-green)', margin: '0 auto 1rem' }} />
+            <Activity size={48} className="animate-pulse" style={{ color: 'var(--grass-dark)', margin: '0 auto 1rem' }} />
             <p style={{ color: 'var(--text-secondary)' }}>Carregando...</p>
           </div>
         )}
@@ -189,7 +189,7 @@ export default function JuradoPage() {
               <img
                 src="/logologos.png"
                 alt="Logo"
-                style={{ width: 140, height: 140, objectFit: 'contain', margin: '0 auto 1.5rem', borderRadius: 20, background: 'rgba(255,255,255,0.08)', padding: 12, boxShadow: '0 0 30px rgba(255,255,255,0.15)' }}
+                style={{ width: 140, height: 140, objectFit: 'contain', margin: '0 auto 1.5rem', borderRadius: 20, background: 'var(--logo-bg)', padding: 12, outline: '1px solid var(--logo-ring)' }}
               />
               <h2 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.5rem' }}>Painel do Jurado</h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
@@ -208,9 +208,9 @@ export default function JuradoPage() {
                 style={{
                   width: '100%', padding: '1rem', borderRadius: '12px', fontSize: '1.5rem',
                   textAlign: 'center', letterSpacing: '12px', fontWeight: 800,
-                  background: 'var(--bg-dark)', color: 'var(--glow-green)',
+                  background: 'rgba(255,255,255,0.5)', color: 'var(--blue-brazil)',
                   border: pinError ? '1px solid #ef4444' : '1px solid var(--border-light)',
-                  outline: 'none', caretColor: 'var(--glow-green)'
+                  outline: 'none', caretColor: 'var(--blue-brazil)'
                 }}
                 required
                 autoFocus
@@ -227,7 +227,7 @@ export default function JuradoPage() {
                 type="submit"
                 className="btn"
                 style={{
-                  background: 'linear-gradient(135deg, var(--glow-green), #00c853)',
+                  background: 'var(--grass-dark)',
                   fontWeight: 900, fontSize: '1rem', opacity: pinInput.length < 4 ? 0.5 : 1
                 }}
                 disabled={verifyingPin || pinInput.length < 4}
@@ -250,7 +250,7 @@ export default function JuradoPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <img src="/logologos.png" alt="Logo" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 10, boxShadow: '0 0 12px rgba(255,255,255,0.2)' }} />
+            <img src="/logologos.png" alt="Logo" style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 8, background: 'var(--logo-bg)', padding: 4, outline: '1px solid var(--logo-ring)' }} />
             <div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Acesso Autorizado</div>
               <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{jurado.name}</div>
@@ -275,7 +275,7 @@ export default function JuradoPage() {
             style={{ padding: '3rem 2rem', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
           >
             <div style={{ marginBottom: '1.5rem' }}>
-              <ClipboardList size={48} style={{ color: 'var(--glow-yellow)', opacity: 0.6 }} />
+              <ClipboardList size={48} style={{ color: 'var(--yellow-brazil)', opacity: 0.6 }} />
             </div>
             <h3 style={{ marginBottom: '0.5rem', fontSize: '1.3rem' }}>Nenhuma Prova Ativa</h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
@@ -288,15 +288,15 @@ export default function JuradoPage() {
               className="glass"
               style={{
                 padding: '1rem 1.5rem', textAlign: 'center', marginBottom: '1.2rem',
-                background: 'linear-gradient(135deg, rgba(0, 230, 118, 0.08), rgba(0, 200, 83, 0.03))',
-                border: '1px solid rgba(0, 230, 118, 0.2)'
+                background: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.2)'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
-                <Award size={16} style={{ color: 'var(--glow-green)' }} />
+                <Award size={16} style={{ color: 'var(--grass-dark)' }} />
                 <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Prova em Andamento</span>
               </div>
-              <h3 style={{ color: 'var(--glow-green)', fontSize: '1.3rem', fontWeight: 900 }}>
+              <h3 style={{ color: 'var(--grass-dark)', fontSize: '1.3rem', fontWeight: 900 }}>
                 {activeProva.name}
               </h3>
             </div>
@@ -356,7 +356,7 @@ export default function JuradoPage() {
                             WebkitAppearance: 'none',
                             appearance: 'none',
                             outline: 'none',
-                            background: `linear-gradient(to right, ${team.color} ${currentScore * 10}%, rgba(255,255,255,0.08) ${currentScore * 10}%)`,
+                            background: `linear-gradient(to right, ${team.color} ${currentScore * 10}%, rgba(0,0,0,0.08) ${currentScore * 10}%)`,
                             borderRadius: 3
                           }}
                         />
@@ -368,7 +368,7 @@ export default function JuradoPage() {
                       <div
                         style={{
                           display: 'flex', alignItems: 'center', gap: '0.4rem',
-                          color: 'var(--glow-green)', fontSize: '0.8rem'
+                          color: 'var(--grass-dark)', fontSize: '0.8rem'
                         }}
                       >
                         <Award size={14} />
@@ -391,7 +391,7 @@ export default function JuradoPage() {
           border-radius: 50%;
           background: white;
           border: 3px solid currentColor;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
           cursor: pointer;
           transition: transform 0.15s ease;
         }
@@ -404,7 +404,7 @@ export default function JuradoPage() {
           border-radius: 50%;
           background: white;
           border: 3px solid currentColor;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
           cursor: pointer;
         }
       `}</style>

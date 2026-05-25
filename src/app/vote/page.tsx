@@ -4,6 +4,7 @@ import useSWR from 'swr';
 import { useState, useEffect } from 'react';
 import { CheckCircle2, ShieldAlert } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import ShareButton from '@/components/ShareButton';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -86,8 +87,8 @@ export default function VotePage() {
     setVotedFor(null);
   };
 
-  if (error) return <div className="mobile-container glass"><div style={{padding: '2rem', textAlign: 'center'}}>Erro ao carregar sistema.</div></div>;
-  if (!data) return <div className="mobile-container glass"><div style={{padding: '2rem', textAlign: 'center'}} className="animate-pulse">Carregando...</div></div>;
+  if (error) return <div className="mobile-container"><div className="glass" style={{padding: '2rem', textAlign: 'center'}}>Erro ao carregar sistema.</div></div>;
+  if (!data) return <div className="mobile-container"><div className="glass" style={{padding: '2rem', textAlign: 'center'}}><span className="animate-pulse">Carregando...</span></div></div>;
 
   const isActive = data.status === 'active';
   const activeProva = data.provas.find((p: any) => p.id === data.currentProvaId);
@@ -95,18 +96,19 @@ export default function VotePage() {
   return (
     <div className="mobile-container" style={{ position: 'relative', overflow: 'hidden' }}>
       
-      <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-        <img src="/logologos.png" alt="Logo" style={{ width: 80, height: 80, objectFit: 'contain', borderRadius: 14, background: 'rgba(255,255,255,0.08)', padding: 8, boxShadow: '0 0 20px rgba(255,255,255,0.15)' }} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+        <img src="/logologos.png" alt="Logo" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 10, background: 'var(--logo-bg)', padding: 4, outline: '1px solid var(--logo-ring)' }} />
+        <ShareButton url="/vote" label="Compartilhar" />
       </div>
 
-      <div className="glass" style={{ padding: '1rem', textAlign: 'center', marginBottom: '2rem', background: isActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)', border: isActive ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(245, 158, 11, 0.3)' }}>
-        <h2 style={{ fontSize: '1.2rem', color: isActive ? '#10b981' : '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+      <div className={`status-banner ${isActive ? 'active' : 'waiting'}`}>
+        <h2 style={{ fontSize: '1.2rem', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
           {isActive ? <span className="animate-pulse">● VOTAÇÃO ABERTA</span> : <><ShieldAlert size={18} /> {data.message}</>}
         </h2>
-        {activeProva && <p style={{ marginTop: '0.5rem', color: 'var(--text-primary)', fontWeight: 'bold' }}>{activeProva.name}</p>}
+        {activeProva && <p style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>{activeProva.name}</p>}
       </div>
 
-      <h1 style={{ fontSize: '2rem', textAlign: 'center' }}>Votação do Público</h1>
+      <h1 style={{ fontSize: '1.8rem', textAlign: 'center', color: 'var(--blue-brazil)' }}>Votação do Público</h1>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, justifyContent: 'center' }}>
         {hasVoted ? (
@@ -124,7 +126,7 @@ export default function VotePage() {
               <button 
                 className="btn" 
                 onClick={handleVoteAgain}
-                style={{ marginTop: '0.5rem', background: '#3b82f6', width: '100%' }}
+                style={{ marginTop: '0.5rem', background: 'var(--blue-brazil)', width: '100%' }}
               >
                 VOTAR NOVAMENTE
               </button>
@@ -139,9 +141,8 @@ export default function VotePage() {
               disabled={!isActive}
               style={{ 
                 height: '80px', 
-                position: 'relative', 
                 background: team.color, 
-                boxShadow: `0 0 20px ${team.color}50` 
+                fontSize: '1.4rem'
               }}
             >
               {team.name.toUpperCase()}

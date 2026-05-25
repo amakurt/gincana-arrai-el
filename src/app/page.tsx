@@ -1,31 +1,71 @@
 import Link from "next/link";
-import { MonitorPlay, Smartphone, Lock } from "lucide-react";
+import { MonitorPlay, Smartphone, Lock, ArrowRight } from "lucide-react";
+import ShareButton from "@/components/ShareButton";
 
 export default function Home() {
   return (
     <div className="container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '3rem' }}>
-        <img src="/logologos.png" alt="Logo" style={{ width: 110, height: 110, objectFit: 'contain', borderRadius: 20, background: 'rgba(255,255,255,0.08)', padding: 10, boxShadow: '0 0 30px rgba(255,255,255,0.2)' }} />
-        <h1 className="gradient-text" style={{ textAlign: 'center', margin: 0, fontSize: '5rem' }}>Arrai-el<br/><span style={{ fontSize: '2rem', color: 'var(--glow-yellow)' }}>2026</span></h1>
+      <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '1.5rem 2.5rem', marginBottom: '3rem' }}>
+        <img src="/logologos.png" alt="Logo" style={{ width: 72, height: 72, objectFit: 'contain', borderRadius: 14, background: 'var(--logo-bg)', padding: 6, outline: '1px solid var(--logo-ring)' }} />
+        <div>
+          <h1 style={{ textAlign: 'center', margin: 0, fontSize: '3.5rem', color: 'var(--blue-brazil)', lineHeight: 1 }}>Arrai-el</h1>
+          <p style={{ textAlign: 'center', fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-secondary)', letterSpacing: '0.08em' }}>2026</p>
+        </div>
       </div>
       
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', width: '100%', maxWidth: '800px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', maxWidth: '600px' }}>
         
-        <Link href="/screen" className="glass" style={{ padding: '3rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', transition: 'transform 0.2s', cursor: 'pointer' }}>
-          <MonitorPlay size={64} color="#3b82f6" />
-          <h2>Telão</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>Placar em tempo real para o público.</p>
+        <Link 
+          href="/screen" 
+          className="glass glass-card-link"
+          style={{ 
+            padding: '2rem 2.5rem', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '1.5rem', 
+            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', 
+            cursor: 'pointer',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        >
+          <div style={{ width: 56, height: 56, borderRadius: 14, background: 'var(--blue-brazil)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <MonitorPlay size={28} color="white" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Telão</h2>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Placar em tempo real para o público</p>
+          </div>
+          <ArrowRight size={20} color="var(--blue-brazil)" style={{ opacity: 0.4 }} />
         </Link>
         
-        <Link href="/vote" className="glass" style={{ padding: '3rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', transition: 'transform 0.2s', cursor: 'pointer' }}>
-          <Smartphone size={64} color="#10b981" />
-          <h2>Votar (Alunos)</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>Interface mobile para votação.</p>
+        <Link 
+          href="/vote" 
+          className="glass glass-card-link"
+          style={{ 
+            padding: '2rem 2.5rem', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '1.5rem', 
+            cursor: 'pointer',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        >
+          <div style={{ width: 56, height: 56, borderRadius: 14, background: 'var(--grass-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Smartphone size={28} color="white" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Votar</h2>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Votação do público pelo celular</p>
+          </div>
+          <ArrowRight size={20} color="var(--grass-dark)" style={{ opacity: 0.4 }} />
         </Link>
         
       </div>
 
-      <div style={{ marginTop: '4rem', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ marginTop: '3rem', display: 'flex', justifyContent: 'center', gap: '1rem', alignItems: 'center' }}>
+        <ShareButton url="/" label="Compartilhar Evento" />
         <Link 
           href="/login" 
           style={{ 
@@ -33,16 +73,16 @@ export default function Home() {
             alignItems: 'center', 
             gap: '0.5rem', 
             color: 'var(--text-secondary)', 
-            fontWeight: 'bold', 
-            fontSize: '1rem', 
-            padding: '0.8rem 1.5rem', 
-            borderRadius: '30px', 
+            fontWeight: 600, 
+            fontSize: '0.9rem', 
+            padding: '0.6rem 1.2rem', 
+            borderRadius: '20px', 
             background: 'var(--bg-card)', 
             border: '1px solid var(--border-light)', 
             transition: 'all 0.2s' 
           }}
         >
-          <Lock size={16} color="var(--glow-yellow)" />
+          <Lock size={14} color="var(--blue-brazil)" />
           <span>Área Restrita</span>
         </Link>
       </div>
