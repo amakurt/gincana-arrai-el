@@ -17,6 +17,7 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
+    let loggedIn = false;
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -28,14 +29,15 @@ export default function LoginPage() {
       if (response.ok && result.success) {
         sessionStorage.setItem('admin_verified', 'true');
         sessionStorage.setItem('jurado_verified', 'true');
-        router.push('/admin');
+        loggedIn = true;
+        router.replace('/admin');
       } else {
         setError(result.error || 'Credenciais inválidas! Tente novamente.');
       }
     } catch (err) {
       setError('Erro ao comunicar com o servidor.');
     } finally {
-      setLoading(false);
+      if (!loggedIn) setLoading(false);
     }
   };
 
@@ -74,7 +76,7 @@ export default function LoginPage() {
 
         {/* Campo Senha */}
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <div style={{ position: 'absolute', left: '1rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+          <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', zIndex: 1, pointerEvents: 'none' }}>
             <Lock size={20} />
           </div>
           <input
@@ -84,7 +86,7 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             style={{
               width: '100%',
-              padding: '1rem 3rem 1rem 3rem',
+              padding: '1rem 3.2rem 1rem 3rem',
               borderRadius: '12px',
               fontSize: '1.1rem',
               background: 'rgba(255,255,255,0.5)',
@@ -96,14 +98,23 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
+            tabIndex={0}
             style={{
               position: 'absolute',
-              right: '1rem',
+              right: '0.5rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
               color: 'var(--text-secondary)',
-              zIndex: 1
+              zIndex: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 40,
+              height: 40,
+              borderRadius: 8
             }}
             aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
           >

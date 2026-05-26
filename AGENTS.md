@@ -23,3 +23,25 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `src/app/page.tsx`, `vote/page.tsx`, `login/page.tsx`, `admin/page.tsx`, `jurado/page.tsx` — logo bg vars
 - `.gitignore`, `.env.local` — committed to repo
 
+## Session 2026-05-26
+
+### Changes
+- **Show password fix** (`src/app/login/page.tsx`): Botão "mostrar senha" tinha z-index insuficiente e faltava `top: 50% / translateY(-50%)`, ficando fora da área clicável. Corrigido com `width/height: 40px`, `zIndex: 2`, centralização vertical. Ícone do cadeado recebeu `pointerEvents: 'none'`.
+
+- **Login flash fix** (`src/app/login/page.tsx`, `src/app/admin/page.tsx`):
+  - Login: adicionado `loggedIn` flag para evitar `setLoading(false)` depois de login bem-sucedido (botão voltava a "ENTRAR NO PAINEL" antes da navegação). Trocado `router.push` por `router.replace`.
+  - Admin page: adicionado estado `checkingAuth` + `return null` enquanto verifica sessionStorage, eliminando o flash de "Carregando painel admin..." antes do redirect para `/login` em usuários não autenticados.
+
+- **Acesso por IP da rede** (`next.config.ts`): Adicionado `192.168.20.54` ao `allowedDevOrigins` para permitir acesso ao dev server pelo IP da máquina.
+
+### Pendente / Sugestões
+- **Deploy**: Hospedar em VPS (Hetzner CX22 ~€4/mês ou DigitalOcean $6/mês) com Nginx reverse proxy. Supabase free tier cobre o banco. Pico estimado: 500 acessos simultâneos — 1-2 vCPU + 2GB RAM é suficiente.
+- **Site da escola + gincana**: Pode rodar ambos no mesmo VPS com Nginx roteando por domínio/subdomínio.
+- **Admin/jurados page** (`src/app/admin/jurados/page.tsx`): Não tem verificação de `admin_verified` — qualquer um pode acessar se souber a URL.
+
+### Credenciais (`.env.local`)
+- Admin: `admin` / `arraiel2026`
+- PIN Admin: `1234`
+- PIN Jurado: `5678`
+- Supabase URL/Key no `.env.local`
+

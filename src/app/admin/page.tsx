@@ -10,11 +10,10 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 export default function AdminPage() {
   const router = useRouter();
   const { data, mutate, error: swrError } = useSWR('/api/state', fetcher, { refreshInterval: 1000 });
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [adminVerified, setAdminVerified] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
-
-  // Estado de Segurança por Sessão
-  const [adminVerified, setAdminVerified] = useState(false);
 
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamColor, setNewTeamColor] = useState('#3b82f6');
@@ -25,19 +24,22 @@ export default function AdminPage() {
   const [editTeamColor, setEditTeamColor] = useState('');
   const [editProvaName, setEditProvaName] = useState('');
 
+  const [error, setError] = useState('');
+
   // Verificar se o admin já está autenticado nesta sessão do navegador
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const isVerified = sessionStorage.getItem('admin_verified');
       if (isVerified === 'true') {
         setAdminVerified(true);
+        setCheckingAuth(false);
       } else {
-        router.push('/login');
+        router.replace('/login');
       }
     }
   }, [router]);
 
-  const [error, setError] = useState('');
+  if (checkingAuth) return null;
 
   const updateState = async (updates: any) => {
     setLoading(true);
