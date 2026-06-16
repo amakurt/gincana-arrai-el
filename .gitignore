@@ -30,6 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# Chave SSH (Oracle VPS)
+Chave-oracle/
+
 # env files
 .env.local.example
 

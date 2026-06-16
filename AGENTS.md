@@ -39,6 +39,25 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Site da escola + gincana**: Pode rodar ambos no mesmo VPS com Nginx roteando por domínio/subdomínio.
 - **Admin/jurados page** (`src/app/admin/jurados/page.tsx`): Não tem verificação de `admin_verified` — qualquer um pode acessar se souber a URL.
 
+## Session 2026-06-16
+
+### Progresso Deploy — Oracle Cloud VPS
+
+- [x] Conta Oracle criada
+- [x] VCN `vcn-gincana` criada (CIDR `10.0.0.0/16`)
+- [x] Sub-rede pública `subrede-publica` criada (CIDR `10.0.1.0/24`)
+- [x] Instância Compute criada (Ubuntu 24.04, IP público: `137.131.160.171`)
+- [x] Security List: portas 22 e 80 liberadas
+- [x] Internet Gateway `igw-gincana` + rota padrão 0.0.0.0/0
+- [x] SSH conectado com chave em `~/.ssh/oracle-gincana.key`
+- [x] Node.js 22 + npm instalados
+- [x] Repositório clonado do GitHub
+- [x] Build do Next.js bem-sucedido
+- [x] PM2 configurado (processo `gincana`)
+- [x] Nginx configurado como proxy reverso (porta 80 → 3000)
+- [x] iptables liberado (portas 80 e 443) e persistido
+- [ ] **Pendente**: Configurar domínio + SSL (HTTPS)
+
 ### Credenciais (`.env.local`)
 - Admin: `admin` / `arraiel2026`
 - PIN Admin: `1234`
