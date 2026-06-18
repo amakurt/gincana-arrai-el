@@ -64,3 +64,22 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - PIN Jurado: `5678`
 - Supabase URL/Key no `.env.local`
 
+## Session 2026-06-18
+
+### Otimizações de Performance — VPS Oracle
+
+- **Swap**: 1GB swap file adicionado
+- **PM2**: 2 instâncias fork (portas 3000 + 3001) com `ecosystem.config.js`, `NODE_OPTIONS='--max-old-space-size=400'`
+- **Nginx**: `upstream` com `least_conn` + `proxy_cache` para assets estáticos (1 ano) e home (60 min)
+- **Capacidade estimada**: ~200-400 usuários simultâneos (gargalo: Supabase 100 conexões)
+
+### Próximos passos sugeridos (prioridade)
+1. **HTTPS**: Instalar Cloudflare Tunnel (`cloudflared`) como solução temporária OU registrar domínio de novo no Registro.br confirmando o email
+2. **Domínio definitivo**: `institutoeducacionallogos.com.br` — precisa registrar no Registro.br e validar o cadastro no link por email
+3. **Cloudflare**: Após domínio aprovado, criar conta no Cloudflare, configurar DNS e SSL
+4. **Supabase upgrade**: Plano Pro ($25/mês) se necessidade futura
+5. **Admin/jurados page**: Falta verificação `admin_verified` (`src/app/admin/jurados/page.tsx`)
+
+### Problema conhecido
+- Chrome em HTTP mostra "This page couldn't load" após login no `/admin`. É culpa do navegador tentando forçar HTTPS. Só resolve com certificado SSL.
+
