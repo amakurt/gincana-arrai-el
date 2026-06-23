@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, checkSupabaseAvailable } from '@/lib/supabase';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import path from 'path';
 
@@ -36,7 +36,37 @@ const calcPublicScore = (votes: number, maxVotes: number) => {
   return Number(((votes / maxVotes) * 10).toFixed(1));
 };
 
+function readJsonState() {
+  const fileData = readStateFromFile();
+  if (!fileData) return NextResponse.json({ error: 'Servidor não configurado.' }, { status: 500 });
+  const scores: any = {};
+  if (fileData.scores) {
+    Object.keys(fileData.scores).forEach(provaId => {
+      scores[provaId] = {};
+      Object.keys(fileData.scores[provaId]).forEach(teamId => {
+        scores[provaId][teamId] = fileData.scores[provaId][teamId];
+      });
+    });
+  }
+  return NextResponse.json({
+    status: fileData.status || 'waiting',
+    viewMode: fileData.viewMode || 'prova',
+    currentProvaId: fileData.currentProvaId || '',
+    message: fileData.message || '',
+    teams: fileData.teams || [],
+    provas: fileData.provas || [],
+    jurados: fileData.jurados || [],
+    singleVoteMode: fileData.singleVoteMode !== undefined ? fileData.singleVoteMode : true,
+    showJuryScores: fileData.showJuryScores !== undefined ? fileData.showJuryScores : true,
+    scores
+  });
+}
+
 export async function GET() {
+  if (!(await checkSupabaseAvailable())) {
+    return readJsonState();
+  }
+
   try {
     const fileDataFallback = readStateFromFile();
     // 1. Obter Configuração Global
@@ -48,31 +78,7 @@ export async function GET() {
 
     // Se Supabase falhar, usa JSON file como fallback completo
     if (configError || !config) {
-      const fileData = readStateFromFile();
-      if (fileData) {
-        const scores: any = {};
-        if (fileData.scores) {
-          Object.keys(fileData.scores).forEach(provaId => {
-            scores[provaId] = {};
-            Object.keys(fileData.scores[provaId]).forEach(teamId => {
-              scores[provaId][teamId] = fileData.scores[provaId][teamId];
-            });
-          });
-        }
-        return NextResponse.json({
-          status: fileData.status || 'waiting',
-          viewMode: fileData.viewMode || 'prova',
-          currentProvaId: fileData.currentProvaId || '',
-          message: fileData.message || '',
-          teams: fileData.teams || [],
-          provas: fileData.provas || [],
-          jurados: fileData.jurados || [],
-          singleVoteMode: fileData.singleVoteMode !== undefined ? fileData.singleVoteMode : true,
-          showJuryScores: fileData.showJuryScores !== undefined ? fileData.showJuryScores : true,
-          scores
-        });
-      }
-      return NextResponse.json({ error: 'Servidor não configurado.' }, { status: 500 });
+      return readJsonState();
     }
 
     // 2. Obter Equipes
@@ -262,32 +268,9 @@ export async function POST(request: Request) {
     
     // Ação: Atualizar Estado Global (Mestre de Cerimônias / Admin)
     if (body.action === 'updateState') {
-      // Salva singleVoteMode e showJuryScores sempre no JSON file (garante persistência)
-      if (body.singleVoteMode !== undefined) {
-        const fileData = readStateFromFile() || {};
-        fileData.singleVoteMode = body.singleVoteMode;
-        writeStateToFile(fileData);
-      }
-      if (body.showJuryScores !== undefined) {
-        const fileData = readStateFromFile() || {};
-        fileData.showJuryScores = body.showJuryScores;
-        writeStateToFile(fileData);
-      }
+      const useJson = !(await checkSupabaseAvailable());
 
-      // Tenta Supabase primeiro, com fallback para JSON
-      try {
-        const updateFields: any = {};
-        if (body.status !== undefined) updateFields.status = body.status;
-        if (body.viewMode !== undefined) updateFields.view_mode = body.viewMode;
-        if (body.currentProvaId !== undefined) updateFields.current_prova_id = body.currentProvaId || null;
-        if (body.message !== undefined) updateFields.message = body.message;
-        if (body.showJuryScores !== undefined) updateFields.show_jury_scores = body.showJuryScores;
-        
-        if (Object.keys(updateFields).length > 0) {
-          await supabase.from('config').update(updateFields).eq('id', 1);
-        }
-      } catch {
-        // Supabase falhou - atualiza JSON file diretamente
+      if (useJson) {
         const fileData = readStateFromFile() || {};
         if (body.status !== undefined) fileData.status = body.status;
         if (body.viewMode !== undefined) fileData.viewMode = body.viewMode;
@@ -299,112 +282,104 @@ export async function POST(request: Request) {
         if (body.jurados !== undefined) fileData.jurados = body.jurados;
         if (body.provas !== undefined) fileData.provas = body.provas;
         writeStateToFile(fileData);
-        return GET();
+        return readJsonState();
+      }
+
+      const updateFields: any = {};
+      if (body.status !== undefined) updateFields.status = body.status;
+      if (body.viewMode !== undefined) updateFields.view_mode = body.viewMode;
+      if (body.currentProvaId !== undefined) updateFields.current_prova_id = body.currentProvaId || null;
+      if (body.message !== undefined) updateFields.message = body.message;
+      if (body.showJuryScores !== undefined) updateFields.show_jury_scores = body.showJuryScores;
+      
+      if (Object.keys(updateFields).length > 0) {
+        await supabase.from('config').update(updateFields).eq('id', 1);
       }
 
       // Sincronizar equipes se enviadas
       if (body.teams !== undefined) {
-        try {
-          const { data: dbTeams } = await supabase.from('teams').select('id');
-          const dbTeamIds = dbTeams?.map(t => t.id) || [];
-          const receivedTeams = body.teams || [];
-          const receivedIds = receivedTeams.map((t: any) => t.id);
+        const { data: dbTeams } = await supabase.from('teams').select('id');
+        const dbTeamIds = dbTeams?.map(t => t.id) || [];
+        const receivedIds = body.teams.map((t: any) => t.id);
 
-          const toDelete = dbTeamIds.filter(id => !receivedIds.includes(id));
-          if (toDelete.length > 0) {
-            await supabase.from('teams').delete().in('id', toDelete);
-          }
+        const toDelete = dbTeamIds.filter(id => !receivedIds.includes(id));
+        if (toDelete.length > 0) {
+          await supabase.from('teams').delete().in('id', toDelete);
+        }
 
-          for (const team of receivedTeams) {
-            const isNew = !dbTeamIds.includes(team.id);
-            if (isNew) {
-              await supabase.from('teams').insert({
-                name: team.name,
-                color: team.color
-              });
-            } else {
-              await supabase.from('teams').upsert({
-                id: team.id,
-                name: team.name,
-                color: team.color
-              });
-            }
+        for (const team of body.teams) {
+          const isNew = !dbTeamIds.includes(team.id);
+          if (isNew) {
+            await supabase.from('teams').insert({
+              name: team.name,
+              color: team.color
+            });
+          } else {
+            await supabase.from('teams').upsert({
+              id: team.id,
+              name: team.name,
+              color: team.color
+            });
           }
-        } catch {
-          // Supabase falhou - atualiza JSON
-          const fileData = readStateFromFile() || {};
-          fileData.teams = body.teams;
-          writeStateToFile(fileData);
         }
       }
 
       // Sincronizar jurados se enviados
       if (body.jurados !== undefined) {
-        try {
-          const { data: dbJurados, error: juradosTableError } = await supabase.from('jurados').select('id');
+        const { data: dbJurados, error: juradosTableError } = await supabase.from('jurados').select('id');
 
-          if (!juradosTableError && dbJurados) {
-            const dbJuradoIds = dbJurados.map((j: any) => j.id);
-            const receivedJuradoIds = body.jurados.map((j: any) => j.id);
+        if (!juradosTableError && dbJurados) {
+          const dbJuradoIds = dbJurados.map((j: any) => j.id);
+          const receivedJuradoIds = body.jurados.map((j: any) => j.id);
 
-            const juradosToDelete = dbJuradoIds.filter((id: string) => !receivedJuradoIds.includes(id));
-            if (juradosToDelete.length > 0) {
-              await supabase.from('jurados').delete().in('id', juradosToDelete);
-            }
-
-            for (const jurado of body.jurados) {
-              const isNew = !dbJuradoIds.includes(jurado.id);
-              if (isNew) {
-                await supabase.from('jurados').insert({
-                  name: jurado.name,
-                  pin: jurado.pin || ''
-                });
-              } else {
-                await supabase.from('jurados').upsert({
-                  id: jurado.id,
-                  name: jurado.name,
-                  pin: jurado.pin || ''
-                });
-              }
-            }
-          } else {
-            writeJuradosToFile(body.jurados);
+          const juradosToDelete = dbJuradoIds.filter((id: string) => !receivedJuradoIds.includes(id));
+          if (juradosToDelete.length > 0) {
+            await supabase.from('jurados').delete().in('id', juradosToDelete);
           }
-        } catch {
+
+          for (const jurado of body.jurados) {
+            const isNew = !dbJuradoIds.includes(jurado.id);
+            if (isNew) {
+              await supabase.from('jurados').insert({
+                name: jurado.name,
+                pin: jurado.pin || ''
+              });
+            } else {
+              await supabase.from('jurados').upsert({
+                id: jurado.id,
+                name: jurado.name,
+                pin: jurado.pin || ''
+              });
+            }
+          }
+        } else {
           writeJuradosToFile(body.jurados);
         }
       }
 
       // Sincronizar provas se enviadas
       if (body.provas !== undefined) {
-        try {
-          const { data: dbProvas } = await supabase.from('provas').select('id');
-          const dbProvaIds = dbProvas?.map(p => p.id) || [];
-          const receivedProvas = body.provas || [];
-          const receivedIds = receivedProvas.map((p: any) => p.id);
+        const { data: dbProvas } = await supabase.from('provas').select('id');
+        const dbProvaIds = dbProvas?.map(p => p.id) || [];
+        const receivedIds = body.provas.map((p: any) => p.id);
 
-          const toDelete = dbProvaIds.filter(id => !receivedIds.includes(id));
-          if (toDelete.length > 0) {
-            await supabase.from('provas').delete().in('id', toDelete);
-          }
+        const toDelete = dbProvaIds.filter(id => !receivedIds.includes(id));
+        if (toDelete.length > 0) {
+          await supabase.from('provas').delete().in('id', toDelete);
+        }
 
-          for (const prova of receivedProvas) {
-            const isNew = !dbProvaIds.includes(prova.id);
-            if (isNew) {
-              await supabase.from('provas').insert({
-                name: prova.name
-              });
-            } else {
-              await supabase.from('provas').upsert({
-                id: prova.id,
-                name: prova.name
-              });
-            }
+        for (const prova of body.provas) {
+          const isNew = !dbProvaIds.includes(prova.id);
+          if (isNew) {
+            await supabase.from('provas').insert({
+              name: prova.name
+            });
+          } else {
+            await supabase.from('provas').upsert({
+              id: prova.id,
+              name: prova.name
+            });
           }
-        } catch {
-          const fileData = readStateFromFile() || {};
-          fileData.provas = body.provas;
-          writeStateToFile(fileData);
         }
       }
 

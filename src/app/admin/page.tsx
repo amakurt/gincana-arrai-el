@@ -9,7 +9,7 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function AdminPage() {
   const router = useRouter();
-  const { data, mutate, error: swrError } = useSWR('/api/state', fetcher, { refreshInterval: 1000 });
+  const { data, mutate, error: swrError } = useSWR('/api/state', fetcher, { refreshInterval: 3000 });
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [adminVerified, setAdminVerified] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,23 +21,39 @@ export default function AdminPage() {
   const [editingTeam, setEditingTeam] = useState<string | null>(null);
   const [editingProva, setEditingProva] = useState<string | null>(null);
   const [editTeamName, setEditTeamName] = useState('');
-  const [editTeamColor, setEditTeamColor] = useState('');
+  const [editTeamColor, setEditTeamColor] = useState('#000000');
   const [editProvaName, setEditProvaName] = useState('');
 
   const [error, setError] = useState('');
 
+  const getCookie = (name: string) => {
+    if (typeof document === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift();
+    return null;
+  };
+
   // Verificar se o admin já está autenticado nesta sessão do navegador
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const isVerified = sessionStorage.getItem('admin_verified');
-      if (isVerified === 'true') {
+      const isVerified = getCookie('admin_verified') === 'true';
+      if (isVerified) {
         setAdminVerified(true);
         setCheckingAuth(false);
       } else {
-        router.replace('/login');
+        window.location.href = '/login';
       }
     }
-  }, [router]);
+  }, []);
+
+  useEffect(() => {
+    if (!data && !swrError) {
+      const t = setTimeout(() => setLoadingTimeout(true), 8000);
+      return () => clearTimeout(t);
+    }
+    setLoadingTimeout(false);
+  }, [data, swrError]);
 
   if (checkingAuth) return null;
 
@@ -54,7 +70,8 @@ export default function AdminPage() {
         const err = await res.json();
         throw new Error(err.error || 'Erro ao atualizar');
       }
-      mutate();
+      const newData = await res.json();
+      mutate(newData, false);
     } catch (e: any) {
       setError(e.message || 'Erro de conexão com o servidor');
     } finally {
@@ -89,12 +106,12 @@ export default function AdminPage() {
     setEditTeamColor(team.color);
   };
 
-  const saveEditTeam = (teamId: string) => {
-    if (!editTeamName) return;
+  const saveEditTeam = async (teamId: string) => {
+    if (!editTeamName || loading) return;
     const updated = data.teams.map((t: any) =>
       t.id === teamId ? { ...t, name: editTeamName, color: editTeamColor } : t
     );
-    updateState({ teams: updated });
+    await updateState({ teams: updated });
     setEditingTeam(null);
   };
 
@@ -119,14 +136,6 @@ export default function AdminPage() {
   const cancelEditProva = () => {
     setEditingProva(null);
   };
-
-  useEffect(() => {
-    if (!data && !swrError) {
-      const t = setTimeout(() => setLoadingTimeout(true), 8000);
-      return () => clearTimeout(t);
-    }
-    setLoadingTimeout(false);
-  }, [data, swrError]);
 
   if (!data) {
     const stalled = swrError || loadingTimeout;
@@ -172,10 +181,10 @@ export default function AdminPage() {
         </div>
         <button 
           onClick={() => {
-            sessionStorage.removeItem('admin_verified');
-            sessionStorage.removeItem('jurado_verified');
+            document.cookie = 'admin_verified=; path=/; max-age=0';
+            document.cookie = 'jurado_verified=; path=/; max-age=0';
             setAdminVerified(false);
-            router.push('/login');
+            window.location.href = '/login';
           }} 
           style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold' }}
         >
@@ -392,7 +401,7 @@ export default function AdminPage() {
                       style={{ flex: 1, padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.95rem' }}
                       autoFocus
                     />
-                    <button onClick={() => saveEditTeam(t.id)} style={{ background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    <button onClick={() => saveEditTeam(t.id)} disabled={loading} style={{ background: 'transparent', color: '#10b981', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: loading ? 0.5 : 1 }}>
                       <Save size={18} />
                     </button>
                     <button onClick={cancelEditTeam} style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>

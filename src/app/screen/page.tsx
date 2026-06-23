@@ -4,7 +4,6 @@ import useSWR from 'swr';
 import { motion } from 'framer-motion';
 import { BookOpen, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import ShareButton from '@/components/ShareButton';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
@@ -19,17 +18,6 @@ export default function ScreenPage() {
     }, 8000);
     return () => clearTimeout(timer);
   }, [data, swrError]);
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('db-all-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'config' }, () => mutate())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'scores' }, () => mutate())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => mutate())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'provas' }, () => mutate())
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [mutate]);
 
   if (!data) {
     const hasError = swrError || showTimeout;

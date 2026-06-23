@@ -80,6 +80,21 @@ This version has breaking changes — APIs, conventions, and file structure may 
 4. **Supabase upgrade**: Plano Pro ($25/mês) se necessidade futura
 5. **Admin/jurados page**: Falta verificação `admin_verified` (`src/app/admin/jurados/page.tsx`)
 
-### Problema conhecido
-- Chrome em HTTP mostra "This page couldn't load" após login no `/admin`. É culpa do navegador tentando forçar HTTPS. Só resolve com certificado SSL.
+## Session 2026-06-23
+
+### Mudanças
+
+- **HTTPS via Cloudflare Tunnel**: Já estava configurado e rodando. Domínio `www.institutoeducacionallogos.online` com SSL. O tunnel roteia direto pra `localhost:3000`, bypassando Nginx.
+- **Login redirect fix** (`src/app/api/auth/login/route.ts`, `src/app/login/page.tsx`, `src/app/admin/page.tsx`):
+  - Login mudado de `fetch` + `window.location.href` para **form POST tradicional** com redirect server-side (307).
+  - API route agora aceita `application/x-www-form-urlencoded` (form) e `application/json`.
+  - Em vez de `sessionStorage`, usa **cookies** (`admin_verified`, `jurado_verified`) setados via `response.cookies.set()`.
+  - Admin page lê cookies (`getCookie()`) em vez de `sessionStorage`.
+  - Resolve o erro "This page couldn't load" no Chrome após login.
+- **Home page sem Telão** (`src/app/page.tsx`): Removido link para `/screen` da página inicial. Acesso ao telão só pelo painel admin.
+- **Botão "VER PLACAR COMPLETO"** (`src/app/vote/page.tsx`): Após votar, mostra botão que abre o telão (`/screen`) em nova aba.
+
+### Pendente
+- **Admin/jurados page** (`src/app/admin/jurados/page.tsx`): Sem verificação de `admin_verified` — qualquer um pode acessar.
+- **Domínio raiz** (`institutoeducacionallogos.online` sem `www`): Aponta pro IP errado (`162.240.81.81`), não pro VPS.
 

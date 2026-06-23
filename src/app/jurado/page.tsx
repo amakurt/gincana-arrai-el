@@ -33,7 +33,7 @@ function ScoreCircle({ score, color }: { score: number; color: string }) {
 }
 
 export default function JuradoPage() {
-  const { data, mutate, error: swrError } = useSWR('/api/state', fetcher, { refreshInterval: 2000 });
+  const { data, mutate, error: swrError } = useSWR('/api/state', fetcher, { refreshInterval: 3000 });
   const [jurado, setJurado] = useState<any>(null);
   const [savingTeam, setSavingTeam] = useState<string | null>(null);
   const [localScores, setLocalScores] = useState<{ [teamId: string]: number }>({});

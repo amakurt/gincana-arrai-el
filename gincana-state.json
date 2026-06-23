@@ -4,16 +4,17 @@
   "currentProvaId": "p1",
   "message": "Votação Aberta!",
   "singleVoteMode": true,
+  "showJuryScores": false,
   "teams": [
     {
       "id": "t1",
-      "name": "Azul",
-      "color": "#3b82f6"
+      "name": "VERDE",
+      "color": "#549504"
     },
     {
       "id": "t1779246392988",
-      "name": "Laranja",
-      "color": "#fa7900"
+      "name": "AMARELO",
+      "color": "#faf200"
     }
   ],
   "provas": [
@@ -26,20 +27,6 @@
       "name": "Comidas Típicas"
     }
   ],
-  "scores": {
-    "p1": {
-      "t1": {
-        "publicVotes": 6,
-        "j1": 5,
-        "j2": 6
-      },
-      "t1779246392988": {
-        "publicVotes": 7,
-        "j1": 9,
-        "j2": 4
-      }
-    }
-  },
   "jurados": [
     {
       "id": "j1779386899347",
@@ -52,5 +39,13 @@
       "pin": "4321"
     }
   ],
-  "showJuryScores": false
+  "scores": {
+    "p1": {
+      "t1": {
+        "publicVotes": 0,
+        "j1": 0,
+        "j2": 0
+      }
+    }
+  }
 }

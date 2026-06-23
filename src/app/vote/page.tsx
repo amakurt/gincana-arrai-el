@@ -2,14 +2,14 @@
 
 import useSWR from 'swr';
 import { useState, useEffect } from 'react';
-import { CheckCircle2, ShieldAlert } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { motion } from 'framer-motion';
+import { CheckCircle2, ShieldAlert, Trophy, Monitor } from 'lucide-react';
 import ShareButton from '@/components/ShareButton';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function VotePage() {
-  const { data, error, mutate } = useSWR('/api/state', fetcher);
+  const { data, error, mutate } = useSWR('/api/state', fetcher, { refreshInterval: 3000 });
   const [votedFor, setVotedFor] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
 
@@ -37,31 +37,6 @@ export default function VotePage() {
       }
     }
   }, []);
-
-  // Escuta mudanças de status/equipes em tempo real
-  useEffect(() => {
-    const channel = supabase
-      .channel('db-vote-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'config' },
-        () => {
-          mutate();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'teams' },
-        () => {
-          mutate();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [mutate]);
 
   const handleVote = async (teamId: string) => {
     if (data?.status !== 'active') return;
@@ -93,6 +68,23 @@ export default function VotePage() {
   const isActive = data.status === 'active';
   const activeProva = data.provas.find((p: any) => p.id === data.currentProvaId);
 
+  const teams = data.teams || [];
+  const scores = data.scores || {};
+  const sortedTeams = teams.map((team: any) => {
+    let publicVotes = 0;
+    let publicScore = 0;
+    if (activeProva && scores[activeProva.id]) {
+      const pScores = scores[activeProva.id];
+      const maxPubVotes = Math.max(...Object.values(pScores).map((s: any) => s.publicVotes || 0), 0);
+      const teamScore = pScores[team.id] || { publicVotes: 0 };
+      publicVotes = teamScore.publicVotes;
+      publicScore = maxPubVotes > 0 ? Number(((publicVotes / maxPubVotes) * 10).toFixed(1)) : 0;
+    }
+    return { ...team, publicVotes, publicScore };
+  }).sort((a: any, b: any) => b.publicVotes - a.publicVotes);
+
+  const maxVotes = Math.max(...sortedTeams.map((t: any) => t.publicVotes), 1);
+
   return (
     <div className="mobile-container" style={{ position: 'relative', overflow: 'hidden' }}>
       
@@ -108,46 +100,86 @@ export default function VotePage() {
         {activeProva && <p style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>{activeProva.name}</p>}
       </div>
 
-      <h1 style={{ fontSize: '1.8rem', textAlign: 'center', color: 'var(--blue-brazil)' }}>Votação do Público</h1>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, justifyContent: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
         {hasVoted ? (
-          <div className="glass" style={{ padding: '3rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-            <CheckCircle2 size={64} color="#10b981" />
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Voto Registrado!</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-              Seu voto para a equipe <strong>{data.teams.find((t: any) => t.id === votedFor)?.name}</strong> foi computado com sucesso.
-            </p>
-            {data.singleVoteMode ? (
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                Cada pessoa pode votar apenas uma vez por prova.
+          <>
+            <div className="glass" style={{ padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+              <CheckCircle2 size={48} color="#10b981" />
+              <h2 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0 }}>Voto Registrado!</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+                Você votou na <strong>{data.teams.find((t: any) => t.id === votedFor)?.name}</strong>
               </p>
-            ) : (
-              <button 
-                className="btn" 
-                onClick={handleVoteAgain}
-                style={{ marginTop: '0.5rem', background: 'var(--blue-brazil)', width: '100%' }}
-              >
-                VOTAR NOVAMENTE
-              </button>
+              {data.singleVoteMode ? (
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.3rem' }}>
+                  Cada pessoa pode votar apenas uma vez por prova.
+                </p>
+              ) : (
+                <button className="btn" onClick={handleVoteAgain} style={{ marginTop: '0.5rem', background: 'var(--blue-brazil)', width: '100%', fontSize: '0.9rem' }}>
+                  VOTAR NOVAMENTE
+                </button>
+              )}
+            </div>
+
+            {activeProva && (
+              <div className="glass" style={{ padding: '1.2rem' }}>
+                <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Trophy size={18} color="var(--yellow-brazil)" /> Resultado Parcial
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  {sortedTeams.map((team: any, index: number) => {
+                    const barWidth = (team.publicVotes / maxVotes) * 100;
+                    return (
+                      <div key={team.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <span style={{ width: '1.5rem', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)', textAlign: 'center' }}>
+                          {index + 1}º
+                        </span>
+                        <div style={{ width: '5rem', fontSize: '0.85rem', fontWeight: 700, color: team.color, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {team.name}
+                        </div>
+                        <div style={{ flex: 1, height: '1.5rem', borderRadius: 8, overflow: 'hidden', background: 'var(--warm-wood-border)' }}>
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.max(barWidth, 2)}%` }}
+                            transition={{ type: 'spring', stiffness: 50, damping: 15 }}
+                            style={{ height: '100%', background: team.color, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '0.4rem' }}
+                          >
+                            <span style={{ color: '#fff', fontSize: '0.75rem', fontWeight: 800 }}>{team.publicVotes}</span>
+                          </motion.div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             )}
-          </div>
-        ) : (
-          data.teams.map((team: any) => (
-            <button 
-              key={team.id}
-              className="btn" 
-              onClick={() => handleVote(team.id)}
-              disabled={!isActive}
-              style={{ 
-                height: '80px', 
-                background: team.color, 
-                fontSize: '1.4rem'
-              }}
+
+            <button
+              onClick={() => window.open('/screen', '_blank')}
+              className="btn"
+              style={{ background: 'var(--blue-brazil)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
             >
-              {team.name.toUpperCase()}
+              <Monitor size={20} /> VER PLACAR COMPLETO
             </button>
-          ))
+          </>
+        ) : (
+          <>
+            <h1 style={{ fontSize: '1.8rem', textAlign: 'center', color: 'var(--blue-brazil)', marginBottom: '0.5rem' }}>Votação do Público</h1>
+            {teams.map((team: any) => (
+              <button 
+                key={team.id}
+                className="btn" 
+                onClick={() => handleVote(team.id)}
+                disabled={!isActive}
+                style={{ 
+                  height: '80px', 
+                  background: team.color, 
+                  fontSize: '1.4rem'
+                }}
+              >
+                {team.name.toUpperCase()}
+              </button>
+            ))}
+          </>
         )}
       </div>
 

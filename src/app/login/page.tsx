@@ -1,65 +1,38 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, User, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [displayError, setDisplayError] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    let loggedIn = false;
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        sessionStorage.setItem('admin_verified', 'true');
-        sessionStorage.setItem('jurado_verified', 'true');
-        loggedIn = true;
-        router.replace('/admin');
-      } else {
-        setError(result.error || 'Credenciais inválidas! Tente novamente.');
-      }
-    } catch (err) {
-      setError('Erro ao comunicar com o servidor.');
-    } finally {
-      if (!loggedIn) setLoading(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search.includes('error=1')) {
+      setDisplayError('Credenciais inválidas! Tente novamente.');
     }
-  };
+  }, []);
 
   return (
     <div className="mobile-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '80vh' }}>
-      <form onSubmit={handleLogin} className="glass" style={{ padding: '3rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1.5rem', border: '1px solid var(--team-d)' }}>
+      <form action="/api/auth/login" method="POST" className="glass" style={{ padding: '3rem 2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1.5rem', border: '1px solid var(--team-d)' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
           <img src="/logologos.png" alt="Logo" style={{ width: 90, height: 90, objectFit: 'contain', borderRadius: 16, background: 'var(--logo-bg)', padding: 8, outline: '1px solid var(--logo-ring)' }} />
         </div>
         <h2 style={{ fontSize: '1.8rem', fontWeight: 900 }}>Acesso Restrito</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Área restrita aos organizadores. Faça login para acessar o Painel Administrativo:</p>
 
-        {/* Campo Usuário */}
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           <div style={{ position: 'absolute', left: '1rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', zIndex: 1 }}>
             <User size={20} />
           </div>
           <input
             type="text"
+            name="username"
             placeholder="Usuário (Ex: admin)"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            defaultValue=""
             style={{
               width: '100%',
               padding: '1rem 1rem 1rem 3rem',
@@ -74,16 +47,15 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* Campo Senha */}
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', zIndex: 1, pointerEvents: 'none' }}>
             <Lock size={20} />
           </div>
           <input
             type={showPassword ? "text" : "password"}
+            name="password"
             placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            defaultValue=""
             style={{
               width: '100%',
               padding: '1rem 3.2rem 1rem 3rem',
@@ -122,10 +94,10 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {error && (
+        {displayError && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444', justifyContent: 'center', fontSize: '0.9rem' }}>
             <ShieldAlert size={16} />
-            <span>{error}</span>
+            <span>{displayError}</span>
           </div>
         )}
 
@@ -133,9 +105,8 @@ export default function LoginPage() {
           type="submit"
           className="btn"
           style={{ background: 'var(--team-d)', fontWeight: 'bold', marginTop: '0.5rem' }}
-          disabled={loading}
         >
-          {loading ? 'VERIFICANDO...' : 'ENTRAR NO PAINEL'}
+          ENTRAR NO PAINEL
         </button>
 
         <button

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MonitorPlay, Smartphone, Lock, ArrowRight } from "lucide-react";
+import { Smartphone, Lock, ArrowRight } from "lucide-react";
 import ShareButton from "@/components/ShareButton";
 
 export default function Home() {
@@ -14,30 +14,6 @@ export default function Home() {
       </div>
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', maxWidth: '600px' }}>
-        
-        <Link 
-          href="/screen" 
-          className="glass glass-card-link"
-          style={{ 
-            padding: '2rem 2.5rem', 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '1.5rem', 
-            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', 
-            cursor: 'pointer',
-            position: 'relative',
-            overflow: 'hidden'
-          }}
-        >
-          <div style={{ width: 56, height: 56, borderRadius: 14, background: 'var(--blue-brazil)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <MonitorPlay size={28} color="white" />
-          </div>
-          <div style={{ flex: 1 }}>
-            <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Telão</h2>
-            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Placar em tempo real para o público</p>
-          </div>
-          <ArrowRight size={20} color="var(--blue-brazil)" style={{ opacity: 0.4 }} />
-        </Link>
         
         <Link 
           href="/vote" 
