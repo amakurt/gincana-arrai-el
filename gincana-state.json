@@ -1,8 +1,8 @@
 {
-  "status": "active",
+  "status": "waiting",
   "viewMode": "prova",
   "currentProvaId": "p1",
-  "message": "Votação Aberta!",
+  "message": "Votação Pausada/Encerrada",
   "singleVoteMode": true,
   "showJuryScores": false,
   "teams": [
