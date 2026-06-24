@@ -108,14 +108,14 @@ export default function ScreenPage() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1rem' }}>
             <img src="/logologos.png" alt="Logo" className="screen-logo" style={{ width: 80, height: 80, objectFit: 'contain', borderRadius: 14, background: 'var(--logo-bg)', padding: 6, outline: '2px solid var(--logo-ring)' }} />
-            <h1 className="screen-title" style={{ fontSize: '4.5rem', marginBottom: 0, color: 'var(--blue-brazil)', letterSpacing: '-0.03em' }}>ARRAI-EL <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>2026</span></h1>
+            <h1 className="screen-title" style={{ fontSize: '4.5rem', marginBottom: 0, color: 'var(--blue-brazil)', letterSpacing: '-0.03em' }}>ARRAI-EL <span style={{ color: 'var(--yellow-brazil)', fontWeight: 900 }}>2026</span></h1>
           </div>
           
-          <div className="screen-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '1.1rem' }}>
+          <div className="screen-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '1.1rem' }}>
             <BookOpen size={24} color="var(--blue-brazil)" />
-            <span>INSTITUTO EDUCACIONAL LOGOS</span>
-            <span style={{ opacity: 0.4 }}>—</span>
-            <span style={{ opacity: 0.6 }}>REDENÇÃO - CE</span>
+            <span style={{ color: 'var(--blue-brazil)' }}>INSTITUTO EDUCACIONAL LOGOS</span>
+            <span style={{ color: 'var(--blue-brazil)', opacity: 0.3 }}>—</span>
+            <span style={{ color: 'var(--blue-brazil)', opacity: 0.65 }}>REDENÇÃO - CE</span>
           </div>
         </div>
 
