@@ -21,9 +21,11 @@ export async function POST(request: Request) {
     if (username === expectedUser && password === expectedPassword) {
       const host = request.headers.get('host') || 'www.institutoeducacionallogos.online';
       const proto = request.headers.get('x-forwarded-proto') || 'https';
+      const secure = proto === 'https' || host.includes('localhost') === false;
       const response = NextResponse.redirect(`${proto}://${host}/admin`);
-      response.cookies.set('admin_verified', 'true', { path: '/', sameSite: 'lax' });
-      response.cookies.set('jurado_verified', 'true', { path: '/', sameSite: 'lax' });
+      const cookieOpts = { path: '/', sameSite: 'lax' as const, secure, httpOnly: false };
+      response.cookies.set('admin_verified', 'true', cookieOpts);
+      response.cookies.set('jurado_verified', 'true', cookieOpts);
       return response;
     }
 

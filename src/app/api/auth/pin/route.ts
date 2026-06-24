@@ -5,8 +5,29 @@ import path from 'path';
 
 const STATE_FILE = path.join(process.cwd(), 'gincana-state.json');
 
+// Rate limit for PIN brute-force
+const pinLimits = new Map<string, { count: number; resetAt: number }>();
+function checkPinRate(ip: string): boolean {
+  const now = Date.now();
+  const entry = pinLimits.get(ip);
+  if (!entry || now > entry.resetAt) {
+    pinLimits.set(ip, { count: 1, resetAt: now + 10000 });
+    return true;
+  }
+  if (entry.count >= 5) return false; // 5 attempts per 10s
+  entry.count++;
+  return true;
+}
+
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    if (!checkPinRate(ip)) {
+      return NextResponse.json({ success: false, error: 'Muitas tentativas. Aguarde 10 segundos.' }, { status: 429 });
+    }
+
     const { pin, type } = await request.json();
     
     let adminPin = '1234';

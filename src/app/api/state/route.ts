@@ -2,6 +2,45 @@ import { NextResponse } from 'next/server';
 import { supabase, checkSupabaseAvailable } from '@/lib/supabase';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import path from 'path';
+import crypto from 'crypto';
+
+// Rate limiter: in-memory sliding window
+const ratelimits = new Map<string, { count: number; resetAt: number }>();
+const RATE_WINDOW_MS = 3000; // 3 second window
+function checkRateLimit(key: string, maxReq: number): boolean {
+  const now = Date.now();
+  const entry = ratelimits.get(key);
+  if (!entry || now > entry.resetAt) {
+    ratelimits.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= maxReq) return false;
+  entry.count++;
+  return true;
+}
+function getClientIp(request: Request): string {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || '127.0.0.1';
+}
+// Cleanup stale entries every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of ratelimits) {
+    if (now > v.resetAt) ratelimits.delete(k);
+  }
+}, 300000);
+
+// CSRF: check Origin/Referer against allowed hosts
+function checkOrigin(request: Request): boolean {
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+  const host = request.headers.get('host') || 'localhost:3000';
+  const allowed = [host, 'www.institutoeducacionallogos.online', 'institutoeducacionallogos.online', '137.131.160.171'];
+  if (origin) return allowed.some(a => origin.includes(a));
+  if (referer) return allowed.some(a => referer.includes(a));
+  return false; // block requests with no origin/referer
+}
 
 const STATE_FILE = path.join(process.cwd(), 'gincana-state.json');
 const RESULTADOS_FILE = path.join(process.cwd(), 'resultados.json');
@@ -163,6 +202,18 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
+    // Anti-flood para mutações
+    const ip = getClientIp(request);
+    if ((body.action === 'vote' || body.action === 'juryVote') && !checkRateLimit(`${ip}:${body.action}`, 2)) {
+      return NextResponse.json({ error: 'Muitas requisições. Aguarde alguns segundos.' }, { status: 429 });
+    }
+    // CSRF check for state-changing actions
+    if (body.action === 'updateState' || body.action === 'reset') {
+      if (!checkOrigin(request)) {
+        return NextResponse.json({ error: 'Requisição rejeitada: origem inválida.' }, { status: 403 });
+      }
+    }
+
     // Ação: Registrar Voto do Público
     if (body.action === 'vote') {
       const fileData = readStateFromFile();
