@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync, existsSync } from 'fs';
 import path from 'path';
 
 const STATE_FILE = path.join(process.cwd(), 'gincana-state.json');
+const RESULTADOS_FILE = path.join(process.cwd(), 'resultados.json');
 
 function readStateFromFile(): any {
   try {
@@ -28,6 +29,58 @@ function writeJuradosToFile(jurados: any[]) {
   const fileData = readStateFromFile() || {};
   fileData.jurados = jurados;
   writeStateToFile(fileData);
+}
+
+// Helpers para resultados (backup histórico)
+function readResultadosFile(): any[] {
+  try {
+    if (!existsSync(RESULTADOS_FILE)) return [];
+    return JSON.parse(readFileSync(RESULTADOS_FILE, 'utf-8'));
+  } catch { return []; }
+}
+
+function writeResultadosFile(data: any[]) {
+  try {
+    writeFileSync(RESULTADOS_FILE, JSON.stringify(data, null, 2));
+  } catch {}
+}
+
+function saveSnapshot(fileData: any, provas: any[], teams: any[], jurados: any[], scores: any) {
+  const provaId = fileData.currentProvaId;
+  if (!provaId || !scores[provaId]) return;
+
+  const prova = provas.find((p: any) => p.id === provaId);
+  if (!prova) return;
+
+  const allVotes = Object.values(scores[provaId]).map((s: any) => s.publicVotes || 0);
+  const maxPubVotes = Math.max(...allVotes, 0);
+
+  const teamResults = teams.map((team: any) => {
+    const teamScore = scores[provaId][team.id] || { publicVotes: 0, j1: 0, j2: 0 };
+    const publicScore = maxPubVotes > 0 ? Number(((teamScore.publicVotes / maxPubVotes) * 10).toFixed(1)) : 0;
+    return {
+      id: team.id, name: team.name, color: team.color,
+      publicVotes: teamScore.publicVotes || 0,
+      publicScore,
+      j1: teamScore.j1 || 0,
+      j2: teamScore.j2 || 0,
+      total: Number((publicScore + (teamScore.j1 || 0) + (teamScore.j2 || 0)).toFixed(1))
+    };
+  }).sort((a: any, b: any) => b.total - a.total);
+
+  const resultados = readResultadosFile();
+  const idx = resultados.findIndex((r: any) => r.provaId === provaId);
+  const entry = {
+    provaId, provaName: prova.name,
+    teams: teamResults,
+    backupDate: new Date().toISOString()
+  };
+  if (idx >= 0) {
+    resultados[idx] = entry;
+  } else {
+    resultados.push(entry);
+  }
+  writeResultadosFile(resultados);
 }
 
 // Helper para calcular a pontuação de 0 a 10 baseada nos votos do público
@@ -185,7 +238,8 @@ export async function POST(request: Request) {
     // Ação: Atualizar Estado Global (Mestre de Cerimônias / Admin)
     if (body.action === 'updateState') {
       // 1. Sempre salva no JSON primeiro (armazenamento primário)
-      const fileData = readStateFromFile() || {};
+      const oldData = readStateFromFile() || {};
+      const fileData = { ...oldData };
       if (body.status !== undefined) fileData.status = body.status;
       if (body.viewMode !== undefined) fileData.viewMode = body.viewMode;
       if (body.currentProvaId !== undefined) fileData.currentProvaId = body.currentProvaId || null;
@@ -197,7 +251,16 @@ export async function POST(request: Request) {
       if (body.provas !== undefined) fileData.provas = body.provas;
       writeStateToFile(fileData);
 
-      // 2. Tenta sincronizar com Supabase (best-effort, ignorando erros)
+      // 2. Salvar snapshot se votação foi parada ou prova mudou
+      const shouldSnapshot = (
+        (body.status === 'waiting' && oldData.status === 'active') ||
+        (body.currentProvaId !== undefined && body.currentProvaId !== oldData.currentProvaId && oldData.currentProvaId)
+      );
+      if (shouldSnapshot) {
+        saveSnapshot(fileData, fileData.provas || [], fileData.teams || [], fileData.jurados || [], fileData.scores || {});
+      }
+
+      // 3. Tenta sincronizar com Supabase (best-effort, ignorando erros)
       if (await checkSupabaseAvailable()) {
         try {
           const updateFields: any = {};
