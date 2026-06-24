@@ -177,7 +177,8 @@ export default function VotePage() {
                 onClick={() => handleVote(team.id)}
                 disabled={!isActive}
                 style={{ 
-                  height: '80px', 
+                  height: '5rem', 
+                  minHeight: '60px',
                   background: team.color, 
                   fontSize: '1.4rem'
                 }}

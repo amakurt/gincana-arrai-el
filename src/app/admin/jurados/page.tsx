@@ -221,13 +221,14 @@ export default function JuradosPage() {
         <h2 style={{ fontSize: "1.1rem", marginBottom: "1.2rem", color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <UserPlus size={18} /> Adicionar jurado
         </h2>
-        <div style={{ display: "flex", gap: "0.8rem", marginBottom: "0.8rem" }}>
+        <div style={{ display: "flex", gap: "0.8rem", marginBottom: "0.8rem", flexWrap: "wrap" }}>
           <input
             placeholder="Nome do jurado"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             style={{
               flex: 1,
+              minWidth: "180px",
               padding: "0.8rem 1rem",
               borderRadius: "10px",
               background: "rgba(255,255,255,0.5)",

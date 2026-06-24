@@ -455,3 +455,20 @@ body.screen-page {
   .screen-mode .screen-score-width { width: 65px !important; }
   .screen-mode .screen-rank { width: 30px !important; font-size: 1.1rem !important; }
 }
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .animate-pulse {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  .bandeirinha,
+  .logo-watermark {
+    animation: none !important;
+  }
+}

@@ -40,7 +40,7 @@ export default function Home() {
         
       </div>
 
-      <div style={{ marginTop: '3rem', display: 'flex', justifyContent: 'center', gap: '1rem', alignItems: 'center' }}>
+      <div style={{ marginTop: '3rem', display: 'flex', justifyContent: 'center', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
         <ShareButton url="/" label="Compartilhar Evento" />
         <Link 
           href="/login" 
