@@ -381,35 +381,77 @@ input:focus, select:focus, textarea:focus {
   animation: fadeIn 0.4s ease-out;
 }
 
+/* ===== SCREEN / TELÃO — High Contrast Projector Mode ===== */
+.screen-mode {
+  --bg-card: rgba(255, 255, 255, 0.92) !important;
+  --bg-card-hover: #ffffff !important;
+  --border-light: rgba(0, 0, 0, 0.12) !important;
+
+  --text-primary: #0a0a1a !important;
+  --text-secondary: #3a3a4a !important;
+
+  --warm-wood-border: rgba(0, 0, 0, 0.08) !important;
+  --grass-shadow: rgba(0, 0, 0, 0.08) !important;
+
+  --logo-bg: rgba(255, 255, 255, 0.8) !important;
+  --logo-ring: rgba(0, 0, 0, 0.12) !important;
+
+  --yellow-brazil: #e6c800 !important;
+  --blue-brazil: #002776 !important;
+
+  --team-a: #2563eb !important;
+  --team-b: #dc2626 !important;
+  --team-c: #059669 !important;
+  --team-d: #d97706 !important;
+}
+
+.screen-mode body,
+body.screen-page {
+  background: linear-gradient(135deg, #f5f0e8 0%, #e8e0d4 100%) !important;
+}
+
+.screen-mode body::before,
+.screen-mode body::after {
+  display: none !important;
+}
+
+.screen-mode .glass {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: #ffffff !important;
+  border: 2px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06) !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
-  .screen-padding { padding: 1.5rem 1rem !important; }
-  .screen-title { font-size: 2rem !important; }
-  .screen-subtitle { font-size: 0.8rem !important; }
-  .screen-status-text { font-size: 1.4rem !important; }
-  .screen-status-card { padding: 1rem 1.5rem !important; }
-  .screen-team-name { font-size: 1rem !important; width: auto !important; min-width: 80px !important; }
-  .screen-team-score { font-size: 1.6rem !important; }
-  .screen-bar { height: 50px !important; }
-  .screen-bar-gap { gap: 0.75rem !important; }
-  .screen-bar-padding { padding: 0.6rem 1rem !important; }
-  .screen-rank { width: 40px !important; font-size: 1.2rem !important; }
-  .screen-score-width { width: 80px !important; }
-  .screen-header-gap { margin-bottom: 1.5rem !important; }
-  .screen-header-flex { flex-direction: column !important; align-items: center !important; gap: 1rem !important; }
-  .screen-logo { width: 48px !important; height: 48px !important; }
-  .screen-prova-detail { font-size: 0.75rem !important; }
-  .screen-bar-detail { font-size: 0.75rem !important; flex-wrap: wrap !important; gap: 0.25rem !important; justify-content: center !important; }
+  .screen-mode .screen-padding { padding: 1.5rem 1rem !important; }
+  .screen-mode .screen-title { font-size: 2.2rem !important; }
+  .screen-mode .screen-subtitle { font-size: 0.85rem !important; }
+  .screen-mode .screen-status-text { font-size: 1.6rem !important; }
+  .screen-mode .screen-status-card { padding: 1rem 1.5rem !important; }
+  .screen-mode .screen-team-name { font-size: 1.2rem !important; width: auto !important; min-width: 80px !important; }
+  .screen-mode .screen-team-score { font-size: 1.8rem !important; }
+  .screen-mode .screen-bar { height: 55px !important; }
+  .screen-mode .screen-bar-gap { gap: 0.75rem !important; }
+  .screen-mode .screen-bar-padding { padding: 0.6rem 1rem !important; gap: 1rem !important; }
+  .screen-mode .screen-rank { width: 40px !important; font-size: 1.4rem !important; }
+  .screen-mode .screen-score-width { width: 85px !important; }
+  .screen-mode .screen-header-gap { margin-bottom: 1.5rem !important; }
+  .screen-mode .screen-header-flex { flex-direction: column !important; align-items: center !important; gap: 1rem !important; }
+  .screen-mode .screen-logo { width: 48px !important; height: 48px !important; }
+  .screen-mode .screen-prova-detail { font-size: 0.9rem !important; }
+  .screen-mode .screen-bar-detail { font-size: 0.8rem !important; flex-wrap: wrap !important; gap: 0.25rem !important; justify-content: center !important; }
 }
 
 @media (max-width: 480px) {
-  .screen-padding { padding: 1rem 0.75rem !important; }
-  .screen-title { font-size: 1.5rem !important; }
-  .screen-logo { width: 36px !important; height: 36px !important; }
-  .screen-status-text { font-size: 1.1rem !important; }
-  .screen-team-name { font-size: 0.85rem !important; min-width: 60px !important; }
-  .screen-team-score { font-size: 1.3rem !important; }
-  .screen-bar { height: 40px !important; }
-  .screen-score-width { width: 60px !important; }
-  .screen-rank { width: 30px !important; font-size: 1rem !important; }
+  .screen-mode .screen-padding { padding: 1rem 0.75rem !important; }
+  .screen-mode .screen-title { font-size: 1.6rem !important; }
+  .screen-mode .screen-logo { width: 36px !important; height: 36px !important; }
+  .screen-mode .screen-status-text { font-size: 1.2rem !important; }
+  .screen-mode .screen-team-name { font-size: 0.95rem !important; min-width: 60px !important; }
+  .screen-mode .screen-team-score { font-size: 1.4rem !important; }
+  .screen-mode .screen-bar { height: 42px !important; }
+  .screen-mode .screen-score-width { width: 65px !important; }
+  .screen-mode .screen-rank { width: 30px !important; font-size: 1.1rem !important; }
 }
