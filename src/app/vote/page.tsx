@@ -97,8 +97,14 @@ export default function VotePage() {
         <h2 style={{ fontSize: '1.2rem', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
           {isActive ? <span className="animate-pulse">● VOTAÇÃO ABERTA</span> : <><ShieldAlert size={18} /> {data.message}</>}
         </h2>
-        {activeProva && <p style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>{activeProva.name}</p>}
       </div>
+
+      {activeProva && (
+        <div className="glass" style={{ padding: '1rem 1.5rem', marginBottom: '1.5rem', textAlign: 'center', border: '2px solid var(--yellow-brazil)', borderRadius: 16 }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.3rem' }}>Apresentação Atual</div>
+          <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--blue-brazil)', margin: 0, lineHeight: 1.2 }}>{activeProva.name.toUpperCase()}</h1>
+        </div>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
         {hasVoted ? (
