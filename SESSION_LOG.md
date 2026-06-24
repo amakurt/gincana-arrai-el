@@ -89,3 +89,34 @@
 - `src/app/api/state/route.ts` — rewrite do `updateState` e `GET` handlers
 - `src/app/admin/jurados/page.tsx` — auth check adicionado
 - `AGENTS.md` — pendências marcadas como resolvidas
+
+### Sessão 2 (24/06 — continuação)
+
+#### Melhorias no Telão (Projetor)
+- **Modo projetor** (`src/app/globals.css`): Adicionado `.screen-mode` com fundo claro sólido, cards opacos (sem blur), cores mais saturadas, contraste elevado (`--text-secondary: #3a3a4a`).
+- **Fontes maiores**: Título 4.5rem, status 3.2rem, nomes 2.2rem, scores 3.5rem, barras 85px.
+- **Cores do cabeçalho**: "2026" em amarelo (`var(--yellow-brazil)`), "INSTITUTO EDUCACIONAL LOGOS" e "REDENÇÃO-CE" em azul escuro.
+- **Responsivo**: Breakpoints 768px e 480px ajustados para o `.screen-mode`.
+
+#### Correções
+- **Jurado page** (`src/app/jurado/page.tsx`): Agora verifica `data.status === 'active'` além de `activeProva` — se votação estiver pausada, mostra "Votação Pausada" em vez do painel de notas.
+- **Vote page** (`src/app/vote/page.tsx`): Botões das equipes `height: 80px` → `height: 5rem` (min 60px) — escala com a fonte.
+
+#### Responsividade Geral
+- **Home** (`src/app/page.tsx`): `flexWrap: wrap` na row inferior (ShareButton + Área Restrita).
+- **Admin/Jurados** (`src/app/admin/jurados/page.tsx`): `flexWrap: wrap` no formulário, input com `minWidth: 180px`.
+- **Globals**: `@media (prefers-reduced-motion: reduce)` — desliga animações para usuários com sensibilidade.
+- **Layout** (`src/app/layout.tsx`): `viewport` export explícito (`width=device-width, initial-scale=1`).
+
+#### Deploy
+- Várias rodadas de commit + push + pull na VPS com PM2 restart.
+- Conflitos no `vote/page.tsx` e `gincana-state.json` resolvidos via `git stash`/`checkout --theirs`.
+
+### Files Changed (Sessão 2)
+- `src/app/globals.css` — `.screen-mode`, `prefers-reduced-motion`, breakpoints
+- `src/app/screen/page.tsx` — modo projetor, cores do cabeçalho
+- `src/app/jurado/page.tsx` — verificação de status da votação
+- `src/app/vote/page.tsx` — altura dos botões em rem
+- `src/app/page.tsx` — flexWrap na home
+- `src/app/admin/jurados/page.tsx` — flexWrap no formulário
+- `src/app/layout.tsx` — viewport export
