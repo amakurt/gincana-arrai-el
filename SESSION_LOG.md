@@ -115,8 +115,37 @@
 ### Files Changed (Sessão 2)
 - `src/app/globals.css` — `.screen-mode`, `prefers-reduced-motion`, breakpoints
 - `src/app/screen/page.tsx` — modo projetor, cores do cabeçalho
-- `src/app/jurado/page.tsx` — verificação de status da votação
 - `src/app/vote/page.tsx` — altura dos botões em rem
 - `src/app/page.tsx` — flexWrap na home
 - `src/app/admin/jurados/page.tsx` — flexWrap no formulário
 - `src/app/layout.tsx` — viewport export
+
+## 2026-06-24 (Sessão 3 — Segurança)
+
+### Mudanças
+
+- **Otimização do voto** (`src/app/api/state/route.ts`): Vote e juryVote refatorados para salvar no **JSON primeiro** (como `updateState`), Supabase sync é best-effort. Latência do voto caiu de **7.1s → 186ms** (p95).
+
+- **Rate limiting** (`src/app/api/state/route.ts`): Map in-memory com sliding window de 3s, max 2 requisições de vote/juryVote por IP. Retorna HTTP 429. Cleanup automático a cada 5 min.
+
+- **CSRF protection** (`src/app/api/state/route.ts`, `src/app/api/resultados/route.ts`): POSTs de `updateState`, `reset`, `clear` só aceitos se `Origin` ou `Referer` bater com hosts permitidos. Retorna HTTP 403.
+
+- **PIN brute-force protection** (`src/app/api/auth/pin/route.ts`): Max 5 tentativas de PIN a cada 10s por IP. Retorna HTTP 429.
+
+- **Cookie hardening** (`src/app/api/auth/login/route.ts`): Cookies `admin_verified`/`jurado_verified` agora com `Secure` (só HTTPS) e `SameSite=Lax`.
+
+- **Cloudflare Turnstile CAPTCHA** (invisível/Non-interactive):
+  - Layout (`src/app/layout.tsx`): Script `turnstile/v0/api.js` carregado com `lazyOnload`.
+  - Vote page (`src/app/vote/page.tsx`): Widget Turnstile renderizado via `window.turnstile.render()`, token enviado no POST junto com o voto. Modo Non-interactive (spinner visível durante verificação).
+  - Backend (`src/app/api/state/route.ts`): Valida token via `siteverify` da Cloudflare. Bloqueia votos com token inválido/expirado (HTTP 403).
+  - `.env.local`: Adicionado `NEXT_PUBLIC_TURNSTILE_SITE_KEY` e `TURNSTILE_SECRET_KEY` (configurados na VPS).
+
+### Files Changed
+- `src/app/api/state/route.ts` — rate limit, CSRF, Turnstile validation, vote/juryVote JSON-first
+- `src/app/api/auth/login/route.ts` — cookie Secure + SameSite
+- `src/app/api/auth/pin/route.ts` — rate limit brute-force
+- `src/app/api/resultados/route.ts` — CSRF check
+- `src/app/vote/page.tsx` — Turnstile widget visível, spinner no voto
+- `src/app/layout.tsx` — Turnstile script
+- `.env.local` — Turnstile keys
+- `AGENTS.md` — atualizado com novas features de segurança

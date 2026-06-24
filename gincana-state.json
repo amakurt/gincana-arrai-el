@@ -1,8 +1,8 @@
 {
-  "status": "active",
+  "status": "waiting",
   "viewMode": "prova",
   "currentProvaId": "p1",
-  "message": "Votação Aberta!",
+  "message": "Votação Pausada/Encerrada",
   "singleVoteMode": true,
   "showJuryScores": false,
   "teams": [
@@ -49,6 +49,13 @@
       "t1779246392988": {
         "publicVotes": 0,
         "j1": 2,
+        "j2": 0
+      }
+    },
+    "p1779246412869": {
+      "t1779246392988": {
+        "publicVotes": 1,
+        "j1": 0,
         "j2": 0
       }
     }

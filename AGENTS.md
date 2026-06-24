@@ -121,3 +121,24 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `src/app/admin/jurados/page.tsx` — auth check
 - `SESSION_LOG.md`, `AGENTS.md` — logs
 
+## Session 2026-06-24 (Security)
+
+### Mudanças
+
+- **Voto otimizado**: Vote/juryVote salvam no JSON primeiro (como `updateState`). Latência caiu de **7.1s → 186ms**.
+- **Rate limiting**: Map in-memory, max 2 vote/jury per IP a cada 3s (HTTP 429). Cleanup a cada 5 min.
+- **CSRF check**: POSTs de `updateState`/`reset`/`clear` validam Origin/Referer contra hosts permitidos (HTTP 403).
+- **PIN brute-force**: Max 5 tentativas por IP a cada 10s no `/api/auth/pin` (HTTP 429).
+- **Cookie hardening**: `Secure` + `SameSite=Lax` nos cookies admin/jurado.
+- **Cloudflare Turnstile**: CAPTCHA invisível na votação. Widget renderizado via `window.turnstile.render()` no vote page. Token validado via `siteverify` no backend. Chaves configuradas no `.env.local` da VPS.
+
+### Files Changed
+- `src/app/api/state/route.ts` — rate limit, CSRF, Turnstile, vote JSON-first
+- `src/app/api/auth/login/route.ts` — cookie Secure + SameSite
+- `src/app/api/auth/pin/route.ts` — rate limit brute-force
+- `src/app/api/resultados/route.ts` — CSRF check
+- `src/app/vote/page.tsx` — Turnstile widget, loading spinner
+- `src/app/layout.tsx` — Turnstile script
+- `.env.local` — Turnstile keys
+- `load-test-k6.js` — load test k6 script
+
