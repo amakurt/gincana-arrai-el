@@ -214,6 +214,30 @@ export async function POST(request: Request) {
       }
     }
 
+    // CAPTCHA validation (Turnstile) for public votes
+    if (body.action === 'vote') {
+      const secret = process.env.TURNSTILE_SECRET_KEY;
+      if (secret && secret.length > 0) {
+        const cfToken = body.cfToken || '';
+        if (!cfToken) {
+          return NextResponse.json({ error: 'CAPTCHA não resolvido.' }, { status: 403 });
+        }
+        try {
+          const verify = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `secret=${encodeURIComponent(secret)}&response=${encodeURIComponent(cfToken)}&remoteip=${encodeURIComponent(ip)}`
+          });
+          const result = await verify.json();
+          if (!result.success) {
+            return NextResponse.json({ error: 'CAPTCHA inválido ou expirado. Tente novamente.' }, { status: 403 });
+          }
+        } catch {
+          return NextResponse.json({ error: 'Erro ao validar CAPTCHA.' }, { status: 500 });
+        }
+      }
+    }
+
     // Ação: Registrar Voto do Público
     if (body.action === 'vote') {
       const fileData = readStateFromFile();

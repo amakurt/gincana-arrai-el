@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ThemeToggle from "@/components/ThemeToggle";
+import Script from "next/script";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -67,6 +68,11 @@ export default function RootLayout({
         {children}
 
         <ThemeToggle />
+
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );

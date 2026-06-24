@@ -1,10 +1,21 @@
 "use client";
 
 import useSWR from 'swr';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, ShieldAlert, Trophy, Monitor } from 'lucide-react';
+import { CheckCircle2, ShieldAlert, Trophy, Monitor, Loader2 } from 'lucide-react';
 import ShareButton from '@/components/ShareButton';
+
+declare global {
+  interface Window {
+    turnstile?: {
+      execute: (container: string | HTMLElement, options: { callback: (token: string) => void }) => void;
+      reset: (container: string | HTMLElement) => void;
+      remove: (container: string | HTMLElement) => void;
+      render: (container: string | HTMLElement, options: any) => string;
+    };
+  }
+}
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -12,6 +23,10 @@ export default function VotePage() {
   const { data, error, mutate } = useSWR('/api/state', fetcher, { refreshInterval: 3000 });
   const [votedFor, setVotedFor] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
+  const [voting, setVoting] = useState(false);
+  const turnstileContainer = useRef<HTMLDivElement>(null);
+  const turnstileReady = useRef(false);
+  const turnstileWidgetId = useRef<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && data?.currentProvaId) {
@@ -38,12 +53,48 @@ export default function VotePage() {
     }
   }, []);
 
+  // Render Turnstile widget when script is loaded
+  useEffect(() => {
+    const checkTurnstile = () => {
+      if (window.turnstile && turnstileContainer.current && !turnstileWidgetId.current) {
+        const id = window.turnstile.render(turnstileContainer.current, {
+          sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
+          callback: () => { turnstileReady.current = true; },
+          'expired-callback': () => { turnstileReady.current = false; },
+          'error-callback': () => { turnstileReady.current = false; },
+        });
+        turnstileWidgetId.current = id;
+      }
+    };
+    // Retry until script is loaded
+    const interval = setInterval(checkTurnstile, 200);
+    setTimeout(() => clearInterval(interval), 10000);
+    return () => { clearInterval(interval); };
+  }, []);
+
+  const getTurnstileToken = useCallback(() => {
+    return new Promise<string | null>((resolve) => {
+      if (!window.turnstile || !turnstileContainer.current) {
+        resolve(null);
+        return;
+      }
+      window.turnstile.execute(turnstileContainer.current, {
+        callback: (token: string) => resolve(token),
+      });
+    });
+  }, []);
+
   const handleVote = async (teamId: string) => {
     if (data?.status !== 'active') return;
     if (data.singleVoteMode && hasVoted) return;
-    
+    if (voting) return;
+    setVoting(true);
+
+    // Get Turnstile token (if available)
+    const cfToken = await getTurnstileToken();
+
     const voterId = localStorage.getItem('voter_id') || '';
-    
+
     setVotedFor(teamId);
     setHasVoted(true);
     if (data.singleVoteMode) {
@@ -53,8 +104,15 @@ export default function VotePage() {
     await fetch('/api/state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'vote', teamId, voterId })
+      body: JSON.stringify({ action: 'vote', teamId, voterId, cfToken })
     });
+
+    setVoting(false);
+    // Reset turnstile so next vote requires fresh token
+    if (window.turnstile && turnstileContainer.current) {
+      window.turnstile.reset(turnstileContainer.current);
+    }
+    turnstileReady.current = false;
   };
 
   const handleVoteAgain = () => {
@@ -175,17 +233,20 @@ export default function VotePage() {
                 key={team.id}
                 className="btn" 
                 onClick={() => handleVote(team.id)}
-                disabled={!isActive}
+                disabled={!isActive || voting}
                 style={{ 
                   height: '5rem', 
                   minHeight: '60px',
                   background: team.color, 
-                  fontSize: '1.4rem'
+                  fontSize: '1.4rem',
+                  opacity: voting ? 0.6 : 1,
                 }}
               >
-                {team.name.toUpperCase()}
+                {voting ? <Loader2 size={24} className="animate-spin" /> : team.name.toUpperCase()}
               </button>
             ))}
+            {/* Container invisível do Turnstile */}
+            <div ref={turnstileContainer} style={{ position: 'fixed', opacity: 0, pointerEvents: 'none', zIndex: -1 }} />
           </>
         )}
       </div>
