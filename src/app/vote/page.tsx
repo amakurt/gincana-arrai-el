@@ -245,8 +245,10 @@ export default function VotePage() {
                 {voting ? <Loader2 size={24} className="animate-spin" /> : team.name.toUpperCase()}
               </button>
             ))}
-            {/* Container invisível do Turnstile */}
-            <div ref={turnstileContainer} style={{ position: 'fixed', opacity: 0, pointerEvents: 'none', zIndex: -1 }} />
+            {/* Widget Turnstile visível (Non-interactive mode) */}
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
+              <div ref={turnstileContainer} style={{ width: 300, height: 65 }} />
+            </div>
           </>
         )}
       </div>
