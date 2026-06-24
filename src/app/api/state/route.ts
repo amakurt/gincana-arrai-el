@@ -163,75 +163,62 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    // Ação: Registrar Voto do Público (Votação Concorrente-safe)
+    // Ação: Registrar Voto do Público
     if (body.action === 'vote') {
-      const { data: config } = await supabase.from('config').select('status, current_prova_id').eq('id', 1).single();
-      
-      if (config && config.status === 'active' && config.current_prova_id && body.teamId) {
-        // Chama a RPC atômica que criamos no Postgres do Supabase
-        const { error } = await supabase.rpc('increment_public_vote', {
-          p_prova_id: config.current_prova_id,
-          p_team_id: body.teamId
-        });
+      const fileData = readStateFromFile();
+      if (fileData && body.teamId && fileData.currentProvaId) {
+        const provaId = fileData.currentProvaId;
+        if (!fileData.scores) fileData.scores = {};
+        if (!fileData.scores[provaId]) fileData.scores[provaId] = {};
+        if (!fileData.scores[provaId][body.teamId]) fileData.scores[provaId][body.teamId] = { publicVotes: 0, j1: 0, j2: 0 };
+        fileData.scores[provaId][body.teamId].publicVotes = (fileData.scores[provaId][body.teamId].publicVotes || 0) + 1;
+        writeStateToFile(fileData);
 
-        if (error) {
-          return NextResponse.json({ error: 'Erro ao computar voto no banco.' }, { status: 500 });
+        // Tenta sincronizar com Supabase (best-effort)
+        if (await checkSupabaseAvailable()) {
+          try {
+            await supabase.rpc('increment_public_vote', {
+              p_prova_id: provaId,
+              p_team_id: body.teamId
+            });
+          } catch {}
         }
       }
-      
-      // Retorna o novo estado atualizado
       return GET();
     }
     
     // Ação: Lançar Nota do Jurado
     if (body.action === 'juryVote') {
-      const { data: config } = await supabase.from('config').select('current_prova_id').eq('id', 1).single();
-      
-      if (config && config.current_prova_id && body.teamId && body.jurado) {
-        const pId = config.current_prova_id;
-        const tId = body.teamId;
-        const value = Number(body.score);
-        
-        // Mapeia o ID do jurado para a coluna j1/j2 baseado na posição na lista ordenada
-        let juradoIndex = -1;
-        const { data: dbJurados } = await supabase
-          .from('jurados')
-          .select('id')
-          .order('created_at', { ascending: true });
-        if (dbJurados) {
-          juradoIndex = dbJurados.findIndex((j: any) => j.id === body.jurado);
-        }
-        if (juradoIndex === -1) {
-          // Fallback: busca no JSON file
-          const fileJurados = readJuradosFromFile();
-          juradoIndex = fileJurados.findIndex((j: any) => j.id === body.jurado);
-        }
-        const scoreField = juradoIndex === 0 ? 'j1' : 'j2';
-        
-        // Verifica se a pontuação já existe para criar ou atualizar
-        const { data: existing } = await supabase
-          .from('scores')
-          .select('id')
-          .eq('prova_id', pId)
-          .eq('team_id', tId)
-          .single();
+      if (body.teamId && body.jurado && body.score !== undefined) {
+        const fileData = readStateFromFile();
+        if (fileData && fileData.currentProvaId) {
+          const pId = fileData.currentProvaId;
+          const value = Number(body.score);
+          if (!fileData.scores) fileData.scores = {};
+          if (!fileData.scores[pId]) fileData.scores[pId] = {};
+          if (!fileData.scores[pId][body.teamId]) fileData.scores[pId][body.teamId] = { publicVotes: 0, j1: 0, j2: 0 };
+          fileData.scores[pId][body.teamId][body.jurado] = value;
+          writeStateToFile(fileData);
 
-        if (existing) {
-          await supabase
-            .from('scores')
-            .update({ [scoreField]: value })
-            .eq('id', existing.id);
-        } else {
-          await supabase
-            .from('scores')
-            .insert({
-              prova_id: pId,
-              team_id: tId,
-              [scoreField]: value
-            });
+          // Tenta sincronizar com Supabase (best-effort)
+          if (await checkSupabaseAvailable()) {
+            try {
+              const { data: existing } = await supabase
+                .from('scores')
+                .select('id')
+                .eq('prova_id', pId)
+                .eq('team_id', body.teamId)
+                .single();
+
+              if (existing) {
+                await supabase.from('scores').update({ [body.jurado]: value }).eq('id', existing.id);
+              } else {
+                await supabase.from('scores').insert({ prova_id: pId, team_id: body.teamId, [body.jurado]: value });
+              }
+            } catch {}
+          }
         }
       }
-      
       return GET();
     }
     
