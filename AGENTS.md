@@ -94,7 +94,30 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Home page sem Telão** (`src/app/page.tsx`): Removido link para `/screen` da página inicial. Acesso ao telão só pelo painel admin.
 - **Botão "VER PLACAR COMPLETO"** (`src/app/vote/page.tsx`): Após votar, mostra botão que abre o telão (`/screen`) em nova aba.
 
-### Pendente
-- **Admin/jurados page** (`src/app/admin/jurados/page.tsx`): Sem verificação de `admin_verified` — qualquer um pode acessar.
-- **Domínio raiz** (`institutoeducacionallogos.online` sem `www`): Aponta pro IP errado (`162.240.81.81`), não pro VPS.
+### Pendente (Resolvido)
+- ~~**Admin/jurados page** (`src/app/admin/jurados/page.tsx`): Sem verificação de `admin_verified` — qualquer um pode acessar.~~ ✅ Adicionado cookie check `admin_verified` com redirect pra `/login`.
+- ~~**Domínio raiz** (`institutoeducacionallogos.online` sem `www`): Aponta pro IP errado (`162.240.81.81`), não pro VPS.~~ ✅ DNS já foi corrigido — ambos os domínios apontam para Cloudflare (104.21.90.184 / 172.67.203.210).
+
+## Session 2026-06-24
+
+### Correção: Painel Admin não salvava alterações
+
+**Problema**: "Parar votação" e edição de equipes/provas no painel admin não funcionavam.
+
+**Causa raiz** (`src/app/api/state/route.ts`):
+- `checkSupabaseAvailable()` verificava apenas se a API REST do Supabase estava acessível (fetch), retornando `true`.
+- Quando `true`, o código tentava escrever no Supabase usando a **anon key**.
+- A anon key tem permissão apenas de leitura (RLS) — writes falhavam **silenciosamente** (sem checar `error`).
+- `GET()` lia de volta os dados **antigos** do Supabase — painel parecia não salvar.
+
+**Solução**:
+- POST `updateState` **sempre escreve no JSON primeiro** como armazenamento primário.
+- Sincronização com Supabase é **best-effort** (ignora erros).
+- `GET()` **lê do JSON como fonte primária** para estado, times, provas, jurados.
+- Scores (votos ao vivo via RPC) ainda vêm do Supabase quando disponível.
+
+### Files Changed
+- `src/app/api/state/route.ts` — rewrite do `updateState` e `GET`
+- `src/app/admin/jurados/page.tsx` — auth check
+- `SESSION_LOG.md`, `AGENTS.md` — logs
 

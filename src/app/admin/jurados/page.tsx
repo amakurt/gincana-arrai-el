@@ -10,6 +10,28 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 export default function JuradosPage() {
   const router = useRouter();
   const { data, mutate, error: swrError } = useSWR("/api/state", fetcher, { refreshInterval: 2000 });
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  const getCookie = (name: string) => {
+    if (typeof document === "undefined") return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(";").shift();
+    return null;
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isVerified = getCookie("admin_verified") === "true";
+      if (!isVerified) {
+        window.location.href = "/login";
+      } else {
+        setCheckingAuth(false);
+      }
+    }
+  }, []);
+
+  if (checkingAuth) return null;
   const [newName, setNewName] = useState("");
   const [newPin, setNewPin] = useState("");
   const [loading, setLoading] = useState(false);
