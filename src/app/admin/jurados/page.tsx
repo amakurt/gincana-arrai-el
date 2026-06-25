@@ -20,18 +20,6 @@ export default function JuradosPage() {
     return null;
   };
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const isVerified = getCookie("admin_verified") === "true";
-      if (!isVerified) {
-        window.location.href = "/login";
-      } else {
-        setCheckingAuth(false);
-      }
-    }
-  }, []);
-
-  if (checkingAuth) return null;
   const [newName, setNewName] = useState("");
   const [newPin, setNewPin] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,6 +36,19 @@ export default function JuradosPage() {
     }
     setLoadingTimeout(false);
   }, [data, swrError]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isVerified = getCookie("admin_verified") === "true";
+      if (!isVerified) {
+        window.location.href = "/login";
+      } else {
+        setCheckingAuth(false);
+      }
+    }
+  }, []);
+
+  if (checkingAuth) return null;
 
   const addJurado = async () => {
     if (!newName) return;
