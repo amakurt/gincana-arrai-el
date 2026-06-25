@@ -12,7 +12,12 @@ declare global {
       execute: (container: string | HTMLElement, options: { callback: (token: string) => void }) => void;
       reset: (container: string | HTMLElement) => void;
       remove: (container: string | HTMLElement) => void;
-      render: (container: string | HTMLElement, options: any) => string;
+      render: (container: string | HTMLElement, options: {
+        sitekey: string;
+        callback: (token: string) => void;
+        'expired-callback': () => void;
+        'error-callback': () => void;
+      }) => string;
     };
   }
 }
@@ -27,6 +32,7 @@ export default function VotePage() {
   const turnstileContainer = useRef<HTMLDivElement>(null);
   const turnstileReady = useRef(false);
   const turnstileWidgetId = useRef<string | null>(null);
+  const turnstileToken = useRef<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && data?.currentProvaId) {
@@ -59,29 +65,29 @@ export default function VotePage() {
       if (window.turnstile && turnstileContainer.current && !turnstileWidgetId.current) {
         const id = window.turnstile.render(turnstileContainer.current, {
           sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
-          callback: () => { turnstileReady.current = true; },
-          'expired-callback': () => { turnstileReady.current = false; },
-          'error-callback': () => { turnstileReady.current = false; },
+          callback: (token: string) => {
+            turnstileToken.current = token;
+            turnstileReady.current = true;
+          },
+          'expired-callback': () => {
+            turnstileToken.current = null;
+            turnstileReady.current = false;
+          },
+          'error-callback': () => {
+            turnstileToken.current = null;
+            turnstileReady.current = false;
+          },
         });
         turnstileWidgetId.current = id;
       }
     };
-    // Retry until script is loaded
     const interval = setInterval(checkTurnstile, 200);
     setTimeout(() => clearInterval(interval), 10000);
     return () => { clearInterval(interval); };
   }, []);
 
   const getTurnstileToken = useCallback(() => {
-    return new Promise<string | null>((resolve) => {
-      if (!window.turnstile || !turnstileContainer.current) {
-        resolve(null);
-        return;
-      }
-      window.turnstile.execute(turnstileContainer.current, {
-        callback: (token: string) => resolve(token),
-      });
-    });
+    return Promise.resolve(turnstileToken.current);
   }, []);
 
   const handleVote = async (teamId: string) => {
@@ -108,16 +114,21 @@ export default function VotePage() {
     });
 
     setVoting(false);
-    // Reset turnstile so next vote requires fresh token
     if (window.turnstile && turnstileContainer.current) {
       window.turnstile.reset(turnstileContainer.current);
     }
     turnstileReady.current = false;
+    turnstileToken.current = null;
   };
 
   const handleVoteAgain = () => {
     setHasVoted(false);
     setVotedFor(null);
+    if (window.turnstile && turnstileContainer.current) {
+      window.turnstile.reset(turnstileContainer.current);
+    }
+    turnstileReady.current = false;
+    turnstileToken.current = null;
   };
 
   if (error) return <div className="mobile-container"><div className="glass" style={{padding: '2rem', textAlign: 'center'}}>Erro ao carregar sistema.</div></div>;
