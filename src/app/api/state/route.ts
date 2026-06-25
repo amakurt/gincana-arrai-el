@@ -214,8 +214,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // CAPTCHA validation (Turnstile) for public votes
-    if (body.action === 'vote') {
+    // CAPTCHA validation (Turnstile) for votes and jury votes
+    if (body.action === 'vote' || body.action === 'juryVote') {
       const secret = process.env.TURNSTILE_SECRET_KEY;
       if (secret && secret.length > 0) {
         const cfToken = body.cfToken || '';

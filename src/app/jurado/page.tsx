@@ -1,9 +1,23 @@
 "use client";
 
 import useSWR from 'swr';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Lock, ShieldAlert, LogOut, Star, Award, Activity, ClipboardList, RefreshCw } from 'lucide-react';
+
+declare global {
+  interface Window {
+    turnstile?: {
+      reset: (container: string | HTMLElement) => void;
+      render: (container: string | HTMLElement, options: {
+        sitekey: string;
+        callback: (token: string) => void;
+        'expired-callback': () => void;
+        'error-callback': () => void;
+      }) => string;
+    };
+  }
+}
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -43,6 +57,26 @@ export default function JuradoPage() {
   const [pinError, setPinError] = useState('');
   const [verifyingPin, setVerifyingPin] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [captchaError, setCaptchaError] = useState('');
+  const turnstileContainer = useRef<HTMLDivElement>(null);
+  const turnstileWidgetId = useRef<string | null>(null);
+  const turnstileToken = useRef<string | null>(null);
+
+  useEffect(() => {
+    const checkTurnstile = () => {
+      if (window.turnstile && turnstileContainer.current && !turnstileWidgetId.current) {
+        window.turnstile.render(turnstileContainer.current, {
+          sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
+          callback: (token: string) => { turnstileToken.current = token; },
+          'expired-callback': () => { turnstileToken.current = null; },
+          'error-callback': () => { turnstileToken.current = null; },
+        });
+      }
+    };
+    const interval = setInterval(checkTurnstile, 200);
+    setTimeout(() => clearInterval(interval), 10000);
+    return () => { clearInterval(interval); };
+  }, []);
 
   useEffect(() => {
     if (!data && !swrError) {
@@ -118,23 +152,44 @@ export default function JuradoPage() {
     }
   };
 
+  const getTurnstileToken = useCallback(() => {
+    return Promise.resolve(turnstileToken.current);
+  }, []);
+
   const handleVoteSubmit = useCallback(async (teamId: string, score: number) => {
     if (!jurado || !data) return;
+    setCaptchaError('');
+
+    const cfToken = await getTurnstileToken();
+    if (!cfToken) {
+      setCaptchaError('Aguardando verificação de segurança...');
+      return;
+    }
+
     const jurados = data.jurados || [];
     const juradoIndex = jurados.findIndex((j: any) => j.id === jurado.id);
     const mySlot = juradoIndex === 0 ? 'j1' : 'j2';
     setSavingTeam(teamId);
     try {
-      await fetch('/api/state', {
+      const res = await fetch('/api/state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'juryVote', teamId, jurado: mySlot, score })
+        body: JSON.stringify({ action: 'juryVote', teamId, jurado: mySlot, score, cfToken })
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Erro ao enviar nota.' }));
+        setCaptchaError(err.error || 'Erro ao enviar nota.');
+        return;
+      }
       mutate();
     } catch {
-      console.error('Erro ao enviar nota');
+      setCaptchaError('Erro ao comunicar com o servidor.');
     } finally {
       setTimeout(() => setSavingTeam(null), 1200);
+      if (window.turnstile && turnstileContainer.current) {
+        window.turnstile.reset(turnstileContainer.current);
+      }
+      turnstileToken.current = null;
     }
   }, [jurado, data, mutate]);
 
@@ -360,44 +415,29 @@ export default function JuradoPage() {
                       <ScoreCircle score={currentScore} color={team.color} />
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', minWidth: 28 }}>0</span>
-                      <div style={{ flex: 1, position: 'relative' }}>
-                        <input
-                          type="range"
-                          min="0"
-                          max="10"
-                          step="0.5"
-                          value={currentScore}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setLocalScores(prev => ({ ...prev, [team.id]: val }));
-                          }}
-                          onMouseUp={() => handleVoteSubmit(team.id, currentScore)}
-                          onTouchEnd={() => handleVoteSubmit(team.id, currentScore)}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', justifyContent: 'center' }}>
+                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                        <button
+                          key={n}
+                          onClick={() => handleVoteSubmit(team.id, n)}
+                          disabled={savingTeam === team.id || !!captchaError}
                           style={{
-                            width: '100%',
-                            accentColor: team.color,
-                            height: 6,
-                            cursor: 'pointer',
-                            WebkitAppearance: 'none',
-                            appearance: 'none',
-                            outline: 'none',
-                            background: `linear-gradient(to right, ${team.color} ${currentScore * 10}%, rgba(0,0,0,0.08) ${currentScore * 10}%)`,
-                            borderRadius: 3
+                            width: '2.2rem', height: '2.2rem', borderRadius: '8px',
+                            border: currentScore === n ? `2px solid ${team.color}` : '1px solid var(--border-light)',
+                            background: currentScore === n ? team.color : 'var(--bg-card)',
+                            color: currentScore === n ? '#fff' : 'var(--text-primary)',
+                            fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
+                            opacity: savingTeam === team.id ? 0.5 : 1,
+                            fontFamily: 'inherit',
                           }}
-                        />
-                      </div>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', minWidth: 28, textAlign: 'right' }}>10</span>
+                        >
+                          {n}
+                        </button>
+                      ))}
                     </div>
 
                     {savingTeam === team.id && (
-                      <div
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: '0.4rem',
-                          color: 'var(--grass-dark)', fontSize: '0.8rem'
-                        }}
-                      >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--grass-dark)', fontSize: '0.8rem', justifyContent: 'center' }}>
                         <Award size={14} />
                         Nota salva com sucesso!
                       </div>
@@ -406,35 +446,19 @@ export default function JuradoPage() {
                 );
               })}
             </div>
+
+            {captchaError && (
+              <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center', margin: '0.5rem 0 0' }}>
+                {captchaError}
+              </p>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
+              <div ref={turnstileContainer} style={{ width: 300, height: 65 }} />
+            </div>
           </div>
         )}
       </div>
-
-      <style jsx>{`
-        input[type='range']::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          background: white;
-          border: 3px solid currentColor;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-          cursor: pointer;
-          transition: transform 0.15s ease;
-        }
-        input[type='range']::-webkit-slider-thumb:hover {
-          transform: scale(1.15);
-        }
-        input[type='range']::-moz-range-thumb {
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          background: white;
-          border: 3px solid currentColor;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-          cursor: pointer;
-        }
-      `}</style>
     </div>
   );
 }
