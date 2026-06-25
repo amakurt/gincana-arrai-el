@@ -38,6 +38,7 @@ export default function JuradoPage() {
   const [savingTeam, setSavingTeam] = useState<string | null>(null);
   const [localScores, setLocalScores] = useState<{ [teamId: string]: number }>({});
   const [pinVerified, setPinVerified] = useState(false);
+  const [juradoName, setJuradoName] = useState('');
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [verifyingPin, setVerifyingPin] = useState(false);
@@ -51,15 +52,24 @@ export default function JuradoPage() {
     setLoadingTimeout(false);
   }, [data, swrError]);
 
+  const getCookie = (cname: string) => {
+    if (typeof document === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${cname}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift();
+    return null;
+  };
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = sessionStorage.getItem('jurado_data');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          setJurado(parsed);
+      const verified = getCookie('jurado_verified') === 'true';
+      if (verified) {
+        const jid = getCookie('jurado_id');
+        const jname = getCookie('jurado_name');
+        if (jid && jname) {
+          setJurado({ id: jid, name: decodeURIComponent(jname) });
           setPinVerified(true);
-        } catch {}
+        }
       }
     }
   }, []);
@@ -92,16 +102,14 @@ export default function JuradoPage() {
       const response = await fetch('/api/auth/pin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin: pinInput, type: 'jurado' })
+        body: JSON.stringify({ name: juradoName, pin: pinInput, type: 'jurado' })
       });
       const result = await response.json();
       if (response.ok && result.success && result.jurado) {
-        sessionStorage.setItem('jurado_verified', 'true');
-        sessionStorage.setItem('jurado_data', JSON.stringify(result.jurado));
         setJurado(result.jurado);
         setPinVerified(true);
       } else {
-        setPinError(result.error || 'PIN incorreto!');
+        setPinError(result.error || 'Nome ou PIN incorreto!');
       }
     } catch {
       setPinError('Erro ao comunicar com o servidor.');
@@ -131,11 +139,13 @@ export default function JuradoPage() {
   }, [jurado, data, mutate]);
 
   const handleExit = () => {
-    sessionStorage.removeItem('jurado_verified');
-    sessionStorage.removeItem('jurado_data');
+    document.cookie = 'jurado_verified=; path=/; max-age=0';
+    document.cookie = 'jurado_id=; path=/; max-age=0';
+    document.cookie = 'jurado_name=; path=/; max-age=0';
     setJurado(null);
     setPinVerified(false);
     setPinInput('');
+    setJuradoName('');
   };
 
   if (!data) {
@@ -199,6 +209,20 @@ export default function JuradoPage() {
 
             <div className="glass" style={{ padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <input
+                placeholder="Seu nome"
+                value={juradoName}
+                onChange={(e) => setJuradoName(e.target.value)}
+                style={{
+                  width: '100%', padding: '1rem', borderRadius: '12px', fontSize: '1.1rem',
+                  textAlign: 'center', fontWeight: 600,
+                  background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)',
+                  border: pinError ? '1px solid #ef4444' : '1px solid var(--border-light)',
+                  outline: 'none'
+                }}
+                required
+                autoFocus
+              />
+              <input
                 type="password"
                 pattern="[0-9]*"
                 inputMode="numeric"
@@ -213,7 +237,6 @@ export default function JuradoPage() {
                   outline: 'none', caretColor: 'var(--blue-brazil)'
                 }}
                 required
-                autoFocus
               />
 
               {pinError && (
@@ -228,9 +251,9 @@ export default function JuradoPage() {
                 className="btn"
                 style={{
                   background: 'var(--grass-dark)',
-                  fontWeight: 900, fontSize: '1rem', opacity: pinInput.length < 4 ? 0.5 : 1
+                  fontWeight: 900, fontSize: '1rem', opacity: (!juradoName || pinInput.length < 4) ? 0.5 : 1
                 }}
-                disabled={verifyingPin || pinInput.length < 4}
+                disabled={verifyingPin || !juradoName || pinInput.length < 4}
               >
                 {verifyingPin ? 'VERIFICANDO...' : 'ENTRAR'}
               </button>
