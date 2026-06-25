@@ -214,26 +214,26 @@ export async function POST(request: Request) {
       }
     }
 
-    // CAPTCHA validation (reCAPTCHA v2) for public votes
+    // CAPTCHA validation (Turnstile) for public votes
     if (body.action === 'vote') {
-      const secret = process.env.RECAPTCHA_SECRET_KEY;
+      const secret = process.env.TURNSTILE_SECRET_KEY;
       if (secret && secret.length > 0) {
-        const captchaToken = body.captchaToken || '';
-        if (!captchaToken) {
-          return NextResponse.json({ error: 'Marque a caixa "Não sou um robô" antes de votar.' }, { status: 403 });
+        const cfToken = body.cfToken || '';
+        if (!cfToken) {
+          return NextResponse.json({ error: 'Aguardando verificação de segurança...' }, { status: 403 });
         }
         try {
-          const verify = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+          const verify = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `secret=${encodeURIComponent(secret)}&response=${encodeURIComponent(captchaToken)}&remoteip=${encodeURIComponent(ip)}`
+            body: `secret=${encodeURIComponent(secret)}&response=${encodeURIComponent(cfToken)}&remoteip=${encodeURIComponent(ip)}`
           });
           const result = await verify.json();
           if (!result.success) {
-            return NextResponse.json({ error: 'CAPTCHA inválido. Tente novamente.' }, { status: 403 });
+            return NextResponse.json({ error: 'Verificação de segurança falhou. Tente novamente.' }, { status: 403 });
           }
         } catch {
-          return NextResponse.json({ error: 'Erro ao validar CAPTCHA.' }, { status: 500 });
+          return NextResponse.json({ error: 'Erro ao validar verificação de segurança.' }, { status: 500 });
         }
       }
     }
