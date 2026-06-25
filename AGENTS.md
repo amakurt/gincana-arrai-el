@@ -142,3 +142,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `.env.local` — Turnstile keys
 - `load-test-k6.js` — load test k6 script
 
+## Session 2026-06-25
+
+### Changes
+- **Turnstile + botões 0-10 nos jurados** (`src/app/jurado/page.tsx`): Slider substituído por botões numerados 0–10 (inteiros). Turnstile Non-interactive adicionado com token enviado no body do `juryVote`. Tipos Turnstile declarados globalmente (idêntico ao `vote/page.tsx`). Reset do widget após cada voto.
+- **Backend CAPTCHA** (`src/app/api/state/route.ts`): Validação Turnstile estendida para `juryVote` (antes só `vote`).
+
+### Key Files Changed
+- `src/app/jurado/page.tsx` — botões 0-10 + Turnstile
+- `src/app/api/state/route.ts` — CAPTCHA para juryVote
+

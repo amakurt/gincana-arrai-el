@@ -149,3 +149,21 @@
 - `src/app/layout.tsx` — Turnstile script
 - `.env.local` — Turnstile keys
 - `AGENTS.md` — atualizado com novas features de segurança
+
+## 2026-06-25
+
+### Mudanças
+
+- **Turnstile + botões 0-10 nos jurados** (`src/app/jurado/page.tsx`):
+  - Substituído slider (range) por **botões numerados 0 a 10** (inteiros), cada um com cor da equipe quando selecionado.
+  - Adicionado Turnstile CAPTCHA Non-interactive (banner "Verificando...", sem clique/desafio de imagem), renderizado via `useRef` + `window.turnstile.render()`.
+  - Token enviado no body do `fetch('api/state')` para `juryVote`.
+  - `declare global` com tipos Turnstile (idêntico ao do `vote/page.tsx`).
+  - Exibição de erro do CAPTCHA e reset do widget após cada voto.
+
+- **Backend CAPTCHA** (`src/app/api/state/route.ts`): Validação Turnstile estendida para cobrir também `juryVote` (antes só cobria `vote`).
+
+### Files Changed
+- `src/app/jurado/page.tsx` — Turnstile + botões 0-10
+- `src/app/api/state/route.ts` — CAPTCHA também para juryVote
+- `SESSION_LOG.md` — este log
