@@ -9,6 +9,7 @@ declare global {
   interface Window {
     turnstile?: {
       reset: (container: string | HTMLElement) => void;
+      remove: (container: string | HTMLElement) => void;
       render: (container: string | HTMLElement, options: {
         sitekey: string;
         callback: (token: string) => void;
