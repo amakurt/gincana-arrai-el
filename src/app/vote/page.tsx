@@ -28,6 +28,7 @@ export default function VotePage() {
   const [votedFor, setVotedFor] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [voting, setVoting] = useState(false);
+  const [captchaError, setCaptchaError] = useState('');
   const recaptchaContainer = useRef<HTMLDivElement>(null);
   const recaptchaReady = useRef(false);
   const recaptchaWidgetId = useRef<number | null>(null);
@@ -85,21 +86,35 @@ export default function VotePage() {
     if (voting) return;
     setVoting(true);
 
+    setCaptchaError('');
+
     const captchaToken = await getRecaptchaToken();
+    if (!captchaToken) {
+      setCaptchaError('Marque a caixa "Não sou um robô" antes de votar.');
+      setVoting(false);
+      return;
+    }
 
     const voterId = localStorage.getItem('voter_id') || '';
+
+    const res = await fetch('/api/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'vote', teamId, voterId, captchaToken })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Erro ao registrar voto.' }));
+      setCaptchaError(err.error || 'Erro ao registrar voto.');
+      setVoting(false);
+      return;
+    }
 
     setVotedFor(teamId);
     setHasVoted(true);
     if (data.singleVoteMode) {
       localStorage.setItem(`voted_prova_${data.currentProvaId}`, teamId);
     }
-
-    await fetch('/api/state', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'vote', teamId, voterId, captchaToken })
-    });
 
     setVoting(false);
     if (window.grecaptcha && recaptchaWidgetId.current !== null) {
@@ -245,6 +260,11 @@ export default function VotePage() {
             <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
               <div ref={recaptchaContainer} />
             </div>
+            {captchaError && (
+              <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center', margin: '-0.3rem 0 0 0' }}>
+                {captchaError}
+              </p>
+            )}
           </>
         )}
       </div>
