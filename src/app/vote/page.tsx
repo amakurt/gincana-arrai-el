@@ -8,16 +8,15 @@ import ShareButton from '@/components/ShareButton';
 
 declare global {
   interface Window {
-    turnstile?: {
-      execute: (container: string | HTMLElement, options: { callback: (token: string) => void }) => void;
-      reset: (container: string | HTMLElement) => void;
-      remove: (container: string | HTMLElement) => void;
+    grecaptcha?: {
       render: (container: string | HTMLElement, options: {
         sitekey: string;
-        callback: (token: string) => void;
-        'expired-callback': () => void;
-        'error-callback': () => void;
-      }) => string;
+        callback?: (token: string) => void;
+        'expired-callback'?: () => void;
+        'error-callback'?: () => void;
+      }) => number;
+      reset: (widgetId: number) => void;
+      getResponse: (widgetId: number) => string;
     };
   }
 }
@@ -29,10 +28,9 @@ export default function VotePage() {
   const [votedFor, setVotedFor] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [voting, setVoting] = useState(false);
-  const turnstileContainer = useRef<HTMLDivElement>(null);
-  const turnstileReady = useRef(false);
-  const turnstileWidgetId = useRef<string | null>(null);
-  const turnstileToken = useRef<string | null>(null);
+  const recaptchaContainer = useRef<HTMLDivElement>(null);
+  const recaptchaReady = useRef(false);
+  const recaptchaWidgetId = useRef<number | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && data?.currentProvaId) {
@@ -59,35 +57,26 @@ export default function VotePage() {
     }
   }, []);
 
-  // Render Turnstile widget when script is loaded
   useEffect(() => {
-    const checkTurnstile = () => {
-      if (window.turnstile && turnstileContainer.current && !turnstileWidgetId.current) {
-        const id = window.turnstile.render(turnstileContainer.current, {
-          sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
-          callback: (token: string) => {
-            turnstileToken.current = token;
-            turnstileReady.current = true;
-          },
-          'expired-callback': () => {
-            turnstileToken.current = null;
-            turnstileReady.current = false;
-          },
-          'error-callback': () => {
-            turnstileToken.current = null;
-            turnstileReady.current = false;
-          },
+    const checkRecaptcha = () => {
+      if (window.grecaptcha && recaptchaContainer.current && recaptchaWidgetId.current === null) {
+        const id = window.grecaptcha.render(recaptchaContainer.current, {
+          sitekey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '',
+          callback: () => { recaptchaReady.current = true; },
+          'expired-callback': () => { recaptchaReady.current = false; },
         });
-        turnstileWidgetId.current = id;
+        recaptchaWidgetId.current = id;
       }
     };
-    const interval = setInterval(checkTurnstile, 200);
+    const interval = setInterval(checkRecaptcha, 200);
     setTimeout(() => clearInterval(interval), 10000);
     return () => { clearInterval(interval); };
   }, []);
 
-  const getTurnstileToken = useCallback(() => {
-    return Promise.resolve(turnstileToken.current);
+  const getRecaptchaToken = useCallback(() => {
+    if (!window.grecaptcha || recaptchaWidgetId.current === null) return Promise.resolve(null);
+    const token = window.grecaptcha.getResponse(recaptchaWidgetId.current);
+    return Promise.resolve(token || null);
   }, []);
 
   const handleVote = async (teamId: string) => {
@@ -96,8 +85,7 @@ export default function VotePage() {
     if (voting) return;
     setVoting(true);
 
-    // Get Turnstile token (if available)
-    const cfToken = await getTurnstileToken();
+    const captchaToken = await getRecaptchaToken();
 
     const voterId = localStorage.getItem('voter_id') || '';
 
@@ -110,25 +98,23 @@ export default function VotePage() {
     await fetch('/api/state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'vote', teamId, voterId, cfToken })
+      body: JSON.stringify({ action: 'vote', teamId, voterId, captchaToken })
     });
 
     setVoting(false);
-    if (window.turnstile && turnstileContainer.current) {
-      window.turnstile.reset(turnstileContainer.current);
+    if (window.grecaptcha && recaptchaWidgetId.current !== null) {
+      window.grecaptcha.reset(recaptchaWidgetId.current);
     }
-    turnstileReady.current = false;
-    turnstileToken.current = null;
+    recaptchaReady.current = false;
   };
 
   const handleVoteAgain = () => {
     setHasVoted(false);
     setVotedFor(null);
-    if (window.turnstile && turnstileContainer.current) {
-      window.turnstile.reset(turnstileContainer.current);
+    if (window.grecaptcha && recaptchaWidgetId.current !== null) {
+      window.grecaptcha.reset(recaptchaWidgetId.current);
     }
-    turnstileReady.current = false;
-    turnstileToken.current = null;
+    recaptchaReady.current = false;
   };
 
   if (error) return <div className="mobile-container"><div className="glass" style={{padding: '2rem', textAlign: 'center'}}>Erro ao carregar sistema.</div></div>;
@@ -256,9 +242,8 @@ export default function VotePage() {
                 {voting ? <Loader2 size={24} className="animate-spin" /> : team.name.toUpperCase()}
               </button>
             ))}
-            {/* Widget Turnstile visível (Non-interactive mode) */}
             <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
-              <div ref={turnstileContainer} style={{ width: 300, height: 65 }} />
+              <div ref={recaptchaContainer} />
             </div>
           </>
         )}
