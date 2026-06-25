@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Smartphone, Lock, ArrowRight } from "lucide-react";
+import { Smartphone, ArrowRight } from "lucide-react";
 import ShareButton from "@/components/ShareButton";
 
 export default function Home() {
@@ -40,27 +40,8 @@ export default function Home() {
         
       </div>
 
-      <div style={{ marginTop: '3rem', display: 'flex', justifyContent: 'center', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ marginTop: '3rem', display: 'flex', justifyContent: 'center' }}>
         <ShareButton url="/" label="Compartilhar Evento" />
-        <Link 
-          href="/login" 
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.5rem', 
-            color: 'var(--text-secondary)', 
-            fontWeight: 600, 
-            fontSize: '0.9rem', 
-            padding: '0.6rem 1.2rem', 
-            borderRadius: '20px', 
-            background: 'var(--bg-card)', 
-            border: '1px solid var(--border-light)', 
-            transition: 'all 0.2s' 
-          }}
-        >
-          <Lock size={14} color="var(--blue-brazil)" />
-          <span>Área Restrita</span>
-        </Link>
       </div>
     </div>
   );
