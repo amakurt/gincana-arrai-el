@@ -26,25 +26,19 @@ export default function AdminPage() {
 
   const [error, setError] = useState('');
 
-  const getCookie = (name: string) => {
-    if (typeof document === 'undefined') return null;
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop()?.split(';').shift();
-    return null;
-  };
-
-  // Verificar se o admin já está autenticado nesta sessão do navegador
+  // Verificar se o admin já está autenticado
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const isVerified = getCookie('admin_verified') === 'true';
-      if (isVerified) {
-        setAdminVerified(true);
-        setCheckingAuth(false);
-      } else {
-        window.location.href = '/login';
-      }
-    }
+    fetch('/api/auth/check')
+      .then(r => r.json())
+      .then(d => {
+        if (d.verified) {
+          setAdminVerified(true);
+          setCheckingAuth(false);
+        } else {
+          window.location.href = '/login';
+        }
+      })
+      .catch(() => { window.location.href = '/login'; });
   }, []);
 
   useEffect(() => {

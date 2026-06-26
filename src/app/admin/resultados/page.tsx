@@ -7,14 +7,6 @@ import { BarChart3, Trophy, ArrowLeft, AlertTriangle, RefreshCw, Trash2 } from "
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
-function getCookie(name: string) {
-  if (typeof document === "undefined") return null;
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(";").shift();
-  return null;
-}
-
 export default function ResultadosPage() {
   const router = useRouter();
   const { data, mutate, error } = useSWR("/api/resultados", fetcher, { refreshInterval: 5000 });
@@ -22,14 +14,16 @@ export default function ResultadosPage() {
   const [confirmClear, setConfirmClear] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const isVerified = getCookie("admin_verified") === "true";
-      if (!isVerified) {
-        window.location.href = "/login";
-      } else {
-        setCheckingAuth(false);
-      }
-    }
+    fetch("/api/auth/check")
+      .then(r => r.json())
+      .then(d => {
+        if (d.verified) {
+          setCheckingAuth(false);
+        } else {
+          window.location.href = "/login";
+        }
+      })
+      .catch(() => { window.location.href = "/login"; });
   }, []);
 
   if (checkingAuth) return null;
