@@ -167,3 +167,40 @@
 - `src/app/jurado/page.tsx` — Turnstile + botões 0-10
 - `src/app/api/state/route.ts` — CAPTCHA também para juryVote
 - `SESSION_LOG.md` — este log
+
+## 2026-06-26
+
+### Análise de Vulnerabilidades (security-scan + vulnhunter)
+
+- **CRÍTICO**: `.env.local` commitado com credenciais — corrigido (`.gitignore` agora ignora `.env.local`, `git rm --cached`)
+- **CRÍTICO**: Turnstile secret key exposta — usuário rotacionou no Cloudflare
+- **HIGH**: Fallback de credenciais hardcoded removido (`login/route.ts` — retorna 500 se env vars faltando)
+- **HIGH**: PINs hardcoded (`1234`/`5678`) removidos (`pin/route.ts` — retorna 500 se não configurado)
+- **HIGH**: `httpOnly: true` nos cookies de autenticação (login + pin)
+- **HIGH**: Senha admin rotacionada para hash forte
+- **HIGH**: PINs dos jurados mascarados na interface (`●●●●`)
+- **HIGH**: `Secure` cookie simplificado (`secure = proto === 'https'`)
+- **MEDIUM**: Criado endpoint `/api/auth/check` para verificar cookie httpOnly server-side
+- **MEDIUM**: Admin pages refatoradas para usar `/api/auth/check` em vez de `document.cookie`
+- **MEDIUM**: `getCookie()` removido de admin pages
+
+### Supabase Removido
+
+- `@supabase/supabase-js` removido do `package.json` (9 pacotes a menos)
+- `src/lib/supabase.ts` reescrito como stub — toda chamada retorna `error`, JSON fallback
+- App 100% auto-suficiente, sem dependência externa
+- Backup criado na branch `backup-antes-remover-supabase`
+
+### Deploy VPS
+
+- Commit e push para GitHub
+- Pull, build, PM2 restart na Oracle VPS
+- Nova senha admin: `4f1ca7004c2af552610104fb70527d7b3fda80d22ee3aa4b`
+- Turnstile secret key rotacionada
+
+### Pendente
+
+- ~~Conta Hetzner criada~~ — aguardando criação do servidor (CX23, Ubuntu 24.04, Nuremberg)
+- Após Hetzner ativo: configurar Node.js, clonar repo, build, PM2, Cloudflare Tunnel
+- Opcional: rotacionar Supabase anon key
+- Opcional: configurar domínio definitivo `institutoeducacionallogos.com.br`

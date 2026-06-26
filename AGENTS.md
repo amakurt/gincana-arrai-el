@@ -152,3 +152,31 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `src/app/jurado/page.tsx` — botões 0-10 + Turnstile
 - `src/app/api/state/route.ts` — CAPTCHA para juryVote
 
+## Session 2026-06-26
+
+### Mudanças
+
+- **Auditoria de segurança**: Instaladas skills `security-scan` (jwynia) + `vulnhunter` (sendaifun). Achados: 2 críticos, 5 altos, 5 médios, 5 baixos.
+- **Credenciais vazadas**: `.gitignore` corrigido para ignorar `.env.local`; removido do tracking (`git rm --cached`); `.env.local.example` criado como template; senha admin rotacionada.
+- **Hardcoded fallbacks removidos**: `login/route.ts` não usa mais `|| 'admin'/'arraiel2026'`; `pin/route.ts` não usa mais `|| '1234'/'5678'` — ambos retornam 500 se env vars/Supabase não configurados.
+- **Cookies endurecidos**: `httpOnly: true` em todos os cookies de autenticação; `Secure` simplificado para `proto === 'https'`.
+- **PINs mascarados**: Em `admin/jurados/page.tsx`, PINs exibidos como `●●●●`.
+- **Auth check endpoint**: Criado `/api/auth/check` que lê cookie server-side; admin pages refatoradas para usá-lo (substitui `document.cookie` quebrado pelo `httpOnly`).
+- **Supabase removido**: `@supabase/supabase-js` removido; `supabase.ts` vira stub que sempre retorna `error`; app 100% JSON. Backup na branch `backup-antes-remover-supabase`.
+- **Turnstile secret key**: Rotacionada no Cloudflare pelo usuário.
+- **Hetzner**: Conta criada, pendente criar servidor CX23 (Ubuntu 24.04, Nuremberg).
+
+### Key Files Changed
+- `.gitignore` — agora ignora `.env.local`
+- `.env.local` — removido do git, nova senha admin, nova Turnstile secret
+- `.env.local.example` — template criado
+- `src/app/api/auth/login/route.ts` — sem fallback, httpOnly, secure fix
+- `src/app/api/auth/pin/route.ts` — sem fallback, httpOnly, secure fix
+- `src/app/api/auth/check/route.ts` — novo endpoint
+- `src/app/admin/page.tsx` — auth via /api/auth/check
+- `src/app/admin/jurados/page.tsx` — PINs mascarados, auth via /api/auth/check
+- `src/app/admin/resultados/page.tsx` — auth via /api/auth/check
+- `src/lib/supabase.ts` — stub (sempre unavailable)
+- `package.json` — @supabase/supabase-js removido
+- `SESSION_LOG.md` — atualizado
+
