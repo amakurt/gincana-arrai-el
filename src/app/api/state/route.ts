@@ -340,10 +340,10 @@ export async function POST(request: Request) {
           if (body.teams !== undefined) {
             const { data: dbTeams, error: teamsErr } = await supabase.from('teams').select('id');
             if (teamsErr) throw teamsErr;
-            const dbTeamIds = dbTeams?.map(t => t.id) || [];
+            const dbTeamIds = dbTeams?.map((t: any) => t.id) || [];
             const receivedIds = body.teams.map((t: any) => t.id);
 
-            const toDelete = dbTeamIds.filter(id => !receivedIds.includes(id));
+            const toDelete = dbTeamIds.filter((id: string) => !receivedIds.includes(id));
             if (toDelete.length > 0) {
               const { error: delErr } = await supabase.from('teams').delete().in('id', toDelete);
               if (delErr) throw delErr;
@@ -383,10 +383,10 @@ export async function POST(request: Request) {
           if (body.provas !== undefined) {
             const { data: dbProvas, error: provasErr } = await supabase.from('provas').select('id');
             if (provasErr) throw provasErr;
-            const dbProvaIds = dbProvas?.map(p => p.id) || [];
+            const dbProvaIds = dbProvas?.map((p: any) => p.id) || [];
             const receivedIds = body.provas.map((p: any) => p.id);
 
-            const toDelete = dbProvaIds.filter(id => !receivedIds.includes(id));
+            const toDelete = dbProvaIds.filter((id: string) => !receivedIds.includes(id));
             if (toDelete.length > 0) {
               const { error: delErr } = await supabase.from('provas').delete().in('id', toDelete);
               if (delErr) throw delErr;

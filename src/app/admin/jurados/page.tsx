@@ -341,7 +341,7 @@ export default function JuradosPage() {
                   <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{j.name}</div>
                   {j.pin && (
                     <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "0.2rem" }}>
-                      PIN: {j.pin}
+                      PIN: {'●'.repeat(j.pin.length)}
                     </div>
                   )}
                 </div>

@@ -34,7 +34,7 @@ yarn-error.log*
 Chave-oracle/
 
 # env files
-.env.local.example
+.env.local
 
 # vercel
 .vercel

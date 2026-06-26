@@ -32,11 +32,11 @@ export async function POST(request: Request) {
 
     const host = request.headers.get('host') || 'www.institutoeducacionallogos.online';
     const proto = request.headers.get('x-forwarded-proto') || 'https';
-    const secure = proto === 'https' || host.includes('localhost') === false;
-    const cookieOpts = { path: '/', sameSite: 'lax' as const, secure, httpOnly: false };
+    const secure = proto === 'https';
+    const cookieOpts = { path: '/', sameSite: 'lax' as const, secure, httpOnly: true };
 
-    let adminPin = '1234';
-    let juryPin = '5678';
+    let adminPin: string | null = null;
+    let juryPin: string | null = null;
 
     const { data: config, error } = await supabase
       .from('config')
@@ -45,12 +45,16 @@ export async function POST(request: Request) {
       .single();
 
     if (!error && config) {
-      adminPin = config.admin_pin || adminPin;
-      juryPin = config.jury_pin || juryPin;
+      adminPin = config.admin_pin;
+      juryPin = config.jury_pin;
+    }
+
+    if (!adminPin && !juryPin) {
+      return NextResponse.json({ success: false, error: 'PINs não configurados no servidor.' }, { status: 500 });
     }
 
     if (type === 'admin') {
-      if (pin === adminPin) {
+      if (adminPin && pin === adminPin) {
         return NextResponse.json({ success: true, message: 'PIN Admin validado com sucesso!' });
       }
     } else if (type === 'jurado') {
@@ -103,7 +107,7 @@ export async function POST(request: Request) {
         }
 
         // Fallback para PIN genérico (só sem nome)
-        if (pin === juryPin) {
+        if (juryPin && pin === juryPin) {
           const response = NextResponse.json({
             success: true,
             message: 'PIN Jurado validado com sucesso!'
