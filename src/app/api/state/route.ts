@@ -116,9 +116,9 @@ function saveSnapshot(fileData: any, provas: any[], teams: any[], scores: any) {
   writeResultadosFile(resultados);
 }
 
-function determineProvaWinner(provaId: string, scores: any, teams: any[], provas: any[]) {
+function getJuryPicks(provaId: string, scores: any, teams: any[]) {
   const pScores = scores[provaId];
-  if (!pScores) return null;
+  if (!pScores) return { j1Pick: null, j2Pick: null };
 
   let j1Pick: string | null = null;
   let j2Pick: string | null = null;
@@ -129,44 +129,27 @@ function determineProvaWinner(provaId: string, scores: any, teams: any[], provas
     if (s.j2 === 1) j2Pick = team.id;
   }
 
-  let audienceWinner: string | null = null;
-  const pubVotes = teams.map((t: any) => ({ id: t.id, votes: pScores[t.id]?.publicVotes || 0 }));
-  if (pubVotes.length === 2) {
-    if (pubVotes[0].votes > pubVotes[1].votes) audienceWinner = pubVotes[0].id;
-    else if (pubVotes[1].votes > pubVotes[0].votes) audienceWinner = pubVotes[1].id;
-  }
-
-  let winnerId: string | null = null;
-
-  if (j1Pick && j2Pick && j1Pick === j2Pick) {
-    winnerId = j1Pick;
-  } else if (audienceWinner) {
-    winnerId = audienceWinner;
-  } else if (j1Pick && j2Pick && j1Pick !== j2Pick && !audienceWinner) {
-    return null;
-  } else if (j1Pick) {
-    winnerId = j1Pick;
-  } else if (j2Pick) {
-    winnerId = j2Pick;
-  }
-
-  return {
-    winnerId,
-    j1Pick,
-    j2Pick,
-    audienceWinner,
-    hasJuryVote: !!(j1Pick || j2Pick),
-    hasAudience: pubVotes.some((v: any) => v.votes > 0),
-  };
+  return { j1Pick, j2Pick };
 }
 
-function calculatePoints(prova: any, winnerId: string | null) {
-  const points = prova.points || 0;
+function calculateProvaPoints(provaPoints: number, j1Pick: string | null, j2Pick: string | null, teams: any[]) {
   const pointsAwarded: Record<string, number> = {};
-  if (!prova.teams) return {};
-  for (const team of prova.teams) {
-    pointsAwarded[team.id] = team.id === winnerId ? points : Math.floor(points * 0.5);
+  for (const team of teams) {
+    pointsAwarded[team.id] = 0;
   }
+
+  if (j1Pick && j2Pick && j1Pick === j2Pick) {
+    pointsAwarded[j1Pick] = provaPoints;
+  } else if (j1Pick && j2Pick && j1Pick !== j2Pick) {
+    const half = Math.floor(provaPoints / 2);
+    pointsAwarded[j1Pick] = half;
+    pointsAwarded[j2Pick] = half;
+  } else if (j1Pick) {
+    pointsAwarded[j1Pick] = provaPoints;
+  } else if (j2Pick) {
+    pointsAwarded[j2Pick] = provaPoints;
+  }
+
   return pointsAwarded;
 }
 
@@ -344,33 +327,23 @@ export async function POST(request: Request) {
       const teams = fileData.teams || [];
       const scores = fileData.scores || {};
 
-      const result = determineProvaWinner(provaId, scores, teams, provas);
+      const { j1Pick, j2Pick } = getJuryPicks(provaId, scores, teams);
 
-      if (!result) {
+      if (!j1Pick && !j2Pick) {
         return NextResponse.json({
-          error: 'Não foi possível determinar vencedor automaticamente.',
-          details: 'Jurados discordam e público está empatado. Selecione o vencedor manualmente no painel.'
-        }, { status: 400 });
-      }
-
-      if (!result.winnerId) {
-        return NextResponse.json({
-          error: 'Nenhum voto registrado. Não é possível finalizar.',
-          details: 'Nenhum jurado votou e o público não votou.'
+          error: 'Nenhum jurado votou. Não é possível finalizar.',
+          details: 'Aguardar votos dos jurados ou usar vencedor manual.'
         }, { status: 400 });
       }
 
       const prova = provas[provaIdx];
-      const points = prova.points || 0;
-      const pointsAwarded: Record<string, number> = {};
-      for (const team of teams) {
-        pointsAwarded[team.id] = team.id === result.winnerId ? points : Math.floor(points * 0.5);
-      }
+      const pointsAwarded = calculateProvaPoints(prova.points || 0, j1Pick, j2Pick, teams);
+      const winnerId = j1Pick && j2Pick && j1Pick === j2Pick ? j1Pick : (j1Pick || j2Pick);
 
       provas[provaIdx] = {
         ...prova,
         finalized: true,
-        winnerId: result.winnerId,
+        winnerId,
         pointsAwarded,
       };
       fileData.provas = provas;
@@ -382,17 +355,16 @@ export async function POST(request: Request) {
         timestamp: new Date().toISOString(),
         type: 'finalize',
         provaId,
-        winnerId: result.winnerId,
+        winnerId,
         pointsAwarded,
-        j1Pick: result.j1Pick,
-        j2Pick: result.j2Pick,
-        audienceWinner: result.audienceWinner,
+        j1Pick,
+        j2Pick,
       });
 
       return readJsonState();
     }
 
-    // Ação: Definir Vencedor Manual (admin override quando auto falha)
+    // Ação: Definir Vencedor Manual
     if (body.action === 'manualWinner') {
       const fileData = readStateFromFile();
       if (!fileData) return NextResponse.json({ error: 'Servidor não configurado.' }, { status: 500 });
@@ -407,10 +379,9 @@ export async function POST(request: Request) {
 
       const teams = fileData.teams || [];
       const prova = provas[provaIdx];
-      const points = prova.points || 0;
       const pointsAwarded: Record<string, number> = {};
       for (const team of teams) {
-        pointsAwarded[team.id] = team.id === body.winnerId ? points : Math.floor(points * 0.5);
+        pointsAwarded[team.id] = team.id === body.winnerId ? (prova.points || 0) : 0;
       }
 
       provas[provaIdx] = {
