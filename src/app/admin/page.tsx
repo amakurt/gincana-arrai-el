@@ -342,7 +342,7 @@ export default function AdminPage() {
             <select 
               value={data.currentProvaId || ''} 
               onChange={(e) => updateState({ currentProvaId: e.target.value })}
-              style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontWeight: 600 }}
+              style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontWeight: 600, colorScheme: 'dark' }}
             >
               <option value="">Selecione uma prova...</option>
               {(data.provas || []).map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
