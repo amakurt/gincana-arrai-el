@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
 import { readFileSync, existsSync } from 'fs';
 import path from 'path';
 
 const STATE_FILE = path.join(process.cwd(), 'gincana-state.json');
 
-// Rate limit for PIN brute-force
 const pinLimits = new Map<string, { count: number; resetAt: number }>();
 function checkPinRate(ip: string): boolean {
   const now = Date.now();
@@ -14,9 +12,20 @@ function checkPinRate(ip: string): boolean {
     pinLimits.set(ip, { count: 1, resetAt: now + 10000 });
     return true;
   }
-  if (entry.count >= 5) return false; // 5 attempts per 10s
+  if (entry.count >= 5) return false;
   entry.count++;
   return true;
+}
+
+function readJuradosFromFile(): any[] {
+  try {
+    if (!existsSync(STATE_FILE)) return [];
+    const raw = readFileSync(STATE_FILE, 'utf-8');
+    const data = JSON.parse(raw);
+    return data.jurados || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function POST(request: Request) {
@@ -35,51 +44,21 @@ export async function POST(request: Request) {
     const secure = proto === 'https';
     const cookieOpts = { path: '/', sameSite: 'lax' as const, secure, httpOnly: true };
 
-    let adminPin: string | null = null;
-    let juryPin: string | null = null;
-
-    const { data: config, error } = await supabase
-      .from('config')
-      .select('admin_pin, jury_pin')
-      .eq('id', 1)
-      .single();
-
-    if (!error && config) {
-      adminPin = config.admin_pin;
-      juryPin = config.jury_pin;
-    }
-
-    if (!adminPin && !juryPin) {
-      return NextResponse.json({ success: false, error: 'PINs não configurados no servidor.' }, { status: 500 });
-    }
-
     if (type === 'admin') {
+      const adminPin = process.env.ADMIN_PIN;
       if (adminPin && pin === adminPin) {
-        return NextResponse.json({ success: true, message: 'PIN Admin validado com sucesso!' });
+        const response = NextResponse.json({ success: true, message: 'PIN Admin validado com sucesso!' });
+        response.cookies.set('admin_verified', 'true', cookieOpts);
+        return response;
       }
-    } else if (type === 'jurado') {
-      // Busca jurados do Supabase primeiro
-      const { data: dbJurados } = await supabase
-        .from('jurados')
-        .select('*');
-      const allJurados: any[] = dbJurados || [];
+      return NextResponse.json({ success: false, error: 'PIN inválido!' }, { status: 401 });
+    }
 
-      // Fallback: busca do JSON file
-      try {
-        if (existsSync(STATE_FILE)) {
-          const fileData = JSON.parse(readFileSync(STATE_FILE, 'utf-8'));
-          const jsonJurados = fileData.jurados || [];
-          for (const j of jsonJurados) {
-            if (!allJurados.find((dj: any) => dj.id === j.id)) {
-              allJurados.push(j);
-            }
-          }
-        }
-      } catch {}
+    if (type === 'jurado') {
+      const allJurados = readJuradosFromFile();
 
       if (name) {
-        // Valida nome + PIN (dupla verificação)
-        const juradoMatch = allJurados.find((j: any) => j.name === name && j.pin === pin);
+        const juradoMatch = allJurados.find((j: any) => j.name === name && String(j.pin) === String(pin));
         if (juradoMatch) {
           const response = NextResponse.json({
             success: true,
@@ -92,8 +71,7 @@ export async function POST(request: Request) {
           return response;
         }
       } else {
-        // Fallback: só PIN (compatibilidade)
-        const juradoMatch = allJurados.find((j: any) => j.pin === pin);
+        const juradoMatch = allJurados.find((j: any) => String(j.pin) === String(pin));
         if (juradoMatch) {
           const response = NextResponse.json({
             success: true,
@@ -103,16 +81,6 @@ export async function POST(request: Request) {
           response.cookies.set('jurado_verified', 'true', cookieOpts);
           response.cookies.set('jurado_id', juradoMatch.id, cookieOpts);
           response.cookies.set('jurado_name', encodeURIComponent(juradoMatch.name), cookieOpts);
-          return response;
-        }
-
-        // Fallback para PIN genérico (só sem nome)
-        if (juryPin && pin === juryPin) {
-          const response = NextResponse.json({
-            success: true,
-            message: 'PIN Jurado validado com sucesso!'
-          });
-          response.cookies.set('jurado_verified', 'true', cookieOpts);
           return response;
         }
       }
