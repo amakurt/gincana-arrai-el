@@ -14,6 +14,20 @@ export default function HistoricoPage() {
   const [confirmClear, setConfirmClear] = useState(false);
   const [filtro, setFiltro] = useState("");
 
+  const filtered = useMemo(() => {
+    if (!Array.isArray(data)) return [];
+    if (!filtro) return data;
+    const f = filtro.toLowerCase();
+    return data.filter((v: any) =>
+      (v.teamId || '').toLowerCase().includes(f) ||
+      (v.type || '').toLowerCase().includes(f) ||
+      (v.provaId || '').toLowerCase().includes(f) ||
+      (v.juradoName || '').toLowerCase().includes(f) ||
+      (v.voterId || '').toLowerCase().includes(f) ||
+      (v.jurado || '').toLowerCase().includes(f)
+    );
+  }, [data, filtro]);
+
   useEffect(() => {
     fetch("/api/auth/check")
       .then(r => r.json())
@@ -28,20 +42,6 @@ export default function HistoricoPage() {
   }, []);
 
   if (checkingAuth) return null;
-
-  const filtered = useMemo(() => {
-    if (!Array.isArray(data)) return [];
-    if (!filtro) return data;
-    const f = filtro.toLowerCase();
-    return data.filter((v: any) =>
-      (v.teamId || '').toLowerCase().includes(f) ||
-      (v.type || '').toLowerCase().includes(f) ||
-      (v.provaId || '').toLowerCase().includes(f) ||
-      (v.juradoName || '').toLowerCase().includes(f) ||
-      (v.voterId || '').toLowerCase().includes(f) ||
-      (v.jurado || '').toLowerCase().includes(f)
-    );
-  }, [data, filtro]);
 
   const handleClear = async () => {
     await fetch("/api/historico", {
