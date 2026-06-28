@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from 'swr';
-import { Play, Square, RotateCcw, AlertTriangle, Users, Trophy, Monitor, Lock, ShieldAlert, Home, RefreshCw, Edit2, Save, X, BarChart3 } from 'lucide-react';
+import { Play, Square, RotateCcw, AlertTriangle, Users, Trophy, Monitor, Lock, ShieldAlert, Home, RefreshCw, Edit2, Save, X, BarChart3, History } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -208,6 +208,7 @@ export default function AdminPage() {
         <button onClick={() => router.push('/jurado')} className="nav-btn"><Trophy size={16} /> Júri</button>
         <button onClick={() => router.push('/admin/jurados')} className="nav-btn"><ShieldAlert size={16} /> Jurados</button>
         <button onClick={() => router.push('/admin/resultados')} className="nav-btn"><BarChart3 size={16} /> Resultados</button>
+        <button onClick={() => router.push('/admin/historico')} className="nav-btn"><History size={16} /> Histórico</button>
         <button onClick={() => router.push('/vote')} className="nav-btn"><Users size={16} /> Votos</button>
 
         <style dangerouslySetInnerHTML={{ __html: `

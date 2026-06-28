@@ -44,6 +44,13 @@ function checkOrigin(request: Request): boolean {
 
 const STATE_FILE = path.join(process.cwd(), 'gincana-state.json');
 const RESULTADOS_FILE = path.join(process.cwd(), 'resultados.json');
+const HISTORICO_FILE = path.join(process.cwd(), 'votacoes-historico.jsonl');
+
+function appendHistorico(entry: any) {
+  try {
+    writeFileSync(HISTORICO_FILE, JSON.stringify(entry) + '\n', { flag: 'a' });
+  } catch {}
+}
 
 function readStateFromFile(): any {
   try {
@@ -249,6 +256,14 @@ export async function POST(request: Request) {
         fileData.scores[provaId][body.teamId].publicVotes = (fileData.scores[provaId][body.teamId].publicVotes || 0) + 1;
         writeStateToFile(fileData);
 
+        appendHistorico({
+          timestamp: new Date().toISOString(),
+          type: 'public',
+          provaId,
+          teamId: body.teamId,
+          voterId: body.voterId || 'anon'
+        });
+
         // Tenta sincronizar com Supabase (best-effort)
         if (await checkSupabaseAvailable()) {
           try {
@@ -274,6 +289,16 @@ export async function POST(request: Request) {
           if (!fileData.scores[pId][body.teamId]) fileData.scores[pId][body.teamId] = { publicVotes: 0, j1: 0, j2: 0 };
           fileData.scores[pId][body.teamId][body.jurado] = value;
           writeStateToFile(fileData);
+
+          appendHistorico({
+            timestamp: new Date().toISOString(),
+            type: 'jury',
+            provaId: pId,
+            teamId: body.teamId,
+            jurado: body.jurado,
+            score: value,
+            juradoName: body.juradoName || ''
+          });
 
           // Tenta sincronizar com Supabase (best-effort)
           if (await checkSupabaseAvailable()) {

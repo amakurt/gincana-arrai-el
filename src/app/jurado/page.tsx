@@ -175,7 +175,7 @@ export default function JuradoPage() {
       const res = await fetch('/api/state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'juryVote', teamId, jurado: mySlot, score, cfToken })
+        body: JSON.stringify({ action: 'juryVote', teamId, jurado: mySlot, score, cfToken, juradoName: jurado.name })
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Erro ao enviar nota.' }));

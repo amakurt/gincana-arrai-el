@@ -204,3 +204,31 @@
 - Após Hetzner ativo: configurar Node.js, clonar repo, build, PM2, Cloudflare Tunnel
 - Opcional: rotacionar Supabase anon key
 - Opcional: configurar domínio definitivo `institutoeducacionallogos.com.br`
+## Session 2026-06-27
+
+### Mudanças
+
+- **Servidor Hetzner CX23 criado**: Nuremberg, 2 vCPU, 4GB RAM, Ubuntu 24.04. IP: `23.88.58.41`
+- **Node.js 22.23.1** instalado, repo clonado do GitHub, build Next.js bem-sucedido
+- **PM2** com `ecosystem.config.js`, `NODE_OPTIONS='--max-old-space-size=800'`
+- **Nginx** configurado como proxy reverso (porta 80 → 3000) com cache de assets (1 ano) e home (60 min)
+- **Cloudflare Tunnel** (`gincana-hetzner`): `hetzner.institutoeducacionallogos.online` → localhost:80
+- **Swap 1GB** adicionado e persistido
+- **Firewall (UFW)** ativo: portas 22 e 3000 liberadas
+
+### Comparativo Oracle vs Hetzner
+
+| Item | Oracle | Hetzner |
+|------|--------|---------|
+| CPU | 1 vCPU (AMD) | **2 vCPU** (Intel) |
+| RAM | 1GB | **4GB** |
+| Swap | 1GB | **1GB** |
+| Node memory | 400MB | **800MB** |
+| Cache | Nginx | **Nginx** |
+| Tunnel | Cloudflare | **Cloudflare** |
+| Domínio | `www.institutoeducacionallogos.online` | `hetzner.institutoeducacionallogos.online` |
+
+### Pendente
+
+- Migrar `institutoeducacionallogos.com.br` para Cloudflare + apontar pro Hetzner (DNS leva ~3 dias)
+- `institutoeducacionallogos.store` já está na Cloudflare (nameservers Cloudflare)
