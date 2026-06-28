@@ -21,6 +21,7 @@ export default function AdminPage() {
   const [newProvaName, setNewProvaName] = useState('');
   const [newProvaTimer, setNewProvaTimer] = useState(0);
   const [newProvaPoints, setNewProvaPoints] = useState(300);
+  const [newProvaExternal, setNewProvaExternal] = useState(false);
   const [editingTeam, setEditingTeam] = useState<string | null>(null);
   const [editingProva, setEditingProva] = useState<string | null>(null);
   const [editTeamName, setEditTeamName] = useState('');
@@ -31,6 +32,7 @@ export default function AdminPage() {
   const [finalizeLoading, setFinalizeLoading] = useState(false);
   const [showManualWinner, setShowManualWinner] = useState(false);
   const [finalizeError, setFinalizeError] = useState('');
+  const [externalValues, setExternalValues] = useState<Record<string, string>>({});
 
   const [error, setError] = useState('');
 
@@ -152,6 +154,26 @@ export default function AdminPage() {
     setFinalizeError('');
     setShowManualWinner(false);
     try {
+      if (activeProva?.externalResult) {
+        const vals: Record<string, number> = {};
+        for (const team of (data?.teams || [])) {
+          vals[team.id] = Number(externalValues[team.id]) || 0;
+        }
+        const res = await fetch('/api/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'externalResult', externalValues: vals })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          setFinalizeError(err.error || 'Erro ao calcular resultado.');
+          return;
+        }
+        const newData = await res.json();
+        mutate(newData, false);
+        return;
+      }
+
       const res = await fetch('/api/state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -159,7 +181,7 @@ export default function AdminPage() {
       });
       if (!res.ok) {
         const err = await res.json();
-        if (err.details?.includes('Selecione o vencedor')) {
+        if (err.details?.includes('Definir vencedor manualmente')) {
           setShowManualWinner(true);
           setFinalizeError(err.details);
         } else {
@@ -404,6 +426,35 @@ export default function AdminPage() {
                   REABRIR PROVA
                 </button>
               </div>
+            ) : activeProva?.externalResult ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  Insira o valor de cada equipe (arrecadação, rifas vendidas, etc). A equipe com maior valor vence.
+                </p>
+                {(data.teams || []).map((team: any) => (
+                  <div key={team.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: 12, height: 12, borderRadius: '50%', background: team.color, flexShrink: 0 }} />
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem', minWidth: '80px' }}>{team.name}</span>
+                    <input
+                      type="number"
+                      value={externalValues[team.id] || ''}
+                      onChange={(e) => setExternalValues(prev => ({ ...prev, [team.id]: e.target.value }))}
+                      min={0}
+                      placeholder="Valor"
+                      style={{ flex: 1, padding: '0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.9rem' }}
+                    />
+                  </div>
+                ))}
+                <button
+                  className="btn"
+                  style={{ background: '#8b5cf6' }}
+                  disabled={finalizeLoading || !data.currentProvaId}
+                  onClick={finalizeProva}
+                >
+                  {finalizeLoading ? 'CALCULANDO...' : 'CALCULAR RESULTADO'}
+                </button>
+                {finalizeError && <div style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center' }}>{finalizeError}</div>}
+              </div>
             ) : (
               <>
                 <button
@@ -635,13 +686,18 @@ export default function AdminPage() {
               style={{ width: '80px', padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
             />
             <span style={{ display: 'flex', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>pts</span>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+              <input type="checkbox" checked={newProvaExternal} onChange={(e) => setNewProvaExternal(e.target.checked)} />
+              s/ voto
+            </label>
             <button 
               onClick={() => {
                 if(newProvaName) {
-                  updateState({ provas: [...(data.provas || []), { id: 'p'+Date.now(), name: newProvaName, timer: newProvaTimer || 0, points: newProvaPoints, day: 1, finalized: false }] });
+                  updateState({ provas: [...(data.provas || []), { id: 'p'+Date.now(), name: newProvaName, timer: newProvaTimer || 0, points: newProvaPoints, externalResult: newProvaExternal, day: 1, finalized: false }] });
                   setNewProvaName('');
                   setNewProvaTimer(0);
                   setNewProvaPoints(300);
+                  setNewProvaExternal(false);
                 }
               }}
               disabled={loading}

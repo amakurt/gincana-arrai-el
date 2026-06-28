@@ -334,7 +334,7 @@ export default function JuradoPage() {
           </button>
         </div>
 
-        {!activeProva || data.status !== 'active' ? (
+        {!activeProva || data.status !== 'active' || activeProva?.externalResult ? (
           <div
             className="glass"
             style={{ padding: '3rem 2rem', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
@@ -343,12 +343,14 @@ export default function JuradoPage() {
               <ClipboardList size={48} style={{ color: 'var(--yellow-brazil)', opacity: 0.6 }} />
             </div>
             <h3 style={{ marginBottom: '0.5rem', fontSize: '1.3rem' }}>
-              {activeProva ? 'Votação Pausada' : 'Nenhuma Prova Ativa'}
+              {activeProva?.externalResult ? 'Prova sem Votação' : activeProva ? 'Votação Pausada' : 'Nenhuma Prova Ativa'}
             </h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-              {activeProva
-                ? `A prova "${activeProva.name}" está selecionada, mas a votação está pausada.`
-                : 'Aguarde o administrador iniciar a próxima prova no painel de controle.'}
+              {activeProva?.externalResult
+                ? `"${activeProva.name}" não precisa de votação de jurados. O resultado será definido pelo administrador.`
+                : activeProva
+                  ? `A prova "${activeProva.name}" está selecionada, mas a votação está pausada.`
+                  : 'Aguarde o administrador iniciar a próxima prova no painel de controle.'}
             </p>
           </div>
         ) : (

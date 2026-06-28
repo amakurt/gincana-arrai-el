@@ -4,7 +4,7 @@ import useSWR from 'swr';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSound } from '@/hooks/useSound';
 import { motion } from 'framer-motion';
-import { CheckCircle2, ShieldAlert, Trophy, Monitor, Loader2 } from 'lucide-react';
+import { CheckCircle2, ShieldAlert, Trophy, Monitor, Loader2, ClipboardList } from 'lucide-react';
 import ShareButton from '@/components/ShareButton';
 import Timer from '@/components/Timer';
 
@@ -151,6 +151,7 @@ export default function VotePage() {
 
   const isActive = data.status === 'active';
   const activeProva = data.provas.find((p: any) => p.id === data.currentProvaId);
+  const isExternalResult = activeProva?.externalResult;
 
   const teams = data.teams || [];
   const scores = data.scores || {};
@@ -196,7 +197,22 @@ export default function VotePage() {
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
-        {hasVoted ? (
+        {isExternalResult ? (
+          <div className="glass" style={{ padding: '3rem 2rem', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <ClipboardList size={48} style={{ color: 'var(--yellow-brazil)', opacity: 0.6, marginBottom: '1rem' }} />
+            <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>Prova sem Votação</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+              Esta prova não tem votação do público. O resultado será definido pelo administrador.
+            </p>
+            <button
+              onClick={() => window.open('/screen', '_blank')}
+              className="btn"
+              style={{ background: 'var(--blue-brazil)', marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+            >
+              <Monitor size={20} /> VER PLACAR COMPLETO
+            </button>
+          </div>
+        ) : hasVoted ? (
           <>
             <div className="glass" style={{ padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
               <CheckCircle2 size={48} color="#10b981" />
