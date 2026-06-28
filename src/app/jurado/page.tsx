@@ -3,7 +3,7 @@
 import useSWR from 'swr';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, ShieldAlert, LogOut, Star, Award, Activity, ClipboardList, RefreshCw } from 'lucide-react';
+import { Lock, ShieldAlert, LogOut, Award, Activity, ClipboardList, RefreshCw, ThumbsUp, CheckCircle } from 'lucide-react';
 import { useSound } from '@/hooks/useSound';
 import Timer from '@/components/Timer';
 
@@ -24,36 +24,12 @@ declare global {
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
-function ScoreCircle({ score, color }: { score: number; color: string }) {
-  const radius = 24;
-  const circumference = 2 * Math.PI * radius;
-  const progress = score / 10;
-
-  return (
-    <svg width="64" height="64" viewBox="0 0 64 64">
-      <circle cx="32" cy="32" r={radius} fill="none" stroke="var(--warm-wood-border)" strokeWidth="5" />
-      <motion.circle
-        cx="32" cy="32" r={radius}
-        fill="none" stroke={color} strokeWidth="5"
-        strokeLinecap="round"
-        strokeDasharray={circumference}
-        initial={{ strokeDashoffset: circumference }}
-        animate={{ strokeDashoffset: circumference * (1 - progress) }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        transform="rotate(-90 32 32)"
-      />
-      <text x="32" y="38" textAnchor="middle" fill="var(--text-primary)" fontSize="16" fontWeight="800">
-        {score.toFixed(1)}
-      </text>
-    </svg>
-  );
-}
-
 export default function JuradoPage() {
   const { data, mutate, error: swrError } = useSWR('/api/state', fetcher, { refreshInterval: 3000 });
   const [jurado, setJurado] = useState<any>(null);
-  const [savingTeam, setSavingTeam] = useState<string | null>(null);
-  const [localScores, setLocalScores] = useState<{ [teamId: string]: number }>({});
+  const [saving, setSaving] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const [hasPicked, setHasPicked] = useState(false);
   const [pinVerified, setPinVerified] = useState(false);
   const [juradoName, setJuradoName] = useState('');
   const [pinInput, setPinInput] = useState('');
@@ -119,15 +95,17 @@ export default function JuradoPage() {
     const ap = p.find((p: any) => p.id === data.currentProvaId);
     const apId = ap?.id;
     if (t.length > 0 && apId) {
-      // Determina o slot (j1/j2) baseado na posição do jurado na lista ordenada
       const jurados = data.jurados || [];
       const juradoIndex = jurados.findIndex((j: any) => j.id === jurado.id);
       const mySlot = juradoIndex === 0 ? 'j1' : 'j2';
-      const initialScores: any = {};
-      t.forEach((team: any) => {
-        initialScores[team.id] = s[apId]?.[team.id]?.[mySlot] || 0;
-      });
-      setLocalScores(initialScores);
+      const pickedTeam = t.find((team: any) => s[apId]?.[team.id]?.[mySlot] === 1);
+      if (pickedTeam) {
+        setSelectedTeam(pickedTeam.id);
+        setHasPicked(true);
+      } else {
+        setSelectedTeam(null);
+        setHasPicked(false);
+      }
     }
   }, [data, jurado]);
 
@@ -161,7 +139,7 @@ export default function JuradoPage() {
     return Promise.resolve(turnstileToken.current);
   }, []);
 
-  const handleVoteSubmit = useCallback(async (teamId: string, score: number) => {
+  const handlePickWinner = useCallback(async (teamId: string) => {
     if (!jurado || !data) return;
     setCaptchaError('');
 
@@ -174,24 +152,26 @@ export default function JuradoPage() {
     const jurados = data.jurados || [];
     const juradoIndex = jurados.findIndex((j: any) => j.id === jurado.id);
     const mySlot = juradoIndex === 0 ? 'j1' : 'j2';
-    setSavingTeam(teamId);
+    setSaving(true);
     try {
       const res = await fetch('/api/state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'juryVote', teamId, jurado: mySlot, score, cfToken, juradoName: jurado.name })
+        body: JSON.stringify({ action: 'juryVote', teamId, jurado: mySlot, cfToken, juradoName: jurado.name })
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Erro ao enviar nota.' }));
-        setCaptchaError(err.error || 'Erro ao enviar nota.');
+        const err = await res.json().catch(() => ({ error: 'Erro ao enviar escolha.' }));
+        setCaptchaError(err.error || 'Erro ao enviar escolha.');
         return;
       }
       sound.juryVote();
+      setSelectedTeam(teamId);
+      setHasPicked(true);
       mutate();
     } catch {
       setCaptchaError('Erro ao comunicar com o servidor.');
     } finally {
-      setTimeout(() => setSavingTeam(null), 1200);
+      setSaving(false);
       if (window.turnstile && turnstileContainer.current) {
         window.turnstile.reset(turnstileContainer.current);
       }
@@ -250,6 +230,7 @@ export default function JuradoPage() {
   const scores = data.scores || {};
   const provas = data.provas || [];
   const activeProva = provas.find((p: any) => p.id === data.currentProvaId);
+  const isFinalized = activeProva?.finalized;
 
   if (!pinVerified) {
     return (
@@ -394,69 +375,87 @@ export default function JuradoPage() {
               )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
-              {teams.length === 0 && (
-                <div className="glass" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                  Nenhuma equipe cadastrada para pontuar.
+            {isFinalized ? (
+              <div className="glass" style={{ padding: '2rem', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <CheckCircle size={48} style={{ color: '#10b981', marginBottom: '1rem' }} />
+                <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>Prova Finalizada</h3>
+                <p style={{ color: 'var(--text-secondary)' }}>Esta prova já foi encerrada e o resultado foi calculado.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+                <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+                  <ThumbsUp size={24} style={{ color: 'var(--yellow-brazil)' }} />
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0.3rem 0' }}>Escolha o Time VENCEDOR</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Selecione qual equipe teve o melhor desempenho nesta prova</p>
                 </div>
-              )}
-              {teams.map((team: any) => {
-                const currentScore = localScores[team.id] !== undefined
-                  ? localScores[team.id]
-                  : (scores[activeProva.id]?.[team.id]?.[jurado] || 0);
 
-                return (
-                  <div
-                    key={team.id}
-                    className="glass"
-                    style={{
-                      padding: '1.2rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.8rem',
-                      borderLeft: `4px solid ${team.color}`
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-                        <div style={{
-                          width: 14, height: 14, borderRadius: '50%',
-                          background: team.color,
-                          boxShadow: `0 0 8px ${team.color}`
-                        }} />
-                        <span style={{ fontWeight: 700, fontSize: '1rem' }}>Equipe {team.name}</span>
-                      </div>
-                      <ScoreCircle score={currentScore} color={team.color} />
-                    </div>
-
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', justifyContent: 'center' }}>
-                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
-                        <button
-                          key={n}
-                          onClick={() => handleVoteSubmit(team.id, n)}
-                          disabled={savingTeam === team.id || !!captchaError}
-                          style={{
-                            width: '2.2rem', height: '2.2rem', borderRadius: '8px',
-                            border: currentScore === n ? `2px solid ${team.color}` : '1px solid var(--border-light)',
-                            background: currentScore === n ? team.color : 'var(--bg-card)',
-                            color: currentScore === n ? '#fff' : 'var(--text-primary)',
-                            fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
-                            opacity: savingTeam === team.id ? 0.5 : 1,
-                            fontFamily: 'inherit',
-                          }}
-                        >
-                          {n}
-                        </button>
-                      ))}
-                    </div>
-
-                    {savingTeam === team.id && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--grass-dark)', fontSize: '0.8rem', justifyContent: 'center' }}>
-                        <Award size={14} />
-                        Nota salva com sucesso!
-                      </div>
-                    )}
+                {teams.length === 0 && (
+                  <div className="glass" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                    Nenhuma equipe cadastrada.
                   </div>
-                );
-              })}
-            </div>
+                )}
+                {teams.map((team: any) => {
+                  const isSelected = selectedTeam === team.id;
+                  return (
+                    <button
+                      key={team.id}
+                      onClick={() => handlePickWinner(team.id)}
+                      disabled={saving}
+                      style={{
+                        padding: '2rem 1.5rem',
+                        borderRadius: '16px',
+                        border: isSelected ? `3px solid ${team.color}` : '2px solid var(--border-light)',
+                        background: isSelected ? `${team.color}22` : 'var(--bg-card)',
+                        cursor: saving ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '1rem',
+                        opacity: saving ? 0.6 : 1,
+                        transition: 'all 0.3s ease',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      <div style={{
+                        width: 20, height: 20, borderRadius: '50%',
+                        background: team.color,
+                        boxShadow: isSelected ? `0 0 12px ${team.color}` : 'none'
+                      }} />
+                      <span style={{
+                        fontSize: '1.8rem',
+                        fontWeight: 900,
+                        color: isSelected ? team.color : 'var(--text-primary)'
+                      }}>
+                        Equipe {team.name}
+                      </span>
+                      {isSelected && (
+                        <CheckCircle size={28} color={team.color} />
+                      )}
+                    </button>
+                  );
+                })}
+
+                {hasPicked && selectedTeam && (
+                  <div style={{
+                    padding: '1rem',
+                    borderRadius: '12px',
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    textAlign: 'center',
+                    color: 'var(--grass-dark)',
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    <CheckCircle size={20} />
+                    Seu voto foi registrado! Você escolheu <strong>{teams.find((t: any) => t.id === selectedTeam)?.name}</strong>
+                  </div>
+                )}
+              </div>
+            )}
 
             {captchaError && (
               <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center', margin: '0.5rem 0 0' }}>

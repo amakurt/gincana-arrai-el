@@ -2,7 +2,7 @@
 
 import useSWR from 'swr';
 import { motion } from 'framer-motion';
-import { BookOpen, RefreshCw } from 'lucide-react';
+import { BookOpen, RefreshCw, Trophy, CheckCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import ShareButton from '@/components/ShareButton';
 
@@ -53,53 +53,52 @@ export default function ScreenPage() {
   const showJuryScores = data.showJuryScores !== false;
   const activeProva = provas.find((p: any) => p.id === data.currentProvaId);
 
-  // Helper para calcular a nota de 0 a 10 baseada nos votos do público
-  const calcPublicScore = (votes: number, maxVotes: number) => {
-    if (maxVotes === 0) return 0;
-    return Number(((votes / maxVotes) * 10).toFixed(1));
+  // Determine jury picks for current active prova
+  const getJuryPicks = (provaId: string) => {
+    const pScores = scores[provaId];
+    if (!pScores) return { j1Pick: null, j2Pick: null };
+    let j1Pick: string | null = null;
+    let j2Pick: string | null = null;
+    for (const team of teams) {
+      const s = pScores[team.id] || {};
+      if (s.j1 === 1) j1Pick = team.id;
+      if (s.j2 === 1) j2Pick = team.id;
+    }
+    return { j1Pick, j2Pick };
   };
 
-  // Calcular Scores das Equipes
+  // Calcular pontos das equipes
   let calculatedTeams = teams.map((team: any) => {
+    let totalPoints = 0;
     let publicVotes = 0;
-    let publicScore = 0;
-    let j1 = 0;
-    let j2 = 0;
-    let totalScore = 0;
+    let j1Pick = false;
+    let j2Pick = false;
 
     if (isGeral) {
       provas.forEach((prova: any) => {
-        const pScores = scores[prova.id];
-        if (pScores) {
-          const maxPubVotes = Math.max(...Object.values(pScores).map((s: any) => s.publicVotes || 0), 0);
-          
-          const teamScore = pScores[team.id] || { publicVotes: 0, j1: 0, j2: 0 };
-          const pScore = calcPublicScore(teamScore.publicVotes, maxPubVotes);
-          const juryScore = showJuryScores ? (teamScore.j1 || 0) + (teamScore.j2 || 0) : 0;
-          
-          totalScore += pScore + juryScore;
+        if (prova.finalized && prova.pointsAwarded) {
+          totalPoints += prova.pointsAwarded[team.id] || 0;
         }
       });
     } else if (activeProva) {
+      if (activeProva.finalized && activeProva.pointsAwarded) {
+        totalPoints = activeProva.pointsAwarded[team.id] || 0;
+      }
+
       const pScores = scores[activeProva.id];
       if (pScores) {
-        const maxPubVotes = Math.max(...Object.values(pScores).map((s: any) => s.publicVotes || 0), 0);
-        const teamScore = pScores[team.id] || { publicVotes: 0, j1: 0, j2: 0 };
-        
-        publicVotes = teamScore.publicVotes;
-        publicScore = calcPublicScore(publicVotes, maxPubVotes);
-        j1 = showJuryScores ? (teamScore.j1 || 0) : 0;
-        j2 = showJuryScores ? (teamScore.j2 || 0) : 0;
-        
-        totalScore = publicScore + j1 + j2;
+        const teamScore = pScores[team.id] || {};
+        publicVotes = teamScore.publicVotes || 0;
+        if (teamScore.j1 === 1) j1Pick = true;
+        if (teamScore.j2 === 1) j2Pick = true;
       }
     }
 
-    return { ...team, publicVotes, publicScore, j1, j2, totalScore: Number(totalScore.toFixed(1)) };
+    return { ...team, totalPoints, publicVotes, j1Pick, j2Pick };
   });
 
-  calculatedTeams = calculatedTeams.sort((a: any, b: any) => b.totalScore - a.totalScore);
-  const maxTotalScore = Math.max(...calculatedTeams.map((t: any) => t.totalScore), 1);
+  calculatedTeams = calculatedTeams.sort((a: any, b: any) => b.totalPoints - a.totalPoints);
+  const maxTotalPoints = Math.max(...calculatedTeams.map((t: any) => t.totalPoints), 1);
 
   return (
     <div className="screen-mode screen-padding" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '3rem 4rem' }}>
@@ -127,18 +126,26 @@ export default function ScreenPage() {
             <div className={`screen-status-text${data.status === 'active' ? ' animate-pulse' : ''}`} style={{ fontSize: '3.2rem', fontWeight: 900, color: data.status === 'active' ? '#059669' : 'var(--team-d)', lineHeight: 1.1 }}>
               {data.status === 'active' ? 'VOTAÇÃO ABERTA' : (data.message || '').toUpperCase()}
             </div>
+            {!isGeral && activeProva?.finalized && activeProva?.winnerId && (
+              <div style={{ marginTop: '0.5rem', fontSize: '1.8rem', fontWeight: 900, color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                <CheckCircle size={28} /> VENCEDOR: {teams.find((t: any) => t.id === activeProva.winnerId)?.name || ''}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       <div className="screen-header-gap screen-bar-gap" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1, justifyContent: 'center' }}>
         {calculatedTeams.map((team: any, index: number) => {
-          const percentage = (team.totalScore / (isGeral ? Math.max(maxTotalScore, 10) : 30)) * 100;
+          const maxScore = isGeral ? Math.max(maxTotalPoints, 10) : (activeProva?.finalized ? maxTotalPoints : Math.max(maxTotalPoints, 10));
+          const percentage = maxScore > 0 ? (team.totalPoints / maxScore) * 100 : 0;
+
+          const juryPicks = !isGeral && activeProva ? getJuryPicks(activeProva.id) : { j1Pick: null, j2Pick: null };
           
           return (
             <div key={team.id} className="glass screen-bar-padding" style={{ display: 'flex', alignItems: 'center', gap: '2.5rem', padding: '1.2rem 2.5rem' }}>
               <div className="screen-rank" style={{ width: '80px', textAlign: 'center', fontSize: '2.2rem', fontWeight: 900, color: 'var(--blue-brazil)' }}>
-                {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                {index === 0 ? '🥇' : index === 1 ? '🥈' : `#${index + 1}`}
               </div>
               
               <div className="screen-team-name" style={{ width: '200px', fontSize: '2.2rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
@@ -160,28 +167,28 @@ export default function ScreenPage() {
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to bottom, rgba(255,255,255,0.2), transparent)' }} />
                 </motion.div>
                 
-                {!isGeral && (
+                {!isGeral && !activeProva?.finalized && (
                   <div className="screen-bar-detail" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-around', color: '#ffffff', fontWeight: 800, fontSize: '1.1rem', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
-                    <span>Público: {team.publicScore} ({team.publicVotes} votos)</span>
+                    <span>Público: {team.publicVotes} votos</span>
                     {showJuryScores && (
                       <>
-                        <span>{jurados[0]?.name || 'Jurado 1'}: {team.j1}</span>
-                        <span>{jurados[1]?.name || 'Jurado 2'}: {team.j2}</span>
+                        <span>{jurados[0]?.name || 'Jurado 1'}: {juryPicks.j1Pick === team.id ? '✓' : '—'}</span>
+                        <span>{jurados[1]?.name || 'Jurado 2'}: {juryPicks.j2Pick === team.id ? '✓' : '—'}</span>
                       </>
                     )}
                   </div>
                 )}
               </div>
 
-              <div className="screen-score-width" style={{ width: '140px', textAlign: 'right' }}>
+              <div className="screen-score-width" style={{ width: '160px', textAlign: 'right' }}>
                 <motion.span
-                  key={team.totalScore}
+                  key={team.totalPoints}
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   className="screen-team-score"
                   style={{ fontSize: '3.5rem', fontWeight: 900, color: team.color, lineHeight: 1 }}
                 >
-                  {team.totalScore.toFixed(1)}
+                  {team.totalPoints}
                 </motion.span>
                 <div style={{ color: 'var(--text-secondary)', fontWeight: 800, fontSize: '1rem', letterSpacing: '0.05em' }}>PTS</div>
               </div>
@@ -189,6 +196,27 @@ export default function ScreenPage() {
           );
         })}
       </div>
+
+      {!isGeral && activeProva?.finalized && activeProva?.pointsAwarded && (
+        <div className="glass" style={{ marginTop: '2rem', padding: '1.5rem 2.5rem', textAlign: 'center' }}>
+          <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--blue-brazil)', marginBottom: '1rem' }}>
+            <Trophy size={32} style={{ color: 'var(--yellow-brazil)' }} /> Pontuação Final
+          </h3>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '4rem' }}>
+            {teams.map((team: any) => (
+              <div key={team.id} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: team.color, marginBottom: '0.3rem' }}>{team.name}</div>
+                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: team.color }}>
+                  {activeProva.pointsAwarded[team.id] || 0}
+                </div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
+                  {team.id === activeProva.winnerId ? 'VENCEDOR (100%)' : '2º LUGAR (50%)'}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
         <ShareButton url="/screen" label="Compartilhar Placar" />

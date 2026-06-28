@@ -1,63 +1,28 @@
 {
   "status": "waiting",
   "viewMode": "prova",
-  "currentProvaId": "p1",
-  "message": "Votação Pausada/Encerrada",
+  "currentProvaId": "",
+  "message": "Arrai-el 2026 vai começar!",
   "singleVoteMode": true,
-  "showJuryScores": false,
+  "showJuryScores": true,
+  "timerStartedAt": null,
   "teams": [
-    {
-      "id": "t1",
-      "name": "VERDE",
-      "color": "#549504"
-    },
-    {
-      "id": "t1779246392988",
-      "name": "AMARELO",
-      "color": "#faf200"
-    }
+    { "id": "t1", "name": "VERDE", "color": "#549504" },
+    { "id": "t2", "name": "AMARELO", "color": "#faf200" }
   ],
   "provas": [
-    {
-      "id": "p1",
-      "name": "Apresentação de Dança"
-    },
-    {
-      "id": "p1779246412869",
-      "name": "Comidas Típicas"
-    }
+    { "id": "p1",  "name": "1ª Apresentação Mascote do Time",   "timer": 300, "points": 300, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {} },
+    { "id": "p2",  "name": "2ª Grito de Guerra",                "timer": 300, "points": 300, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {} },
+    { "id": "p3",  "name": "3ª Rei e Rainha do Time",           "timer": 300, "points": 300, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {} },
+    { "id": "p4",  "name": "4ª Cante e Encante",                "timer": 300, "points": 300, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {} },
+    { "id": "p5",  "name": "5ª Dança Típica",                   "timer": 480, "points": 300, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {} },
+    { "id": "p6",  "name": "6ª Ornamentação dos Corredores",    "timer": 0,   "points": 400, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {} },
+    { "id": "p7",  "name": "7ª Barracas (Maior Arrecadação)",   "timer": 0,   "points": 300, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {} },
+    { "id": "p8",  "name": "8ª Venda das Rifas",                "timer": 0,   "points": 600, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {} }
   ],
   "jurados": [
-    {
-      "id": "j1779386899347",
-      "name": "Fulano",
-      "pin": "1234"
-    },
-    {
-      "id": "j1779386908249",
-      "name": "Ciclano",
-      "pin": "4321"
-    }
+    { "id": "j1", "name": "Jurado 1", "pin": "1234" },
+    { "id": "j2", "name": "Jurado 2", "pin": "5678" }
   ],
-  "scores": {
-    "p1": {
-      "t1": {
-        "publicVotes": 0,
-        "j1": 4,
-        "j2": 0
-      },
-      "t1779246392988": {
-        "publicVotes": 0,
-        "j1": 2,
-        "j2": 0
-      }
-    },
-    "p1779246412869": {
-      "t1779246392988": {
-        "publicVotes": 1,
-        "j1": 0,
-        "j2": 0
-      }
-    }
-  }
+  "scores": {}
 }

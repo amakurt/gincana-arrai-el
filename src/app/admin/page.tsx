@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from 'swr';
-import { Play, Square, RotateCcw, AlertTriangle, Users, Trophy, Monitor, Lock, ShieldAlert, Home, RefreshCw, Edit2, Save, X, BarChart3, History, TrendingUp, Clock } from 'lucide-react';
+import { Play, Square, RotateCcw, AlertTriangle, Users, Trophy, Monitor, Lock, ShieldAlert, Home, RefreshCw, Edit2, Save, X, BarChart3, History, TrendingUp, Clock, CheckCircle, ThumbsUp } from 'lucide-react';
 import Timer from '@/components/Timer';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -20,12 +20,17 @@ export default function AdminPage() {
   const [newTeamColor, setNewTeamColor] = useState('#3b82f6');
   const [newProvaName, setNewProvaName] = useState('');
   const [newProvaTimer, setNewProvaTimer] = useState(0);
+  const [newProvaPoints, setNewProvaPoints] = useState(300);
   const [editingTeam, setEditingTeam] = useState<string | null>(null);
   const [editingProva, setEditingProva] = useState<string | null>(null);
   const [editTeamName, setEditTeamName] = useState('');
   const [editTeamColor, setEditTeamColor] = useState('#000000');
   const [editProvaName, setEditProvaName] = useState('');
   const [editProvaTimer, setEditProvaTimer] = useState(0);
+  const [editProvaPoints, setEditProvaPoints] = useState(300);
+  const [finalizeLoading, setFinalizeLoading] = useState(false);
+  const [showManualWinner, setShowManualWinner] = useState(false);
+  const [finalizeError, setFinalizeError] = useState('');
 
   const [error, setError] = useState('');
 
@@ -126,12 +131,13 @@ export default function AdminPage() {
     setEditingProva(prova.id);
     setEditProvaName(prova.name);
     setEditProvaTimer(prova.timer || 0);
+    setEditProvaPoints(prova.points || 300);
   };
 
   const saveEditProva = (provaId: string) => {
     if (!editProvaName) return;
     const updated = data.provas.map((p: any) =>
-      p.id === provaId ? { ...p, name: editProvaName, timer: editProvaTimer || 0 } : p
+      p.id === provaId ? { ...p, name: editProvaName, timer: editProvaTimer || 0, points: editProvaPoints } : p
     );
     updateState({ provas: updated });
     setEditingProva(null);
@@ -139,6 +145,80 @@ export default function AdminPage() {
 
   const cancelEditProva = () => {
     setEditingProva(null);
+  };
+
+  const finalizeProva = async () => {
+    setFinalizeLoading(true);
+    setFinalizeError('');
+    setShowManualWinner(false);
+    try {
+      const res = await fetch('/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'finalizeProva' })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        if (err.details?.includes('Selecione o vencedor')) {
+          setShowManualWinner(true);
+          setFinalizeError(err.details);
+        } else {
+          setFinalizeError(err.error || err.details || 'Erro ao finalizar.');
+        }
+        return;
+      }
+      const newData = await res.json();
+      mutate(newData, false);
+    } catch (e: any) {
+      setFinalizeError(e.message || 'Erro de conexão');
+    } finally {
+      setFinalizeLoading(false);
+    }
+  };
+
+  const setManualWinner = async (winnerId: string) => {
+    setFinalizeLoading(true);
+    setFinalizeError('');
+    try {
+      const res = await fetch('/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'manualWinner', winnerId })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Erro ao definir vencedor');
+      }
+      const newData = await res.json();
+      mutate(newData, false);
+      setShowManualWinner(false);
+    } catch (e: any) {
+      setFinalizeError(e.message);
+    } finally {
+      setFinalizeLoading(false);
+    }
+  };
+
+  const reopenProva = async () => {
+    setFinalizeLoading(true);
+    setFinalizeError('');
+    try {
+      const res = await fetch('/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reopenProva' })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Erro ao reabrir');
+      }
+      const newData = await res.json();
+      mutate(newData, false);
+    } catch (e: any) {
+      setFinalizeError(e.message);
+    } finally {
+      setFinalizeLoading(false);
+    }
   };
 
   if (!data) {
@@ -166,6 +246,8 @@ export default function AdminPage() {
   }
 
   if (data.error) return <div className="container" style={{ textAlign: 'center', padding: '5rem' }}><h2 style={{ color: '#ef4444' }}>Erro no servidor: {data.error}</h2></div>;
+
+  const activeProva = (data.provas || []).find((p: any) => p.id === data.currentProvaId);
 
   // Tela de redirecionamento temporário
   if (!adminVerified) {
@@ -295,6 +377,77 @@ export default function AdminPage() {
               PARAR VOTAÇÃO
             </button>
           </div>
+
+          <hr style={{ borderColor: 'var(--border-light)', margin: '2rem 0' }} />
+
+          <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CheckCircle size={20} /> Finalizar Prova</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+            {activeProva?.finalized ? (
+              <div style={{ padding: '1rem', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#10b981', fontWeight: 700, marginBottom: '0.5rem' }}>
+                  <CheckCircle size={18} /> Prova Finalizada
+                </div>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                  <strong>Vencedor:</strong> {data.teams?.find((t: any) => t.id === activeProva.winnerId)?.name || 'N/A'}
+                </div>
+                {activeProva.pointsAwarded && Object.entries(activeProva.pointsAwarded as Record<string, number>).map(([teamId, pts]) => (
+                  <div key={teamId} style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    {data.teams?.find((t: any) => t.id === teamId)?.name}: <strong>{pts} pts</strong>
+                  </div>
+                ))}
+                <button
+                  className="btn"
+                  style={{ background: '#f59e0b', marginTop: '0.8rem', fontSize: '0.9rem' }}
+                  disabled={finalizeLoading}
+                  onClick={reopenProva}
+                >
+                  REABRIR PROVA
+                </button>
+              </div>
+            ) : (
+              <>
+                <button
+                  className="btn"
+                  style={{ background: '#8b5cf6' }}
+                  disabled={finalizeLoading || !data.currentProvaId}
+                  onClick={finalizeProva}
+                >
+                  {finalizeLoading ? 'CALCULANDO...' : 'CALCULAR RESULTADO'}
+                </button>
+
+                {showManualWinner && (
+                  <div style={{ padding: '1rem', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid #f59e0b' }}>
+                    <div style={{ fontWeight: 700, marginBottom: '0.8rem', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <ThumbsUp size={16} /> Definir Vencedor Manualmente
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.8rem' }}>
+                      Jurados discordaram e público empatou. Escolha o vencedor:
+                    </p>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      {(data.teams || []).map((team: any) => (
+                        <button
+                          key={team.id}
+                          className="btn"
+                          style={{ background: team.color, flex: 1, fontSize: '0.9rem' }}
+                          disabled={finalizeLoading}
+                          onClick={() => setManualWinner(team.id)}
+                        >
+                          {team.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {finalizeError && !showManualWinner && (
+                  <div style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center' }}>
+                    {finalizeError}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
 
           <hr style={{ borderColor: 'var(--border-light)', margin: '2rem 0' }} />
           
@@ -471,14 +624,24 @@ export default function AdminPage() {
               value={newProvaTimer}
               onChange={(e) => setNewProvaTimer(Number(e.target.value))}
               min={0}
-              style={{ width: '100px', padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+              style={{ width: '90px', padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
             />
+            <input 
+              type="number" 
+              placeholder="Pontos" 
+              value={newProvaPoints}
+              onChange={(e) => setNewProvaPoints(Number(e.target.value))}
+              min={0}
+              style={{ width: '80px', padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+            />
+            <span style={{ display: 'flex', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>pts</span>
             <button 
               onClick={() => {
                 if(newProvaName) {
-                  updateState({ provas: [...(data.provas || []), { id: 'p'+Date.now(), name: newProvaName, timer: newProvaTimer || 0 }] });
+                  updateState({ provas: [...(data.provas || []), { id: 'p'+Date.now(), name: newProvaName, timer: newProvaTimer || 0, points: newProvaPoints, day: 1, finalized: false }] });
                   setNewProvaName('');
                   setNewProvaTimer(0);
+                  setNewProvaPoints(300);
                 }
               }}
               disabled={loading}
@@ -498,7 +661,7 @@ export default function AdminPage() {
                       value={editProvaName}
                       onChange={(e) => setEditProvaName(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && saveEditProva(p.id)}
-                      style={{ flex: '1 1 140px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.95rem' }}
+                      style={{ flex: '1 1 120px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.95rem' }}
                       autoFocus
                     />
                     <input
@@ -506,10 +669,17 @@ export default function AdminPage() {
                       value={editProvaTimer}
                       onChange={(e) => setEditProvaTimer(Number(e.target.value))}
                       min={0}
-                      style={{ width: '70px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.85rem' }}
+                      style={{ width: '60px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.85rem' }}
                       placeholder="seg"
                     />
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>seg</span>
+                    <input
+                      type="number"
+                      value={editProvaPoints}
+                      onChange={(e) => setEditProvaPoints(Number(e.target.value))}
+                      min={0}
+                      style={{ width: '60px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.85rem' }}
+                      placeholder="pts"
+                    />
                     <button onClick={() => saveEditProva(p.id)} style={{ background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                       <Save size={18} />
                     </button>
@@ -519,9 +689,13 @@ export default function AdminPage() {
                   </div>
                 ) : (
                   <>
-                    {p.name}
-                    {p.timer > 0 && <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: '0.5rem' }}><Clock size={12} /> {p.timer}s</span>}
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                      <span>{p.name}</span>
+                      {p.timer > 0 && <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}><Clock size={12} /> {p.timer}s</span>}
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--blue-brazil)', background: 'rgba(37, 99, 235, 0.1)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>{p.points || 300}pts</span>
+                      {p.finalized && <span style={{ fontSize: '0.75rem', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✓ Finalizada</span>}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.3rem', flexShrink: 0 }}>
                       <button
                         onClick={() => startEditProva(p)}
                         disabled={loading}
@@ -529,13 +703,15 @@ export default function AdminPage() {
                       >
                         <Edit2 size={16} />
                       </button>
-                      <button
-                        onClick={() => updateState({ provas: data.provas.filter((prova: any) => prova.id !== p.id) })}
-                        disabled={loading}
-                        style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1 }}
-                      >
-                        Remover
-                      </button>
+                      {!p.finalized && (
+                        <button
+                          onClick={() => updateState({ provas: data.provas.filter((prova: any) => prova.id !== p.id) })}
+                          disabled={loading}
+                          style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}
+                        >
+                          Remover
+                        </button>
+                      )}
                     </div>
                   </>
                 )}

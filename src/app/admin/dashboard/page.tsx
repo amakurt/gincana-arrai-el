@@ -9,21 +9,21 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 const medalColors = ["#f59e0b", "#94a3b8", "#8b5cf6"];
 
-function exportCSV(data: any) {
+  function exportCSV(data: any) {
   if (!data?.ranking?.length && !data?.provas?.length) return;
-  let csv = '\uFEFF'; // BOM for Excel compatibility (UTF-8)
+  let csv = '\uFEFF';
   csv += 'Ranking Geral\n';
-  csv += 'Posição;Equipe;Pontuação Total;Nota Público;Nota Júri;Provas\n';
+  csv += 'Posição;Equipe;Pontos Totais;Vitórias;Provas\n';
   data.ranking.forEach((t: any, i: number) => {
-    csv += `${i + 1};${t.name};${t.totalScore};${t.publicScore.toFixed(1)};${t.juryScore.toFixed(1)};${t.provasCount}\n`;
+    csv += `${i + 1};${t.name};${t.totalPoints};${t.wins};${t.provasCount}\n`;
   });
   csv += '\n';
   (data.provas || []).forEach((p: any) => {
-    csv += `\nProva: ${p.provaName}\n`;
-    csv += 'Posição;Equipe;Votos Público;Nota Público;Júri 1;Júri 2;Total\n';
-    const sorted = [...(p.teams || [])].sort((a: any, b: any) => b.total - a.total);
+    csv += `\nProva: ${p.provaName} (${p.points} pts)\n`;
+    csv += 'Posição;Equipe;Votos Público;Júri 1;Júri 2;Pontos Recebidos;Vencedor\n';
+    const sorted = [...(p.teams || [])].sort((a: any, b: any) => b.pointsAwarded - a.pointsAwarded);
     sorted.forEach((t: any, i: number) => {
-      csv += `${i + 1};${t.name};${t.publicVotes};${t.publicScore};${t.j1};${t.j2};${t.total}\n`;
+      csv += `${i + 1};${t.name};${t.publicVotes};${t.j1};${t.j2};${t.pointsAwarded};${t.winner ? 'Sim' : 'Não'}\n`;
     });
   });
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -101,24 +101,24 @@ export default function DashboardPage() {
                   <div style={{ width: '14px', height: '14px', borderRadius: '4px', background: team.color }} />
                   <strong style={{ fontSize: '1.1rem' }}>{team.name}</strong>
                   <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                    ({team.provasCount} prova{team.provasCount !== 1 ? 's' : ''})
+                    ({team.wins} vitória{team.wins !== 1 ? 's' : ''} · {team.provasCount} prova{team.provasCount !== 1 ? 's' : ''})
                   </span>
                 </div>
-                <span style={{ fontSize: '1.4rem', fontWeight: 800 }}>{team.totalScore}</span>
+                <span style={{ fontSize: '1.4rem', fontWeight: 800 }}>{team.totalPoints} pts</span>
               </div>
               <div style={{
                 height: '28px', background: 'rgba(255,255,255,0.08)', borderRadius: '14px',
                 overflow: 'hidden', position: 'relative'
               }}>
                 <div style={{
-                  height: '100%', width: `${(team.totalScore / maxScore) * 100}%`,
+                  height: '100%', width: `${(team.totalPoints / maxScore) * 100}%`,
                   minWidth: '4px',
                   background: `linear-gradient(90deg, ${team.color}88, ${team.color})`,
                   borderRadius: '14px', transition: 'width 0.6s ease',
                   display: 'flex', alignItems: 'center', paddingLeft: '8px'
                 }}>
                   <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'white', mixBlendMode: 'difference' }}>
-                    Púb: {team.publicScore.toFixed(1)} | Júri: {team.juryScore.toFixed(1)}
+                    {team.totalPoints} pts
                   </span>
                 </div>
               </div>
@@ -139,11 +139,11 @@ export default function DashboardPage() {
           </div>
         ) : (
           provasData.map((prova: any) => {
-            const maxProvaScore = Math.max(...prova.teams.map((t: any) => t.total), 1);
+            const maxProvaScore = Math.max(...prova.teams.map((t: any) => t.pointsAwarded), 1);
             return (
               <div key={prova.provaId} className="glass" style={{ padding: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h3 style={{ margin: 0 }}>{prova.provaName}</h3>
+                  <h3 style={{ margin: 0 }}>{prova.provaName} <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 400 }}>({prova.points} pts)</span></h3>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                     {new Date(prova.backupDate).toLocaleDateString('pt-BR')}
                   </span>
@@ -154,21 +154,24 @@ export default function DashboardPage() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                         <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: team.color }} />
                         <strong>{team.name}</strong>
+                        {team.winner && (
+                          <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 700 }}>✓ Vencedor</span>
+                        )}
                       </div>
-                      <span style={{ fontWeight: 700 }}>{team.total}</span>
+                      <span style={{ fontWeight: 700 }}>{team.pointsAwarded} pts</span>
                     </div>
                     <div style={{ height: '20px', background: 'rgba(255,255,255,0.06)', borderRadius: '10px', overflow: 'hidden' }}>
                       <div style={{
-                        height: '100%', width: `${(team.total / maxProvaScore) * 100}%`,
+                        height: '100%', width: `${(team.pointsAwarded / maxProvaScore) * 100}%`,
                         minWidth: '4px',
                         background: `linear-gradient(90deg, ${team.color}66, ${team.color})`,
                         borderRadius: '10px', transition: 'width 0.4s ease'
                       }} />
                     </div>
                     <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-                      <span>Público: {team.publicVotes} votos (nota {team.publicScore})</span>
-                      <span>Júri 1: {team.j1}</span>
-                      <span>Júri 2: {team.j2}</span>
+                      <span>Público: {team.publicVotes} votos</span>
+                      <span>Júri 1: {team.j1 === 1 ? '✓' : '—'}</span>
+                      <span>Júri 2: {team.j2 === 1 ? '✓' : '—'}</span>
                     </div>
                   </div>
                 ))}

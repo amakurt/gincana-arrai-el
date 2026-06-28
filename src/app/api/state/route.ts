@@ -4,9 +4,8 @@ import { readFileSync, writeFileSync, existsSync } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
-// Rate limiter: in-memory sliding window
 const ratelimits = new Map<string, { count: number; resetAt: number }>();
-const RATE_WINDOW_MS = 3000; // 3 second window
+const RATE_WINDOW_MS = 3000;
 function checkRateLimit(key: string, maxReq: number): boolean {
   const now = Date.now();
   const entry = ratelimits.get(key);
@@ -23,7 +22,6 @@ function getClientIp(request: Request): string {
     || request.headers.get('x-real-ip')
     || '127.0.0.1';
 }
-// Cleanup stale entries every 5 minutes
 setInterval(() => {
   const now = Date.now();
   for (const [k, v] of ratelimits) {
@@ -31,7 +29,6 @@ setInterval(() => {
   }
 }, 300000);
 
-// CSRF: check Origin/Referer against allowed hosts
 function checkOrigin(request: Request): boolean {
   const origin = request.headers.get('origin');
   const referer = request.headers.get('referer');
@@ -39,7 +36,7 @@ function checkOrigin(request: Request): boolean {
   const allowed = [host, 'www.institutoeducacionallogos.online', 'institutoeducacionallogos.online', '137.131.160.171'];
   if (origin) return allowed.some(a => origin.includes(a));
   if (referer) return allowed.some(a => referer.includes(a));
-  return false; // block requests with no origin/referer
+  return false;
 }
 
 const STATE_FILE = path.join(process.cwd(), 'gincana-state.json');
@@ -66,18 +63,6 @@ function writeStateToFile(data: any) {
   } catch {}
 }
 
-function readJuradosFromFile(): any[] {
-  const fileData = readStateFromFile();
-  return fileData?.jurados || [];
-}
-
-function writeJuradosToFile(jurados: any[]) {
-  const fileData = readStateFromFile() || {};
-  fileData.jurados = jurados;
-  writeStateToFile(fileData);
-}
-
-// Helpers para resultados (backup histórico)
 function readResultadosFile(): any[] {
   try {
     if (!existsSync(RESULTADOS_FILE)) return [];
@@ -91,33 +76,35 @@ function writeResultadosFile(data: any[]) {
   } catch {}
 }
 
-function saveSnapshot(fileData: any, provas: any[], teams: any[], jurados: any[], scores: any) {
+function saveSnapshot(fileData: any, provas: any[], teams: any[], scores: any) {
   const provaId = fileData.currentProvaId;
   if (!provaId || !scores[provaId]) return;
 
   const prova = provas.find((p: any) => p.id === provaId);
   if (!prova) return;
 
-  const allVotes = Object.values(scores[provaId]).map((s: any) => s.publicVotes || 0);
-  const maxPubVotes = Math.max(...allVotes, 0);
+  const pScores = scores[provaId];
 
   const teamResults = teams.map((team: any) => {
-    const teamScore = scores[provaId][team.id] || { publicVotes: 0, j1: 0, j2: 0 };
-    const publicScore = maxPubVotes > 0 ? Number(((teamScore.publicVotes / maxPubVotes) * 10).toFixed(1)) : 0;
+    const teamScore = pScores[team.id] || { publicVotes: 0, j1: 0, j2: 0 };
     return {
       id: team.id, name: team.name, color: team.color,
       publicVotes: teamScore.publicVotes || 0,
-      publicScore,
       j1: teamScore.j1 || 0,
       j2: teamScore.j2 || 0,
-      total: Number((publicScore + (teamScore.j1 || 0) + (teamScore.j2 || 0)).toFixed(1))
+      winnerPick: teamScore.j1 === 1 || teamScore.j2 === 1,
     };
-  }).sort((a: any, b: any) => b.total - a.total);
+  });
 
   const resultados = readResultadosFile();
   const idx = resultados.findIndex((r: any) => r.provaId === provaId);
   const entry = {
     provaId, provaName: prova.name,
+    points: prova.points || 0,
+    day: prova.day || 1,
+    finalized: prova.finalized || false,
+    winnerId: prova.winnerId || null,
+    pointsAwarded: prova.pointsAwarded || {},
     teams: teamResults,
     backupDate: new Date().toISOString()
   };
@@ -129,41 +116,61 @@ function saveSnapshot(fileData: any, provas: any[], teams: any[], jurados: any[]
   writeResultadosFile(resultados);
 }
 
-// Helper para calcular a pontuação de 0 a 10 baseada nos votos do público
-const calcPublicScore = (votes: number, maxVotes: number) => {
-  if (maxVotes === 0) return 0;
-  return Number(((votes / maxVotes) * 10).toFixed(1));
-};
+function determineProvaWinner(provaId: string, scores: any, teams: any[], provas: any[]) {
+  const pScores = scores[provaId];
+  if (!pScores) return null;
 
-function readJsonState() {
-  const fileData = readStateFromFile();
-  if (!fileData) return NextResponse.json({ error: 'Servidor não configurado.' }, { status: 500 });
-  const scores: any = {};
-  if (fileData.scores) {
-    Object.keys(fileData.scores).forEach(provaId => {
-      scores[provaId] = {};
-      Object.keys(fileData.scores[provaId]).forEach(teamId => {
-        scores[provaId][teamId] = fileData.scores[provaId][teamId];
-      });
-    });
+  let j1Pick: string | null = null;
+  let j2Pick: string | null = null;
+
+  for (const team of teams) {
+    const s = pScores[team.id] || { publicVotes: 0, j1: 0, j2: 0 };
+    if (s.j1 === 1) j1Pick = team.id;
+    if (s.j2 === 1) j2Pick = team.id;
   }
-  return NextResponse.json({
-    status: fileData.status || 'waiting',
-    viewMode: fileData.viewMode || 'prova',
-    currentProvaId: fileData.currentProvaId || '',
-    message: fileData.message || '',
-    teams: fileData.teams || [],
-    provas: fileData.provas || [],
-    jurados: fileData.jurados || [],
-    singleVoteMode: fileData.singleVoteMode !== undefined ? fileData.singleVoteMode : true,
-    showJuryScores: fileData.showJuryScores !== undefined ? fileData.showJuryScores : true,
-    timerStartedAt: fileData.timerStartedAt || null,
-    scores
-  });
+
+  let audienceWinner: string | null = null;
+  const pubVotes = teams.map((t: any) => ({ id: t.id, votes: pScores[t.id]?.publicVotes || 0 }));
+  if (pubVotes.length === 2) {
+    if (pubVotes[0].votes > pubVotes[1].votes) audienceWinner = pubVotes[0].id;
+    else if (pubVotes[1].votes > pubVotes[0].votes) audienceWinner = pubVotes[1].id;
+  }
+
+  let winnerId: string | null = null;
+
+  if (j1Pick && j2Pick && j1Pick === j2Pick) {
+    winnerId = j1Pick;
+  } else if (audienceWinner) {
+    winnerId = audienceWinner;
+  } else if (j1Pick && j2Pick && j1Pick !== j2Pick && !audienceWinner) {
+    return null;
+  } else if (j1Pick) {
+    winnerId = j1Pick;
+  } else if (j2Pick) {
+    winnerId = j2Pick;
+  }
+
+  return {
+    winnerId,
+    j1Pick,
+    j2Pick,
+    audienceWinner,
+    hasJuryVote: !!(j1Pick || j2Pick),
+    hasAudience: pubVotes.some((v: any) => v.votes > 0),
+  };
+}
+
+function calculatePoints(prova: any, winnerId: string | null) {
+  const points = prova.points || 0;
+  const pointsAwarded: Record<string, number> = {};
+  if (!prova.teams) return {};
+  for (const team of prova.teams) {
+    pointsAwarded[team.id] = team.id === winnerId ? points : Math.floor(points * 0.5);
+  }
+  return pointsAwarded;
 }
 
 export async function GET() {
-  // Lê o JSON como estado base (sempre fresco, POST escreve nele primeiro)
   const fileData = readStateFromFile();
   const base = fileData ? {
     status: fileData.status || 'waiting',
@@ -183,7 +190,6 @@ export async function GET() {
     return NextResponse.json({ error: 'Servidor não configurado.' }, { status: 500 });
   }
 
-  // Tenta enriquecer scores do Supabase (votos em tempo real via RPC)
   if (await checkSupabaseAvailable()) {
     try {
       const { data: dbScores } = await supabase.from('scores').select('*');
@@ -199,9 +205,7 @@ export async function GET() {
         });
         base.scores = scores;
       }
-    } catch {
-      // fallback: mantém scores do JSON
-    }
+    } catch {}
   }
 
   return NextResponse.json(base);
@@ -210,20 +214,17 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    
-    // Anti-flood para mutações
+
     const ip = getClientIp(request);
     if ((body.action === 'vote' || body.action === 'juryVote') && !checkRateLimit(`${ip}:${body.action}`, 2)) {
       return NextResponse.json({ error: 'Muitas requisições. Aguarde alguns segundos.' }, { status: 429 });
     }
-    // CSRF check for state-changing actions
-    if (body.action === 'updateState' || body.action === 'reset') {
+    if (body.action === 'updateState' || body.action === 'finalizeProva') {
       if (!checkOrigin(request)) {
         return NextResponse.json({ error: 'Requisição rejeitada: origem inválida.' }, { status: 403 });
       }
     }
 
-    // CAPTCHA validation (Turnstile) for votes and jury votes
     if (body.action === 'vote' || body.action === 'juryVote') {
       const secret = process.env.TURNSTILE_SECRET_KEY;
       if (secret && secret.length > 0) {
@@ -266,7 +267,6 @@ export async function POST(request: Request) {
           voterId: body.voterId || 'anon'
         });
 
-        // Tenta sincronizar com Supabase (best-effort)
         if (await checkSupabaseAvailable()) {
           try {
             await supabase.rpc('increment_public_vote', {
@@ -278,44 +278,49 @@ export async function POST(request: Request) {
       }
       return GET();
     }
-    
-    // Ação: Lançar Nota do Jurado
+
+    // Ação: Escolha Binária do Jurado (qual time venceu)
     if (body.action === 'juryVote') {
-      if (body.teamId && body.jurado && body.score !== undefined) {
+      if (body.teamId && body.jurado) {
         const fileData = readStateFromFile();
         if (fileData && fileData.currentProvaId) {
           const pId = fileData.currentProvaId;
-          const value = Number(body.score);
+          const teams = fileData.teams || [];
           if (!fileData.scores) fileData.scores = {};
           if (!fileData.scores[pId]) fileData.scores[pId] = {};
-          if (!fileData.scores[pId][body.teamId]) fileData.scores[pId][body.teamId] = { publicVotes: 0, j1: 0, j2: 0 };
-          fileData.scores[pId][body.teamId][body.jurado] = value;
+
+          // Set j1=1 for chosen team, j1=0 for other team
+          for (const team of teams) {
+            if (!fileData.scores[pId][team.id]) fileData.scores[pId][team.id] = { publicVotes: 0, j1: 0, j2: 0 };
+            fileData.scores[pId][team.id][body.jurado] = team.id === body.teamId ? 1 : 0;
+          }
           writeStateToFile(fileData);
 
           appendHistorico({
             timestamp: new Date().toISOString(),
-            type: 'jury',
+            type: 'jury_pick',
             provaId: pId,
-            teamId: body.teamId,
             jurado: body.jurado,
-            score: value,
+            pickedTeamId: body.teamId,
             juradoName: body.juradoName || ''
           });
 
-          // Tenta sincronizar com Supabase (best-effort)
           if (await checkSupabaseAvailable()) {
             try {
-              const { data: existing } = await supabase
-                .from('scores')
-                .select('id')
-                .eq('prova_id', pId)
-                .eq('team_id', body.teamId)
-                .single();
+              for (const team of teams) {
+                const { data: existing } = await supabase
+                  .from('scores')
+                  .select('id')
+                  .eq('prova_id', pId)
+                  .eq('team_id', team.id)
+                  .single();
 
-              if (existing) {
-                await supabase.from('scores').update({ [body.jurado]: value }).eq('id', existing.id);
-              } else {
-                await supabase.from('scores').insert({ prova_id: pId, team_id: body.teamId, [body.jurado]: value });
+                const value = team.id === body.teamId ? 1 : 0;
+                if (existing) {
+                  await supabase.from('scores').update({ [body.jurado]: value }).eq('id', existing.id);
+                } else {
+                  await supabase.from('scores').insert({ prova_id: pId, team_id: team.id, [body.jurado]: value });
+                }
               }
             } catch {}
           }
@@ -323,10 +328,145 @@ export async function POST(request: Request) {
       }
       return GET();
     }
-    
-    // Ação: Atualizar Estado Global (Mestre de Cerimônias / Admin)
+
+    // Ação: Finalizar Prova (calcular vencedor e pontos)
+    if (body.action === 'finalizeProva') {
+      const fileData = readStateFromFile();
+      if (!fileData) return NextResponse.json({ error: 'Servidor não configurado.' }, { status: 500 });
+
+      const provaId = body.provaId || fileData.currentProvaId;
+      if (!provaId) return NextResponse.json({ error: 'Nenhuma prova selecionada.' }, { status: 400 });
+
+      const provas = fileData.provas || [];
+      const provaIdx = provas.findIndex((p: any) => p.id === provaId);
+      if (provaIdx < 0) return NextResponse.json({ error: 'Prova não encontrada.' }, { status: 400 });
+
+      const teams = fileData.teams || [];
+      const scores = fileData.scores || {};
+
+      const result = determineProvaWinner(provaId, scores, teams, provas);
+
+      if (!result) {
+        return NextResponse.json({
+          error: 'Não foi possível determinar vencedor automaticamente.',
+          details: 'Jurados discordam e público está empatado. Selecione o vencedor manualmente no painel.'
+        }, { status: 400 });
+      }
+
+      if (!result.winnerId) {
+        return NextResponse.json({
+          error: 'Nenhum voto registrado. Não é possível finalizar.',
+          details: 'Nenhum jurado votou e o público não votou.'
+        }, { status: 400 });
+      }
+
+      const prova = provas[provaIdx];
+      const points = prova.points || 0;
+      const pointsAwarded: Record<string, number> = {};
+      for (const team of teams) {
+        pointsAwarded[team.id] = team.id === result.winnerId ? points : Math.floor(points * 0.5);
+      }
+
+      provas[provaIdx] = {
+        ...prova,
+        finalized: true,
+        winnerId: result.winnerId,
+        pointsAwarded,
+      };
+      fileData.provas = provas;
+      writeStateToFile(fileData);
+
+      saveSnapshot(fileData, fileData.provas, fileData.teams, fileData.scores);
+
+      appendHistorico({
+        timestamp: new Date().toISOString(),
+        type: 'finalize',
+        provaId,
+        winnerId: result.winnerId,
+        pointsAwarded,
+        j1Pick: result.j1Pick,
+        j2Pick: result.j2Pick,
+        audienceWinner: result.audienceWinner,
+      });
+
+      return readJsonState();
+    }
+
+    // Ação: Definir Vencedor Manual (admin override quando auto falha)
+    if (body.action === 'manualWinner') {
+      const fileData = readStateFromFile();
+      if (!fileData) return NextResponse.json({ error: 'Servidor não configurado.' }, { status: 500 });
+
+      const provaId = body.provaId || fileData.currentProvaId;
+      if (!provaId) return NextResponse.json({ error: 'Nenhuma prova selecionada.' }, { status: 400 });
+      if (!body.winnerId) return NextResponse.json({ error: 'Selecione um vencedor.' }, { status: 400 });
+
+      const provas = fileData.provas || [];
+      const provaIdx = provas.findIndex((p: any) => p.id === provaId);
+      if (provaIdx < 0) return NextResponse.json({ error: 'Prova não encontrada.' }, { status: 400 });
+
+      const teams = fileData.teams || [];
+      const prova = provas[provaIdx];
+      const points = prova.points || 0;
+      const pointsAwarded: Record<string, number> = {};
+      for (const team of teams) {
+        pointsAwarded[team.id] = team.id === body.winnerId ? points : Math.floor(points * 0.5);
+      }
+
+      provas[provaIdx] = {
+        ...prova,
+        finalized: true,
+        winnerId: body.winnerId,
+        pointsAwarded,
+      };
+      fileData.provas = provas;
+      writeStateToFile(fileData);
+
+      saveSnapshot(fileData, fileData.provas, fileData.teams, fileData.scores);
+
+      appendHistorico({
+        timestamp: new Date().toISOString(),
+        type: 'manualWinner',
+        provaId,
+        winnerId: body.winnerId,
+        pointsAwarded,
+      });
+
+      return readJsonState();
+    }
+
+    // Ação: Reabrir Prova Finalizada
+    if (body.action === 'reopenProva') {
+      const fileData = readStateFromFile();
+      if (!fileData) return NextResponse.json({ error: 'Servidor não configurado.' }, { status: 500 });
+
+      const provaId = body.provaId || fileData.currentProvaId;
+      if (!provaId) return NextResponse.json({ error: 'Nenhuma prova selecionada.' }, { status: 400 });
+
+      const provas = fileData.provas || [];
+      const provaIdx = provas.findIndex((p: any) => p.id === provaId);
+      if (provaIdx < 0) return NextResponse.json({ error: 'Prova não encontrada.' }, { status: 400 });
+
+      provas[provaIdx] = {
+        ...provas[provaIdx],
+        finalized: false,
+        winnerId: null,
+        pointsAwarded: {},
+      };
+      fileData.provas = provas;
+      writeStateToFile(fileData);
+
+      appendHistorico({
+        timestamp: new Date().toISOString(),
+        type: 'reopen',
+        provaId,
+      });
+
+      return readJsonState();
+    }
+
+    // Ação: Atualizar Estado Global
     if (body.action === 'updateState') {
-      // 1. Sempre salva no JSON primeiro (armazenamento primário)
       const oldData = readStateFromFile() || {};
       const fileData = { ...oldData };
       if (body.status !== undefined) {
@@ -344,16 +484,14 @@ export async function POST(request: Request) {
       if (body.timerStartedAt !== undefined) fileData.timerStartedAt = body.timerStartedAt;
       writeStateToFile(fileData);
 
-      // 2. Salvar snapshot se votação foi parada ou prova mudou
       const shouldSnapshot = (
         (body.status === 'waiting' && oldData.status === 'active') ||
         (body.currentProvaId !== undefined && body.currentProvaId !== oldData.currentProvaId && oldData.currentProvaId)
       );
       if (shouldSnapshot) {
-        saveSnapshot(fileData, fileData.provas || [], fileData.teams || [], fileData.jurados || [], fileData.scores || {});
+        saveSnapshot(fileData, fileData.provas || [], fileData.teams || [], fileData.scores || {});
       }
 
-      // 3. Tenta sincronizar com Supabase (best-effort, ignorando erros)
       if (await checkSupabaseAvailable()) {
         try {
           const updateFields: any = {};
@@ -431,23 +569,18 @@ export async function POST(request: Request) {
               if (upsErr) throw upsErr;
             }
           }
-        } catch {
-          // Se Supabase falhar, já salvamos no JSON — ignora o erro
-        }
+        } catch {}
       }
 
-      // 3. Retorna dados do JSON (sempre fresco)
       return readJsonState();
     }
-    
-    // Ação: Zerar Tudo (Reset Perigo)
+
+    // Ação: Zerar Tudo
     if (body.action === 'reset') {
-      // 1. Limpar todas as pontuações, provas e equipes
       await supabase.from('scores').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       await supabase.from('provas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       await supabase.from('teams').delete().neq('id', '00000000-0000-0000-0000-000000000000');
 
-      // 2. Restaurar configurações padrão
       await supabase.from('config').upsert({
         id: 1,
         status: 'waiting',
@@ -459,7 +592,6 @@ export async function POST(request: Request) {
         jury_pin: '5678'
       });
 
-      // 3. Inserir equipes padrão novamente
       await supabase.from('teams').insert([
         { name: 'Azul', color: '#3b82f6' },
         { name: 'Vermelha', color: '#ef4444' },
@@ -474,4 +606,31 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: 'Erro interno no POST.' }, { status: 500 });
   }
+}
+
+function readJsonState() {
+  const fileData = readStateFromFile();
+  if (!fileData) return NextResponse.json({ error: 'Servidor não configurado.' }, { status: 500 });
+  const scores: any = {};
+  if (fileData.scores) {
+    Object.keys(fileData.scores).forEach(provaId => {
+      scores[provaId] = {};
+      Object.keys(fileData.scores[provaId]).forEach(teamId => {
+        scores[provaId][teamId] = fileData.scores[provaId][teamId];
+      });
+    });
+  }
+  return NextResponse.json({
+    status: fileData.status || 'waiting',
+    viewMode: fileData.viewMode || 'prova',
+    currentProvaId: fileData.currentProvaId || '',
+    message: fileData.message || '',
+    teams: fileData.teams || [],
+    provas: fileData.provas || [],
+    jurados: fileData.jurados || [],
+    singleVoteMode: fileData.singleVoteMode !== undefined ? fileData.singleVoteMode : true,
+    showJuryScores: fileData.showJuryScores !== undefined ? fileData.showJuryScores : true,
+    timerStartedAt: fileData.timerStartedAt || null,
+    scores
+  });
 }
