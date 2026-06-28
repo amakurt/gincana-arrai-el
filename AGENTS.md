@@ -180,3 +180,24 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `package.json` — @supabase/supabase-js removido
 - `SESSION_LOG.md` — atualizado
 
+## Session 2026-06-28
+
+### Changes
+- **Sonoplastia** (`src/hooks/useSound.ts`): Web Audio API — `voteConfirm`, `juryVote`, `resultsReveal`, `timerBeep`, `timerWarning`. Zero bundle.
+- **Timer/Cronômetro** (`src/components/Timer.tsx`): Contagem regressiva com cor verde/amarelo/vermelho. Duração por prova (`prova.timer`). Auto-inicia quando `status === 'active'`.
+- **Exportar CSV** (`src/app/admin/dashboard/page.tsx`): Botão de download com BOM UTF-8, por prova.
+- **Oracle swap**: 1GB → **3GB** (persistente) para build caber.
+- **Deploy ambos**: Oracle e Hetzner rodando as novas features.
+
+### Key Files Changed
+- `src/hooks/useSound.ts` — novo
+- `src/components/Timer.tsx` — novo
+- `src/app/admin/page.tsx` — timer + editar timer da prova
+- `src/app/admin/dashboard/page.tsx` — ranking + CSV export
+- `src/app/vote/page.tsx` — som + timer
+- `src/app/jurado/page.tsx` — som + timer
+- `src/app/api/state/route.ts` — timer auto-start + historico logging
+- `src/app/api/dashboard/route.ts` — agregador
+- `src/app/api/historico/route.ts` + `admin/historico/page.tsx` — histórico votação
+- `SESSION_LOG.md` — atualizado
+

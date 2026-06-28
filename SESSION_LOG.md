@@ -232,3 +232,31 @@
 
 - Migrar `institutoeducacionallogos.com.br` para Cloudflare + apontar pro Hetzner (DNS leva ~3 dias)
 - `institutoeducacionallogos.store` já está na Cloudflare (nameservers Cloudflare)
+
+## Session 2026-06-28
+
+### Novas Features
+
+- **Sonoplastia** (`src/hooks/useSound.ts`): Hook `useSound` com Web Audio API — sons de `voteConfirm`, `juryVote`, `resultsReveal`, `timerBeep`, `timerWarning`. Zero bundle adicional (sem arquivos de áudio). Usado em `vote/page.tsx` (som ao votar), `jurado/page.tsx` (som ao pontuar), `admin/dashboard/page.tsx` (revelar resultados).
+
+- **Timer/Cronômetro** (`src/components/Timer.tsx`): Componente de contagem regressiva com urgência por cor (verde >60s, amarelo 30-60s, vermelho <30s). Duração por prova (`prova.timer` em segundos). Auto-inicia quando status vira `active` (`timerStartedAt: Date.now()`). Exibido no admin, vote page e jurado page.
+
+- **Exportar Resultados (CSV)** (`src/app/admin/dashboard/page.tsx`): Botão de download CSV com BOM (UTF-8 para Excel). Exporta desagregado por prova + nota geral de cada equipe.
+
+### Deploy Ambos Servidores
+
+- **Oracle**: Swap aumentado de 1GB → **3GB** (persistente em `/etc/fstab`) para build caber nos 954MB de RAM. Build + PM2 restart bem-sucedido.
+- **Hetzner**: Git pull + npm install + build + PM2 restart bem-sucedido.
+- Ambos respondendo 200: `www.institutoeducacionallogos.online` e `hetzner.institutoeducacionallogos.online`
+
+### Files Changed
+- `src/hooks/useSound.ts` — novo
+- `src/components/Timer.tsx` — novo
+- `src/app/admin/page.tsx` — timer no admin, editar timer da prova, export CSV na dashboard
+- `src/app/admin/dashboard/page.tsx` — ranking + gráficos + CSV export
+- `src/app/vote/page.tsx` — som + timer component
+- `src/app/jurado/page.tsx` — som + timer component
+- `src/app/api/state/route.ts` — timer auto-start + historico logging
+- `src/app/api/dashboard/route.ts` — agregador de dados
+- `src/app/api/historico/route.ts` + `src/app/admin/historico/page.tsx` — histórico de votação
+- `SESSION_LOG.md` — este log
