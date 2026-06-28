@@ -2,9 +2,11 @@
 
 import useSWR from 'swr';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSound } from '@/hooks/useSound';
 import { motion } from 'framer-motion';
 import { CheckCircle2, ShieldAlert, Trophy, Monitor, Loader2 } from 'lucide-react';
 import ShareButton from '@/components/ShareButton';
+import Timer from '@/components/Timer';
 
 declare global {
   interface Window {
@@ -85,6 +87,8 @@ export default function VotePage() {
     return () => { clearInterval(interval); };
   }, []);
 
+  const sound = useSound();
+
   const getTurnstileToken = useCallback(() => {
     return Promise.resolve(turnstileToken.current);
   }, []);
@@ -121,6 +125,7 @@ export default function VotePage() {
 
     setVotedFor(teamId);
     setHasVoted(true);
+    sound.voteConfirm();
     if (data.singleVoteMode) {
       localStorage.setItem(`voted_prova_${data.currentProvaId}`, teamId);
     }
@@ -182,6 +187,11 @@ export default function VotePage() {
         <div className="glass" style={{ padding: '1rem 1.5rem', marginBottom: '1.5rem', textAlign: 'center', border: '2px solid var(--yellow-brazil)', borderRadius: 16 }}>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.3rem' }}>Apresentação Atual</div>
           <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--blue-brazil)', margin: 0, lineHeight: 1.2 }}>{activeProva.name.toUpperCase()}</h1>
+          {activeProva.timer > 0 && (
+            <div style={{ marginTop: '0.6rem', display: 'flex', justifyContent: 'center' }}>
+              <Timer timerDuration={activeProva.timer} timerStartedAt={data.timerStartedAt} status={data.status} />
+            </div>
+          )}
         </div>
       )}
 

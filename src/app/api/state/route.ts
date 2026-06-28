@@ -157,6 +157,7 @@ function readJsonState() {
     jurados: fileData.jurados || [],
     singleVoteMode: fileData.singleVoteMode !== undefined ? fileData.singleVoteMode : true,
     showJuryScores: fileData.showJuryScores !== undefined ? fileData.showJuryScores : true,
+    timerStartedAt: fileData.timerStartedAt || null,
     scores
   });
 }
@@ -174,7 +175,8 @@ export async function GET() {
     jurados: fileData.jurados || [],
     singleVoteMode: fileData.singleVoteMode !== undefined ? fileData.singleVoteMode : true,
     showJuryScores: fileData.showJuryScores !== undefined ? fileData.showJuryScores : true,
-    scores: fileData.scores || {}
+    scores: fileData.scores || {},
+    timerStartedAt: fileData.timerStartedAt || null
   } : null;
 
   if (!base) {
@@ -327,7 +329,10 @@ export async function POST(request: Request) {
       // 1. Sempre salva no JSON primeiro (armazenamento primário)
       const oldData = readStateFromFile() || {};
       const fileData = { ...oldData };
-      if (body.status !== undefined) fileData.status = body.status;
+      if (body.status !== undefined) {
+        fileData.status = body.status;
+        if (body.status === 'active') fileData.timerStartedAt = Date.now();
+      }
       if (body.viewMode !== undefined) fileData.viewMode = body.viewMode;
       if (body.currentProvaId !== undefined) fileData.currentProvaId = body.currentProvaId || null;
       if (body.message !== undefined) fileData.message = body.message;
@@ -336,6 +341,7 @@ export async function POST(request: Request) {
       if (body.teams !== undefined) fileData.teams = body.teams;
       if (body.jurados !== undefined) fileData.jurados = body.jurados;
       if (body.provas !== undefined) fileData.provas = body.provas;
+      if (body.timerStartedAt !== undefined) fileData.timerStartedAt = body.timerStartedAt;
       writeStateToFile(fileData);
 
       // 2. Salvar snapshot se votação foi parada ou prova mudou

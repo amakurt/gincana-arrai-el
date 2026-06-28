@@ -1,7 +1,8 @@
 "use client";
 
 import useSWR from 'swr';
-import { Play, Square, RotateCcw, AlertTriangle, Users, Trophy, Monitor, Lock, ShieldAlert, Home, RefreshCw, Edit2, Save, X, BarChart3, History, TrendingUp } from 'lucide-react';
+import { Play, Square, RotateCcw, AlertTriangle, Users, Trophy, Monitor, Lock, ShieldAlert, Home, RefreshCw, Edit2, Save, X, BarChart3, History, TrendingUp, Clock } from 'lucide-react';
+import Timer from '@/components/Timer';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -18,11 +19,13 @@ export default function AdminPage() {
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamColor, setNewTeamColor] = useState('#3b82f6');
   const [newProvaName, setNewProvaName] = useState('');
+  const [newProvaTimer, setNewProvaTimer] = useState(0);
   const [editingTeam, setEditingTeam] = useState<string | null>(null);
   const [editingProva, setEditingProva] = useState<string | null>(null);
   const [editTeamName, setEditTeamName] = useState('');
   const [editTeamColor, setEditTeamColor] = useState('#000000');
   const [editProvaName, setEditProvaName] = useState('');
+  const [editProvaTimer, setEditProvaTimer] = useState(0);
 
   const [error, setError] = useState('');
 
@@ -50,6 +53,12 @@ export default function AdminPage() {
   }, [data, swrError]);
 
   if (checkingAuth) return null;
+
+  const getTimerDuration = (d: any) => {
+    if (!d?.currentProvaId || !d?.provas) return 0;
+    const prova = d.provas.find((p: any) => p.id === d.currentProvaId);
+    return prova?.timer || 0;
+  };
 
   const updateState = async (updates: any) => {
     setLoading(true);
@@ -116,12 +125,13 @@ export default function AdminPage() {
   const startEditProva = (prova: any) => {
     setEditingProva(prova.id);
     setEditProvaName(prova.name);
+    setEditProvaTimer(prova.timer || 0);
   };
 
   const saveEditProva = (provaId: string) => {
     if (!editProvaName) return;
     const updated = data.provas.map((p: any) =>
-      p.id === provaId ? { ...p, name: editProvaName } : p
+      p.id === provaId ? { ...p, name: editProvaName, timer: editProvaTimer || 0 } : p
     );
     updateState({ provas: updated });
     setEditingProva(null);
@@ -258,14 +268,23 @@ export default function AdminPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <button 
-              className="btn"
-              style={{ background: '#10b981' }}
-              disabled={loading || data.status === 'active' || !data.currentProvaId}
-              onClick={() => updateState({ status: 'active', message: 'Votação Aberta!' })}
-            >
-              INICIAR VOTAÇÃO (PUBLICO)
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <button 
+                className="btn"
+                style={{ background: '#10b981', flex: 1 }}
+                disabled={loading || data.status === 'active' || !data.currentProvaId}
+                onClick={() => updateState({ status: 'active', message: 'Votação Aberta!' })}
+              >
+                INICIAR VOTAÇÃO (PUBLICO)
+              </button>
+              {data.status === 'active' && (
+                <Timer
+                  timerDuration={getTimerDuration(data)}
+                  timerStartedAt={data.timerStartedAt}
+                  status={data.status}
+                />
+              )}
+            </div>
             
             <button 
               className="btn"
@@ -438,19 +457,28 @@ export default function AdminPage() {
         <div className="glass" style={{ padding: '2rem' }}>
           <h2 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Trophy /> Provas</h2>
           
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
             <input 
               type="text" 
               placeholder="Nome da Prova (Ex: Dança)" 
               value={newProvaName}
               onChange={(e) => setNewProvaName(e.target.value)}
-              style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+              style={{ flex: '1 1 180px', padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+            />
+            <input 
+              type="number" 
+              placeholder="Timer (seg)" 
+              value={newProvaTimer}
+              onChange={(e) => setNewProvaTimer(Number(e.target.value))}
+              min={0}
+              style={{ width: '100px', padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
             />
             <button 
               onClick={() => {
                 if(newProvaName) {
-                  updateState({ provas: [...(data.provas || []), { id: 'p'+Date.now(), name: newProvaName }] });
+                  updateState({ provas: [...(data.provas || []), { id: 'p'+Date.now(), name: newProvaName, timer: newProvaTimer || 0 }] });
                   setNewProvaName('');
+                  setNewProvaTimer(0);
                 }
               }}
               disabled={loading}
@@ -464,15 +492,24 @@ export default function AdminPage() {
             {(data.provas || []).map((p: any) => (
               <li key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-card)', borderRadius: '8px' }}>
                 {editingProva === p.id ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, flexWrap: 'wrap' }}>
                     <input
                       type="text"
                       value={editProvaName}
                       onChange={(e) => setEditProvaName(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && saveEditProva(p.id)}
-                      style={{ flex: 1, padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.95rem' }}
+                      style={{ flex: '1 1 140px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.95rem' }}
                       autoFocus
                     />
+                    <input
+                      type="number"
+                      value={editProvaTimer}
+                      onChange={(e) => setEditProvaTimer(Number(e.target.value))}
+                      min={0}
+                      style={{ width: '70px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.85rem' }}
+                      placeholder="seg"
+                    />
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>seg</span>
                     <button onClick={() => saveEditProva(p.id)} style={{ background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                       <Save size={18} />
                     </button>
@@ -483,6 +520,7 @@ export default function AdminPage() {
                 ) : (
                   <>
                     {p.name}
+                    {p.timer > 0 && <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: '0.5rem' }}><Clock size={12} /> {p.timer}s</span>}
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button
                         onClick={() => startEditProva(p)}

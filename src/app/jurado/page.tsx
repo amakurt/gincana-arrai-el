@@ -4,6 +4,8 @@ import useSWR from 'swr';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Lock, ShieldAlert, LogOut, Star, Award, Activity, ClipboardList, RefreshCw } from 'lucide-react';
+import { useSound } from '@/hooks/useSound';
+import Timer from '@/components/Timer';
 
 declare global {
   interface Window {
@@ -153,6 +155,8 @@ export default function JuradoPage() {
     }
   };
 
+  const sound = useSound();
+
   const getTurnstileToken = useCallback(() => {
     return Promise.resolve(turnstileToken.current);
   }, []);
@@ -182,6 +186,7 @@ export default function JuradoPage() {
         setCaptchaError(err.error || 'Erro ao enviar nota.');
         return;
       }
+      sound.juryVote();
       mutate();
     } catch {
       setCaptchaError('Erro ao comunicar com o servidor.');
@@ -382,6 +387,11 @@ export default function JuradoPage() {
               <h3 style={{ color: 'var(--grass-dark)', fontSize: '1.3rem', fontWeight: 900 }}>
                 {activeProva.name}
               </h3>
+              {activeProva.timer > 0 && (
+                <div style={{ marginTop: '0.4rem', display: 'flex', justifyContent: 'center' }}>
+                  <Timer timerDuration={activeProva.timer} timerStartedAt={data.timerStartedAt} status={data.status} />
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>

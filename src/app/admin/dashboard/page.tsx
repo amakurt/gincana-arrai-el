@@ -3,11 +3,36 @@
 import useSWR from "swr";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { BarChart3, Trophy, ArrowLeft, Medal, TrendingUp } from "lucide-react";
+import { BarChart3, Trophy, ArrowLeft, Medal, TrendingUp, Download } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 const medalColors = ["#f59e0b", "#94a3b8", "#8b5cf6"];
+
+function exportCSV(data: any) {
+  if (!data?.ranking?.length && !data?.provas?.length) return;
+  let csv = '\uFEFF'; // BOM for Excel compatibility (UTF-8)
+  csv += 'Ranking Geral\n';
+  csv += 'Posição;Equipe;Pontuação Total;Nota Público;Nota Júri;Provas\n';
+  data.ranking.forEach((t: any, i: number) => {
+    csv += `${i + 1};${t.name};${t.totalScore};${t.publicScore.toFixed(1)};${t.juryScore.toFixed(1)};${t.provasCount}\n`;
+  });
+  csv += '\n';
+  (data.provas || []).forEach((p: any) => {
+    csv += `\nProva: ${p.provaName}\n`;
+    csv += 'Posição;Equipe;Votos Público;Nota Público;Júri 1;Júri 2;Total\n';
+    const sorted = [...(p.teams || [])].sort((a: any, b: any) => b.total - a.total);
+    sorted.forEach((t: any, i: number) => {
+      csv += `${i + 1};${t.name};${t.publicVotes};${t.publicScore};${t.j1};${t.j2};${t.total}\n`;
+    });
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `resultados-gincana-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -40,6 +65,7 @@ export default function DashboardPage() {
           <BarChart3 /> Dashboard de Resultados
         </h1>
         <button onClick={() => mutate()} className="nav-btn"><TrendingUp size={16} /> Atualizar</button>
+        <button onClick={() => exportCSV(data)} className="nav-btn"><Download size={16} /> Exportar CSV</button>
       </div>
 
       {error && (
