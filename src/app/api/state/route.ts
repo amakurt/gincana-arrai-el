@@ -280,7 +280,7 @@ export async function POST(request: Request) {
     if ((body.action === 'vote' || body.action === 'juryVote') && !checkRateLimit(`${ip}:${body.action}`, 2)) {
       return NextResponse.json({ error: 'Muitas requisições. Aguarde alguns segundos.' }, { status: 429 });
     }
-    const adminActions = ['updateState', 'finalizeProva', 'externalResult', 'manualWinner', 'reopenProva', 'reset'];
+    const adminActions = ['updateState', 'finalizeProva', 'externalResult', 'manualWinner', 'reopenProva', 'reset', 'resetVoters'];
     if (adminActions.includes(body.action)) {
       if (!checkOrigin(request)) {
         return NextResponse.json({ error: 'Requisição rejeitada: origem inválida.' }, { status: 403 });
@@ -591,6 +591,17 @@ export async function POST(request: Request) {
         provaId,
       });
 
+      return readJsonState();
+    }
+
+    // Ação: Resetar Votação (limpa VOTED_VOTERS para testes)
+    if (body.action === 'resetVoters') {
+      const provaId = body.provaId || (readStateFromFile()?.currentProvaId);
+      if (provaId) {
+        VOTED_VOTERS.delete(provaId);
+      } else {
+        VOTED_VOTERS.clear();
+      }
       return readJsonState();
     }
 

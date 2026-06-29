@@ -398,6 +398,15 @@ export default function AdminPage() {
             >
               PARAR VOTAÇÃO
             </button>
+
+            <button
+              className="btn"
+              style={{ background: '#f59e0b' }}
+              disabled={loading || !data.currentProvaId}
+              onClick={() => updateState({ action: 'resetVoters', provaId: data.currentProvaId })}
+            >
+              RESETAR VOTAÇÃO (TESTE)
+            </button>
           </div>
 
           <hr style={{ borderColor: 'var(--border-light)', margin: '2rem 0' }} />
