@@ -292,3 +292,26 @@ ssh root@<IP> "systemctl start cloudflared"
 
 ### Key Files Changed
 - `SESSION_LOG.md` — este log
+
+## Session 2026-06-29 (Parte 3)
+
+### Changes
+- **PIN hash não vaza na edição** (`src/app/admin/jurados/page.tsx`): Ao editar jurado, `editPin` inicia vazio em vez de mostrar o hash. Se o admin não preencher novo PIN, o antigo é preservado (`...(editPin ? { pin: editPin } : {})`).
+- **PIN exibido como ●●●● fixo** (`src/app/admin/jurados/page.tsx`): `'●'.repeat(4)` em vez de `'●'.repeat(j.pin.length)` que repetia 129 dots do hash.
+- **Jurado page agora lista todas as provas** (`src/app/jurado/page.tsx`): Substituída tela única de votação por 3 seções: 🟢 Em Andamento, ✅ Provas Realizadas (com voto do jurado e vencedor), 📋 Próximas Provas.
+- **Resultados page: campos faltando** (`src/app/api/state/route.ts`): `saveSnapshot` agora salva `publicScore` (= `publicVotes`) e `total` (= `pointsAwarded[team.id]`). Resultados antigos corrigidos via script no Oracle e copiados pro Hetzner para consistência HA.
+- **Botão "VER PLACAR COMPLETO" removido** do `/vote` (3 ocorrências: aguardando, sem votação, e após votar).
+- **Mensagem "Votação Pausada/Encerrada" → "Votação Encerrada"** no admin ao parar votação.
+- **Resetar Votação agora funciona** (`src/app/api/state/route.ts`, `src/app/vote/page.tsx`): 
+  - Server persiste `voterResetAt` no `gincana-state.json` e limpa `VOTED_VOTERS` Map.
+  - Cliente compara `data.voterResetAt` com `localStorage.getItem('voted_reset_${provaId}')`. Se diferente, limpa o voto antigo e permite votar de novo.
+- **Removido Resultado Parcial** do `/vote` (gráfico de barras pós-voto).
+- **Removidos imports não utilizados**: `motion` (framer-motion), `Trophy` (lucide-react), variáveis `sortedTeams`/`maxVotes`/`scores` do vote page.
+
+### Key Files Changed
+- `src/app/admin/jurados/page.tsx` — PIN vazio na edição, ●●●● fixo
+- `src/app/jurado/page.tsx` — lista completa de provas em 3 seções
+- `src/app/api/state/route.ts` — `publicScore`/`total` no saveSnapshot, `voterResetAt`, `resetVoters` action
+- `src/app/vote/page.tsx` — remove VER PLACAR COMPLETO, remove Resultado Parcial, detecta voterResetAt
+- `src/app/admin/page.tsx` — botão RESETAR VOTAÇÃO, mensagem "Votação Encerrada"
+- `SESSION_LOG.md` — este log
