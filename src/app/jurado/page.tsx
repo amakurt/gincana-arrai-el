@@ -54,7 +54,7 @@ export default function JuradoPage() {
       }
     };
     const interval = setInterval(checkTurnstile, 200);
-    setTimeout(() => clearInterval(interval), 10000);
+    setTimeout(() => clearInterval(interval), 30000);
     return () => { clearInterval(interval); };
   }, []);
 
@@ -135,17 +135,23 @@ export default function JuradoPage() {
 
   const sound = useSound();
 
-  const getTurnstileToken = useCallback(() => {
-    return Promise.resolve(turnstileToken.current);
+  const getTurnstileToken = useCallback(async (): Promise<string | null> => {
+    if (turnstileToken.current) return turnstileToken.current;
+    for (let i = 0; i < 25; i++) {
+      await new Promise(r => setTimeout(r, 200));
+      if (turnstileToken.current) return turnstileToken.current;
+    }
+    return null;
   }, []);
 
   const handlePickWinner = useCallback(async (teamId: string) => {
     if (!jurado || !data) return;
     setCaptchaError('');
+    setCaptchaError('Aguardando verificação de segurança...');
 
     const cfToken = await getTurnstileToken();
     if (!cfToken) {
-      setCaptchaError('Aguardando verificação de segurança...');
+      setCaptchaError('Verificação de segurança não disponível. Tente novamente.');
       return;
     }
 
