@@ -263,8 +263,32 @@
 
 ## Session 2026-06-29
 
-### Changes
+### Changes (Parte 1)
 - **Hetzner como servidor principal**: `www.institutoeducacionallogos.online` migrado para Hetzner CX23 (Nuremberg, 4GB RAM). Oracle vira fallback (`hetzner.institutoeducacionallogos.online`).
 - **Correção Cloudflare 404**: `/etc/cloudflared/config.yml` no Hetzner usava `hetzner.*` em vez de `www.*` — corrigido.
 - **Regra de pontuação ajustada**: Jurados discordam → público decide (100%/0%, não 50/50).
 - **P7/P8 externalResult**: Barracas e Rifas sem votação, admin insere valores.
+
+### Changes (Parte 2) — HA Failover Hetzner + Oracle
+- **Problema**: DNS `www.*` tinha CNAME apontando pro tunnel `gincana-hetzner`, que foi deletado — site retornava erro Cloudflare 1033/530.
+- **Causa**: Ambos servidores tinham tunnels separados com o mesmo hostname (`www.*`). Quando o tunnel do Hetzner parava, Cloudflare ainda tentava rotear pra ele.
+- **Solução**: Tunnel único `ha-gincana` (ID `cc818b66`) rodando em **ambos servidores simultaneamente** (HA — High Availability).
+  - Cloudflare distribui tráfego entre as conexões dos dois servidores.
+  - Se um cair, o outro assume automaticamente (failover testado: ~180ms, sem downtime).
+- **DNS atualizado**: `www.*`, bare domain, e `hetzner.*` apontam via CNAME para `ha-gincana`.
+- **Tunnels antigos deletados**: `gincana` (Oracle) e `gincana-hetzner` (Hetzner).
+
+### Failover Testado
+1. Tunnel `ha-gincana` rodando em ambos servidores (8 conexões totais)
+2. Cloudflared parado no Hetzner → site continuou 200 via Oracle em ~180ms
+3. Cloudflared religado no Hetzner → HA restaurada
+
+### Comandos Úteis (Backup)
+```bash
+# Se um servidor falhar, o outro já está servindo. Nada a fazer.
+# Para religar o servidor caído:
+ssh root@<IP> "systemctl start cloudflared"
+```
+
+### Key Files Changed
+- `SESSION_LOG.md` — este log
