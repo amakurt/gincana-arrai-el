@@ -413,6 +413,7 @@ export default function AdminPage() {
         <button onClick={() => router.push('/jurado')} className="nav-btn"><Trophy size={16} /> Júri</button>
         <button onClick={() => router.push('/admin/dashboard')} className="nav-btn"><TrendingUp size={16} /> Dashboard</button>
         <button onClick={() => router.push('/admin/resultados')} className="nav-btn"><BarChart3 size={16} /> Resultados</button>
+        <button onClick={() => window.open('/final', '_blank')} className="nav-btn" style={{ background: 'var(--yellow-brazil)', color: 'var(--text-primary)', fontWeight: 800 }}><Trophy size={16} /> Resultado Final</button>
         <button onClick={() => router.push('/admin/historico')} className="nav-btn"><History size={16} /> Histórico</button>
         <button onClick={() => router.push('/vote')} className="nav-btn"><Users size={16} /> Votos</button>
 

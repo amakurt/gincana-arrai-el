@@ -3,30 +3,38 @@
 import useSWR from "swr";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { History, ArrowLeft, AlertTriangle, RefreshCw, Trash2, Search } from "lucide-react";
+import { History, ArrowLeft, AlertTriangle, RefreshCw, Trash2, Search, Printer } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function HistoricoPage() {
   const router = useRouter();
   const { data, mutate, error } = useSWR("/api/historico", fetcher, { refreshInterval: 3000 });
+  const { data: stateData } = useSWR("/api/state", fetcher, { refreshInterval: 5000 });
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [confirmClear, setConfirmClear] = useState(false);
   const [filtro, setFiltro] = useState("");
+  const [provaFilter, setProvaFilter] = useState("");
+
+  const provas = (stateData?.provas || []) as Array<{ id: string; name: string }>;
 
   const filtered = useMemo(() => {
     if (!Array.isArray(data)) return [];
-    if (!filtro) return data;
+    let votos = data.filter((v: any) => v.type === 'public' || v.type === 'jury_pick');
+    if (provaFilter) {
+      votos = votos.filter((v: any) => v.provaId === provaFilter);
+    }
+    if (!filtro) return votos;
     const f = filtro.toLowerCase();
-    return data.filter((v: any) =>
-      (v.teamId || '').toLowerCase().includes(f) ||
+    return votos.filter((v: any) =>
+      (v.teamId || v.pickedTeamId || '').toLowerCase().includes(f) ||
       (v.type || '').toLowerCase().includes(f) ||
       (v.provaId || '').toLowerCase().includes(f) ||
       (v.juradoName || '').toLowerCase().includes(f) ||
       (v.voterId || '').toLowerCase().includes(f) ||
       (v.jurado || '').toLowerCase().includes(f)
     );
-  }, [data, filtro]);
+  }, [data, filtro, provaFilter]);
 
   useEffect(() => {
     fetch("/api/auth/check")
@@ -62,6 +70,7 @@ export default function HistoricoPage() {
         <h1 style={{ margin: 0, flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <History /> Histórico de Votações
         </h1>
+        <button onClick={() => window.print()} className="nav-btn" style={{ background: 'var(--yellow-brazil)', color: 'var(--text-primary)', fontWeight: 700 }}><Printer size={16} /> Imprimir</button>
         <button onClick={() => mutate()} className="nav-btn"><RefreshCw size={16} /> Atualizar</button>
         {!confirmClear ? (
           <button onClick={() => setConfirmClear(true)} className="nav-btn" style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }}>
@@ -93,6 +102,27 @@ export default function HistoricoPage() {
             boxSizing: 'border-box'
           }}
         />
+      </div>
+
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+        <select
+          value={provaFilter}
+          onChange={e => setProvaFilter(e.target.value)}
+          style={{
+            padding: '0.5rem 1rem',
+            borderRadius: '10px',
+            border: '1px solid var(--warm-wood-border)',
+            background: 'var(--bg-card)',
+            color: 'var(--text-primary)',
+            fontSize: '0.9rem',
+            flex: 1
+          }}
+        >
+          <option value="">Todas as provas</option>
+          {provas.map((p: any) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
       </div>
 
       {error && (
@@ -134,22 +164,22 @@ export default function HistoricoPage() {
                       fontSize: '0.75rem',
                       fontWeight: 700,
                       textTransform: 'uppercase',
-                      background: voto.type === 'jury' ? 'rgba(245,158,11,0.2)' : 'rgba(59,130,246,0.2)',
-                      color: voto.type === 'jury' ? '#f59e0b' : '#3b82f6'
+                      background: voto.type === 'jury_pick' ? 'rgba(245,158,11,0.2)' : 'rgba(59,130,246,0.2)',
+                      color: voto.type === 'jury_pick' ? '#f59e0b' : '#3b82f6'
                     }}>
-                      {voto.type === 'jury' ? 'Júri' : 'Público'}
+                      {voto.type === 'jury_pick' ? 'Júri' : voto.type === 'public' ? 'Público' : voto.type}
                     </span>
                   </td>
                   <td style={{ padding: '0.5rem 0.8rem' }}>{voto.provaId}</td>
-                  <td style={{ padding: '0.5rem 0.8rem' }}>{voto.teamId}</td>
+                  <td style={{ padding: '0.5rem 0.8rem' }}>{voto.teamId || voto.pickedTeamId || '—'}</td>
                   <td style={{ padding: '0.5rem 0.8rem' }}>
-                    {voto.type === 'jury'
+                    {voto.type === 'jury_pick'
                       ? (voto.juradoName || voto.jurado || '—')
                       : (voto.voterId && voto.voterId !== 'anon' ? `Votante ${voto.voterId.slice(0, 6)}...` : 'Anônimo')
                     }
                   </td>
                   <td style={{ padding: '0.5rem 0.8rem', textAlign: 'center', fontWeight: 700 }}>
-                    {voto.type === 'jury' ? voto.score : '✓'}
+                    {voto.type === 'jury_pick' ? '✓' : '✓'}
                   </td>
                 </tr>
               ))}
@@ -160,8 +190,8 @@ export default function HistoricoPage() {
 
       {Array.isArray(data) && (
         <div style={{ marginTop: '1rem', color: 'var(--text-secondary)', fontSize: '0.85rem', textAlign: 'center' }}>
-          Total: {data.length} voto{data.length !== 1 ? 's' : ''}
-          {filtro && filtered.length !== data.length && ` (${filtered.length} filtrados)`}
+          Total: {filtered.length} voto{filtered.length !== 1 ? 's' : ''}
+          {filtro && filtered.length !== (data.filter((v: any) => v.type === 'public' || v.type === 'jury_pick')).length && ` (${filtered.length} filtrados)`}
         </div>
       )}
 
@@ -187,6 +217,16 @@ export default function HistoricoPage() {
         }
         .nav-btn:active {
           transform: translateY(0);
+        }
+      `}</style>
+      <style>{`
+        @media print {
+          body { background: white !important; color: black !important; }
+          .nav-btn, button, input, select, .no-print { display: none !important; }
+          table { font-size: 9pt !important; }
+          th { color: #333 !important; border-bottom: 1px solid #999 !important; }
+          td { border-bottom: 1px solid #ddd !important; }
+          h1 { color: #1a3a5c !important; }
         }
       `}</style>
     </div>

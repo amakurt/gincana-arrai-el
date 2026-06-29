@@ -195,6 +195,16 @@ function getJuryPicks(provaId: string, scores: any, teams: any[]) {
   return { j1Pick, j2Pick };
 }
 
+function getPublicVotes(provaId: string, scores: any, teams: any[]) {
+  const pScores = scores[provaId];
+  if (!pScores) return {};
+  const result: Record<string, number> = {};
+  for (const team of teams) {
+    result[team.id] = pScores[team.id]?.publicVotes || 0;
+  }
+  return result;
+}
+
 function getAudienceWinner(provaId: string, scores: any, teams: any[]) {
   const pScores = scores[provaId];
   if (!pScores) return null;
@@ -205,27 +215,70 @@ function getAudienceWinner(provaId: string, scores: any, teams: any[]) {
   return null;
 }
 
-function calculateProvaPoints(prova: any, j1Pick: string | null, j2Pick: string | null, audienceWinner: string | null, teams: any[]) {
+function calculateProvaPoints(prova: any, j1Pick: string | null, j2Pick: string | null, teams: any[], scores: any) {
   const provaPoints = prova.points || 0;
+  const provaId = prova.id;
   const pointsAwarded: Record<string, number> = {};
+
+  // Score de cada jurado: 300 para o escolhido, 150 para o outro
+  function juryScore(pick: string | null, teamId: string): number {
+    if (!pick) return 150; // jurado não votou = neutro
+    return pick === teamId ? 300 : 150;
+  }
+
+  // Média dos jurados para cada equipe
+  const juryAvgs: Record<string, number> = {};
+  let totalJuryAvg = 0;
   for (const team of teams) {
-    pointsAwarded[team.id] = 0;
+    const avg = (juryScore(j1Pick, team.id) + juryScore(j2Pick, team.id)) / 2;
+    juryAvgs[team.id] = avg;
+    totalJuryAvg += avg;
   }
 
+  // Votos do público
+  const publicVotes = getPublicVotes(provaId, scores, teams);
+  const totalPublicVotes = Object.values(publicVotes).reduce((a: number, b: number) => a + b, 0);
+
+  // Calcular pontos
+  let totalPoints = 0;
+  const teamPoints: Record<string, number> = {};
+  const teamIds = teams.map((t: any) => t.id);
+
+  for (const team of teams) {
+    const juryRatio = totalJuryAvg > 0 ? juryAvgs[team.id] / totalJuryAvg : 0.5;
+    const publicRatio = totalPublicVotes > 0 ? (publicVotes[team.id] || 0) / totalPublicVotes : 0.5;
+    const finalRatio = 0.7 * juryRatio + 0.3 * publicRatio;
+    const pts = Math.round(finalRatio * provaPoints);
+    teamPoints[team.id] = pts;
+    totalPoints += pts;
+  }
+
+  // Ajustar diferença de arredondamento
+  const diff = provaPoints - totalPoints;
+  if (diff !== 0 && teams.length > 0) {
+    teamPoints[teamIds[teamIds.length - 1]] += diff;
+  }
+
+  // Determinar vencedor
   let winnerId: string | null = null;
-
-  if (j1Pick && j2Pick && j1Pick === j2Pick) {
-    winnerId = j1Pick;
-  } else if (j1Pick && j2Pick && j1Pick !== j2Pick) {
-    winnerId = audienceWinner;
-  } else if (j1Pick) {
-    winnerId = j1Pick;
-  } else if (j2Pick) {
-    winnerId = j2Pick;
+  let maxPts = -1;
+  for (const team of teams) {
+    pointsAwarded[team.id] = teamPoints[team.id];
+    if (teamPoints[team.id] > maxPts) {
+      maxPts = teamPoints[team.id];
+      winnerId = team.id;
+    }
   }
 
+  // Se houver empate, usar o voto do público como desempate
   if (winnerId) {
-    pointsAwarded[winnerId] = provaPoints;
+    const tiedTeams = teams.filter((t: any) => teamPoints[t.id] === maxPts);
+    if (tiedTeams.length > 1) {
+      const pVotes = getPublicVotes(provaId, scores, teams);
+      winnerId = tiedTeams.reduce((a: any, b: any) =>
+        (pVotes[a.id] || 0) >= (pVotes[b.id] || 0) ? a : b
+      ).id;
+    }
   }
 
   return { pointsAwarded, winnerId };
@@ -445,14 +498,7 @@ export async function POST(request: Request) {
         }, { status: 400 });
       }
 
-      if (j1Pick && j2Pick && j1Pick !== j2Pick && !audienceWinner) {
-        return NextResponse.json({
-          error: 'Jurados discordaram e público empatou.',
-          details: 'Definir vencedor manualmente no painel.'
-        }, { status: 400 });
-      }
-
-      const { pointsAwarded, winnerId } = calculateProvaPoints(prova, j1Pick, j2Pick, audienceWinner, teams);
+      const { pointsAwarded, winnerId } = calculateProvaPoints(prova, j1Pick, j2Pick, teams, scores);
 
       provas[provaIdx] = { ...prova, finalized: true, winnerId, pointsAwarded };
       fileData.provas = provas;
@@ -493,19 +539,45 @@ export async function POST(request: Request) {
       }
 
       const vals = body.externalValues as Record<string, number>;
+
+      // Calcular total arrecadado
+      let totalVal = 0;
+      for (const team of teams) {
+        totalVal += Math.max(0, vals[team.id] || 0);
+      }
+
+      // Distribuir pontos proporcionalmente
+      if (totalVal > 0) {
+        let totalPts = 0;
+        const teamIds = teams.map((t: any) => t.id);
+        for (let i = 0; i < teamIds.length; i++) {
+          const tid = teamIds[i];
+          const rawPts = (Math.max(0, vals[tid] || 0) / totalVal) * points;
+          const rounded = i < teamIds.length - 1 ? Math.round(rawPts) : points - totalPts;
+          pointsAwarded[tid] = rounded;
+          totalPts += rounded;
+        }
+      } else {
+        // Se não há valores, dividir igualmente
+        for (const team of teams) {
+          pointsAwarded[team.id] = Math.round(points / teams.length);
+        }
+        // Ajustar arredondamento
+        const sum = Object.values(pointsAwarded).reduce((a: number, b: number) => a + b, 0);
+        if (sum !== points && teams.length > 0) {
+          pointsAwarded[teams[teams.length - 1].id] += points - sum;
+        }
+      }
+
+      // Determinar vencedor (maior valor)
       let winnerId: string | null = null;
       let maxVal = -1;
-
       for (const team of teams) {
         const v = vals[team.id];
         if (v !== undefined && v > maxVal) {
           maxVal = v;
           winnerId = team.id;
         }
-      }
-
-      if (winnerId) {
-        pointsAwarded[winnerId] = points;
       }
 
       provas[provaIdx] = { ...prova, finalized: true, winnerId, pointsAwarded };
@@ -725,7 +797,6 @@ export async function POST(request: Request) {
         finalized: false,
         winnerId: null,
         pointsAwarded: {},
-        externalResult: undefined,
         juryVotes: {}
       }));
       writeStateToFile({

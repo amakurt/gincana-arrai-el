@@ -25,7 +25,7 @@ declare global {
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function JuradoPage() {
-  const { data, mutate, error: swrError } = useSWR('/api/state', fetcher, { refreshInterval: 3000 });
+  const { data, mutate, error: swrError } = useSWR('/api/state', fetcher, { refreshInterval: 2000, refreshWhenHidden: true, dedupingInterval: 1000 });
   const [jurado, setJurado] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
@@ -53,8 +53,7 @@ export default function JuradoPage() {
         turnstileWidgetId.current = id;
       }
     };
-    const interval = setInterval(checkTurnstile, 200);
-    setTimeout(() => clearInterval(interval), 30000);
+    const interval = setInterval(checkTurnstile, 500);
     return () => { clearInterval(interval); };
   }, []);
 
@@ -137,7 +136,7 @@ export default function JuradoPage() {
 
   const getTurnstileToken = useCallback(async (): Promise<string | null> => {
     if (turnstileToken.current) return turnstileToken.current;
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 6; i++) {
       await new Promise(r => setTimeout(r, 200));
       if (turnstileToken.current) return turnstileToken.current;
     }

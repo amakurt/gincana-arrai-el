@@ -221,6 +221,15 @@ export default function ScreenPage() {
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
         <ShareButton url="/screen" label="Compartilhar Placar" />
       </div>
+
+      {provas.length > 0 && provas.every((p: any) => p.finalized) && (
+        <div className="screen-final-cta" style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+          <a href="/final" target="_blank"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '1rem 2.5rem', background: 'var(--yellow-brazil)', color: 'var(--text-primary)', fontWeight: 800, fontSize: '1.5rem', borderRadius: 14, textDecoration: 'none' }}>
+            🏆 VER RESULTADO FINAL
+          </a>
+        </div>
+      )}
       
     </div>
   );

@@ -25,7 +25,7 @@ declare global {
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function VotePage() {
-  const { data, error, mutate } = useSWR('/api/state', fetcher, { refreshInterval: 3000 });
+  const { data, error, mutate } = useSWR('/api/state', fetcher, { refreshInterval: 3000, refreshWhenHidden: true, dedupingInterval: 1000 });
   const [votedFor, setVotedFor] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [voting, setVoting] = useState(false);
@@ -85,8 +85,7 @@ export default function VotePage() {
         turnstileWidgetId.current = id;
       }
     };
-    const interval = setInterval(checkTurnstile, 200);
-    setTimeout(() => clearInterval(interval), 30000);
+    const interval = setInterval(checkTurnstile, 500);
     return () => { clearInterval(interval); };
   }, []);
 
@@ -94,7 +93,7 @@ export default function VotePage() {
 
   const getTurnstileToken = useCallback(async (): Promise<string | null> => {
     if (turnstileToken.current) return turnstileToken.current;
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 6; i++) {
       await new Promise(r => setTimeout(r, 200));
       if (turnstileToken.current) return turnstileToken.current;
     }
@@ -107,36 +106,40 @@ export default function VotePage() {
     if (voting) return;
     setVoting(true);
 
-    const cfToken = await getTurnstileToken();
+    try {
+      const cfToken = await getTurnstileToken();
+      const voterId = localStorage.getItem('voter_id') || '';
 
-    const voterId = localStorage.getItem('voter_id') || '';
+      const res = await fetch('/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'vote', teamId, voterId, cfToken })
+      });
 
-    const res = await fetch('/api/state', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'vote', teamId, voterId, cfToken })
-    });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Erro ao registrar voto.' }));
+        setCaptchaError(err.error || 'Erro ao registrar voto.');
+        setVoting(false);
+        return;
+      }
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: 'Erro ao registrar voto.' }));
-      setCaptchaError(err.error || 'Erro ao registrar voto.');
+      setVotedFor(teamId);
+      setHasVoted(true);
+      sound.voteConfirm();
+      if (data.singleVoteMode) {
+        localStorage.setItem(`voted_prova_${data.currentProvaId}`, teamId);
+        localStorage.setItem(`voted_reset_${data.currentProvaId}`, String(data.voterResetAt || 0));
+      }
+
       setVoting(false);
-      return;
+      mutate();
+      if (window.turnstile && turnstileContainer.current) {
+        window.turnstile.reset(turnstileContainer.current);
+      }
+      turnstileReady.current = false;
+    } catch {
+      setVoting(false);
     }
-
-    setVotedFor(teamId);
-    setHasVoted(true);
-    sound.voteConfirm();
-    if (data.singleVoteMode) {
-      localStorage.setItem(`voted_prova_${data.currentProvaId}`, teamId);
-      localStorage.setItem(`voted_reset_${data.currentProvaId}`, String(data.voterResetAt || 0));
-    }
-
-    setVoting(false);
-    if (window.turnstile && turnstileContainer.current) {
-      window.turnstile.reset(turnstileContainer.current);
-    }
-    turnstileReady.current = false;
   };
 
   const handleVoteAgain = () => {
@@ -159,6 +162,7 @@ export default function VotePage() {
 
   return (
     <div className="mobile-container" style={{ position: 'relative', overflow: 'hidden' }}>
+      <div ref={turnstileContainer} style={{ width: 0, height: 0, overflow: 'hidden', position: 'absolute' }} />
       
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <img src="/logologos.png" alt="Logo" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 10, background: 'var(--logo-bg)', padding: 4, outline: '1px solid var(--logo-ring)' }} />
@@ -230,7 +234,6 @@ export default function VotePage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <h1 style={{ fontSize: '1.8rem', textAlign: 'center', color: 'var(--blue-brazil)', marginBottom: '0.5rem' }}>Votação do Público</h1>
-          <div ref={turnstileContainer} style={{ width: 0, height: 0, overflow: 'hidden', position: 'absolute' }} />
           {teams.map((team: any) => (
             <button 
               key={team.id}

@@ -315,3 +315,20 @@ ssh root@<IP> "systemctl start cloudflared"
 - `src/app/vote/page.tsx` — remove VER PLACAR COMPLETO, remove Resultado Parcial, detecta voterResetAt
 - `src/app/admin/page.tsx` — botão RESETAR VOTAÇÃO, mensagem "Votação Encerrada"
 - `SESSION_LOG.md` — este log
+
+## Session 2026-06-29 (Parte 4 — Interrompida e Recuperada)
+
+### Changes
+- **Sistema de pontuação reformulado** (`src/app/api/state/route.ts`): De winner-takes-all para distribuição proporcional. Cada jurado: 300 pts pro escolhido, 150 pro outro. Média dos jurados = 70% da nota. Voto popular = 30%. Desempate por público. `externalResult` também distribui proporcional (baseado no valor arrecadado).
+- **Página Resultado Final** (`src/app/final/page.tsx`): Nova página com campeão, ranking completo, detalhamento por prova (público, votos dos jurados, pontos). Suporte a impressão/PDF. Botão no admin e no telão (quando todas as provas finalizadas).
+- **Histórico** (`src/app/admin/historico/page.tsx`): Filtro por prova (dropdown), botão Imprimir, exibe apenas `public` e `jury_pick`.
+- **Ajustes**: Vote/jurado pages — Turnstile retry loop 25→6, polling 2s/3s, `mutate()` pós-voto, container Turnstile movido pra cima no vote. Reset de provas preserva `externalResult`.
+
+### Key Files Changed
+- `src/app/api/state/route.ts` — `calculateProvaPoints` rewrite, `getPublicVotes`, `externalResult` proportional
+- `src/app/final/page.tsx` — novo
+- `src/app/admin/historico/page.tsx` — filtro prova, imprimir
+- `src/app/admin/page.tsx` — botão Resultado Final
+- `src/app/screen/page.tsx` — banner Resultado Final
+- `src/app/vote/page.tsx` — Turnstile retry, try/catch, container position
+- `src/app/jurado/page.tsx` — Turnstile retry, polling 2s
