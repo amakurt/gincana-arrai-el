@@ -308,6 +308,7 @@ export default function JuradoPage() {
     return null;
   }
 
+  const provasRealizadas = provas.filter((p: any) => p.finalized);
   const provasRestantes = provas.filter((p: any) => !p.finalized && p.id !== data.currentProvaId);
   const showVoting = activeProva && data.status === 'active' && !activeProva.finalized;
 
@@ -468,6 +469,29 @@ export default function JuradoPage() {
         )}
 
 
+
+        {provasRealizadas.length > 0 && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            {sectionHeader(<CheckCircle size={14} style={{ color: '#10b981' }} />, `Provas Realizadas (${provasRealizadas.length})`)}
+            {provasRealizadas.map((prova: any) => (
+              <div key={prova.id} className="glass" style={{
+                padding: '1rem 1.2rem',
+                marginBottom: '0.6rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '0.8rem'
+              }}>
+                <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                  {prova.name}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', flexShrink: 0 }}>
+                  {prova.externalResult ? 'Resultado definido pelo admin' : `${prova.points || '?'} pts`}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {provasRestantes.length > 0 && (
           <div style={{ marginBottom: '1.5rem' }}>
