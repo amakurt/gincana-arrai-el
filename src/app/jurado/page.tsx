@@ -230,7 +230,6 @@ export default function JuradoPage() {
   const scores = data.scores || {};
   const provas = data.provas || [];
   const activeProva = provas.find((p: any) => p.id === data.currentProvaId);
-  const isFinalized = activeProva?.finalized;
 
   if (!pinVerified) {
     return (
@@ -310,6 +309,30 @@ export default function JuradoPage() {
     return null;
   }
 
+  const getJuradoVote = (provaId: string) => {
+    const jurados = data?.jurados || [];
+    const idx = jurados.findIndex((j: any) => j.id === jurado?.id);
+    const slot = idx === 0 ? 'j1' : 'j2';
+    if (!slot) return null;
+    for (const team of teams) {
+      if (scores[provaId]?.[team.id]?.[slot] === 1) return team;
+    }
+    return null;
+  };
+
+  const provasRealizadas = provas.filter((p: any) => p.finalized);
+  const provasRestantes = provas.filter((p: any) => !p.finalized && p.id !== data.currentProvaId);
+  const showVoting = activeProva && data.status === 'active' && !activeProva.finalized;
+
+  const sectionHeader = (icon: React.ReactNode, label: string) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem' }}>
+      {icon}
+      <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-secondary)' }}>
+        {label}
+      </span>
+    </div>
+  );
+
   return (
     <div className="mobile-container">
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -334,57 +357,26 @@ export default function JuradoPage() {
           </button>
         </div>
 
-        {!activeProva || data.status !== 'active' || activeProva?.externalResult ? (
-          <div
-            className="glass"
-            style={{ padding: '3rem 2rem', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <div style={{ marginBottom: '1.5rem' }}>
-              <ClipboardList size={48} style={{ color: 'var(--yellow-brazil)', opacity: 0.6 }} />
-            </div>
-            <h3 style={{ marginBottom: '0.5rem', fontSize: '1.3rem' }}>
-              {activeProva?.externalResult ? 'Prova sem Votação' : activeProva ? 'Votação Pausada' : 'Nenhuma Prova Ativa'}
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-              {activeProva?.externalResult
-                ? `"${activeProva.name}" não precisa de votação de jurados. O resultado será definido pelo administrador.`
-                : activeProva
-                  ? `A prova "${activeProva.name}" está selecionada, mas a votação está pausada.`
-                  : 'Aguarde o administrador iniciar a próxima prova no painel de controle.'}
-            </p>
-          </div>
-        ) : (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <div
-              className="glass"
-              style={{
-                padding: '1rem 1.5rem', textAlign: 'center', marginBottom: '1.2rem',
-                background: 'rgba(16, 185, 129, 0.08)',
-                border: '1px solid rgba(16, 185, 129, 0.2)'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
-                <Award size={16} style={{ color: 'var(--grass-dark)' }} />
-                <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Prova em Andamento</span>
-              </div>
-              <h3 style={{ color: 'var(--grass-dark)', fontSize: '1.3rem', fontWeight: 900 }}>
-                {activeProva.name}
-              </h3>
-              {activeProva.timer > 0 && (
-                <div style={{ marginTop: '0.4rem', display: 'flex', justifyContent: 'center' }}>
-                  <Timer timerDuration={activeProva.timer} timerStartedAt={data.timerStartedAt} status={data.status} />
+        {activeProva && !activeProva.finalized && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            {data.status === 'active' && !activeProva.externalResult ? (
+              <>
+                {sectionHeader(<div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />, 'Em Andamento')}
+                <div className="glass" style={{ padding: '1rem 1.5rem', textAlign: 'center', marginBottom: '1.2rem', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                    <Award size={16} style={{ color: 'var(--grass-dark)' }} />
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Prova em Andamento</span>
+                  </div>
+                  <h3 style={{ color: 'var(--grass-dark)', fontSize: '1.3rem', fontWeight: 900 }}>
+                    {activeProva.name}
+                  </h3>
+                  {activeProva.timer > 0 && (
+                    <div style={{ marginTop: '0.4rem', display: 'flex', justifyContent: 'center' }}>
+                      <Timer timerDuration={activeProva.timer} timerStartedAt={data.timerStartedAt} status={data.status} />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {isFinalized ? (
-              <div className="glass" style={{ padding: '2rem', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <CheckCircle size={48} style={{ color: '#10b981', marginBottom: '1rem' }} />
-                <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>Prova Finalizada</h3>
-                <p style={{ color: 'var(--text-secondary)' }}>Esta prova já foi encerrada e o resultado foi calculado.</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
                 <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
                   <ThumbsUp size={24} style={{ color: 'var(--yellow-brazil)' }} />
                   <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0.3rem 0' }}>Escolha o Time VENCEDOR</h3>
@@ -396,46 +388,48 @@ export default function JuradoPage() {
                     Nenhuma equipe cadastrada.
                   </div>
                 )}
-                {teams.map((team: any) => {
-                  const isSelected = selectedTeam === team.id;
-                  return (
-                    <button
-                      key={team.id}
-                      onClick={() => handlePickWinner(team.id)}
-                      disabled={saving}
-                      style={{
-                        padding: '2rem 1.5rem',
-                        borderRadius: '16px',
-                        border: isSelected ? `3px solid ${team.color}` : '2px solid var(--border-light)',
-                        background: isSelected ? `${team.color}22` : 'var(--bg-card)',
-                        cursor: saving ? 'not-allowed' : 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '1rem',
-                        opacity: saving ? 0.6 : 1,
-                        transition: 'all 0.3s ease',
-                        fontFamily: 'inherit',
-                      }}
-                    >
-                      <div style={{
-                        width: 20, height: 20, borderRadius: '50%',
-                        background: team.color,
-                        boxShadow: isSelected ? `0 0 12px ${team.color}` : 'none'
-                      }} />
-                      <span style={{
-                        fontSize: '1.8rem',
-                        fontWeight: 900,
-                        color: isSelected ? team.color : 'var(--text-primary)'
-                      }}>
-                        Equipe {team.name}
-                      </span>
-                      {isSelected && (
-                        <CheckCircle size={28} color={team.color} />
-                      )}
-                    </button>
-                  );
-                })}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {teams.map((team: any) => {
+                    const isSelected = selectedTeam === team.id;
+                    return (
+                      <button
+                        key={team.id}
+                        onClick={() => handlePickWinner(team.id)}
+                        disabled={saving}
+                        style={{
+                          padding: '2rem 1.5rem',
+                          borderRadius: '16px',
+                          border: isSelected ? `3px solid ${team.color}` : '2px solid var(--border-light)',
+                          background: isSelected ? `${team.color}22` : 'var(--bg-card)',
+                          cursor: saving ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '1rem',
+                          opacity: saving ? 0.6 : 1,
+                          transition: 'all 0.3s ease',
+                          fontFamily: 'inherit',
+                        }}
+                      >
+                        <div style={{
+                          width: 20, height: 20, borderRadius: '50%',
+                          background: team.color,
+                          boxShadow: isSelected ? `0 0 12px ${team.color}` : 'none'
+                        }} />
+                        <span style={{
+                          fontSize: '1.8rem',
+                          fontWeight: 900,
+                          color: isSelected ? team.color : 'var(--text-primary)'
+                        }}>
+                          Equipe {team.name}
+                        </span>
+                        {isSelected && (
+                          <CheckCircle size={28} color={team.color} />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
 
                 {hasPicked && selectedTeam && (
                   <div style={{
@@ -450,24 +444,127 @@ export default function JuradoPage() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '0.5rem'
+                    gap: '0.5rem',
+                    marginTop: '1rem'
                   }}>
                     <CheckCircle size={20} />
                     Seu voto foi registrado! Você escolheu <strong>{teams.find((t: any) => t.id === selectedTeam)?.name}</strong>
                   </div>
                 )}
+
+                {captchaError && (
+                  <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center', margin: '0.5rem 0 0' }}>
+                    {captchaError}
+                  </p>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
+                  <div ref={turnstileContainer} style={{ width: 300, height: 65 }} />
+                </div>
+              </>
+            ) : activeProva.externalResult ? (
+              <>
+                {sectionHeader(<div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b' }} />, 'Em Andamento')}
+                <div className="glass" style={{ padding: '2rem', textAlign: 'center' }}>
+                  <ClipboardList size={48} style={{ color: 'var(--yellow-brazil)', opacity: 0.6, marginBottom: '1rem' }} />
+                  <h3 style={{ marginBottom: '0.5rem', fontSize: '1.2rem' }}>{activeProva.name}</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                    Esta prova não precisa de votação de jurados. O resultado será definido pelo administrador.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                {sectionHeader(<div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b' }} />, 'Aguardando')}
+                <div className="glass" style={{ padding: '2rem', textAlign: 'center' }}>
+                  <ClipboardList size={48} style={{ color: 'var(--yellow-brazil)', opacity: 0.6, marginBottom: '1rem' }} />
+                  <h3 style={{ marginBottom: '0.5rem', fontSize: '1.2rem' }}>{activeProva.name}</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                    A prova "{activeProva.name}" está selecionada, mas a votação está pausada. Aguarde o administrador.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {provasRealizadas.length > 0 && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            {sectionHeader(<CheckCircle size={14} style={{ color: '#10b981' }} />, `Provas Realizadas (${provasRealizadas.length})`)}
+            {provasRealizadas.map((prova: any) => {
+              const myVote = getJuradoVote(prova.id);
+              const vencedor = teams.find((t: any) => t.id === prova.winnerId);
+              return (
+                <div key={prova.id} className="glass" style={{
+                  padding: '1rem 1.2rem',
+                  marginBottom: '0.6rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '0.8rem'
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                      {prova.name}
+                    </div>
+                    {prova.externalResult ? (
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                        🏆 Resultado definido pelo admin
+                      </div>
+                    ) : myVote ? (
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                        🗳 Seu voto: <span style={{ color: myVote.color, fontWeight: 700 }}>{myVote.name}</span>
+                        {vencedor && (
+                          <> · 🏆 Vencedor: <span style={{ color: vencedor.color, fontWeight: 700 }}>{vencedor.name}</span></>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '0.2rem' }}>
+                        ⏳ Você não votou nesta prova
+                      </div>
+                    )}
+                  </div>
+                  {vencedor && (
+                    <div style={{
+                      width: 16, height: 16, borderRadius: '50%',
+                      background: vencedor.color,
+                      flexShrink: 0
+                    }} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {provasRestantes.length > 0 && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            {sectionHeader(<ClipboardList size={14} style={{ color: 'var(--yellow-brazil)' }} />, `Próximas Provas (${provasRestantes.length})`)}
+            {provasRestantes.map((prova: any) => (
+              <div key={prova.id} className="glass" style={{
+                padding: '1rem 1.2rem',
+                marginBottom: '0.6rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '0.8rem'
+              }}>
+                <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                  {prova.name}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', flexShrink: 0 }}>
+                  {prova.externalResult ? 'Sem votação' : `${prova.points || '?'} pts`}
+                </div>
               </div>
-            )}
+            ))}
+          </div>
+        )}
 
-            {captchaError && (
-              <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center', margin: '0.5rem 0 0' }}>
-                {captchaError}
-              </p>
-            )}
-
-            <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
-              <div ref={turnstileContainer} style={{ width: 300, height: 65 }} />
-            </div>
+        {provas.length === 0 && (
+          <div className="glass" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
+            <ClipboardList size={48} style={{ color: 'var(--yellow-brazil)', opacity: 0.6, marginBottom: '1rem' }} />
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Nenhuma Prova Cadastrada</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Aguarde o administrador cadastrar as provas.</p>
           </div>
         )}
       </div>
