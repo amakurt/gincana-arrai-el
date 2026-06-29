@@ -180,6 +180,27 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `package.json` — @supabase/supabase-js removido
 - `SESSION_LOG.md` — atualizado
 
+## Session 2026-06-29
+
+### Changes
+- **Hetzner como servidor principal**: `www.institutoeducacionallogos.online` migrado para Hetzner CX23 (4GB RAM). Oracle vira fallback.
+- **Correção Cloudflare 404**: `/etc/cloudflared/config.yml` usava `hetzner.*` em vez de `www.*` — ingress rule corrigida.
+- **Regra 100%/0%**: Jurados concordam → vencedor leva tudo; discordam → público decide.
+- **P7/P8 externalResult**: Barracas e Rifas sem votação, admin insere valores.
+- **State**: 2 equipes (VERDE/AMARELO), 8 provas 1º dia, 2 jurados.
+
+### Key Files Changed
+- `src/app/api/state/route.ts` — finalizeProva, externalResult, manualWinner, reopenProva
+- `src/app/jurado/page.tsx` — escolha binária do time vencedor
+- `src/app/admin/page.tsx` — pontos, externalResult, Calcular Resultado
+- `src/app/vote/page.tsx` — mensagem "Prova sem votação" para externalResult
+- `gincana-state.json` — 8 provas configuradas
+- `SESSION_LOG.md` — atualizado
+
+### Performance Note
+- Sessão lenta devido a múltiplos SSH + deploys remotos para Hetzner.
+- Usuário reportou latência alta nas respostas.
+
 ## Session 2026-06-28
 
 ### Changes

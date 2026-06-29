@@ -260,3 +260,11 @@
 - `src/app/api/dashboard/route.ts` — agregador de dados
 - `src/app/api/historico/route.ts` + `src/app/admin/historico/page.tsx` — histórico de votação
 - `SESSION_LOG.md` — este log
+
+## Session 2026-06-29
+
+### Changes
+- **Hetzner como servidor principal**: `www.institutoeducacionallogos.online` migrado para Hetzner CX23 (Nuremberg, 4GB RAM). Oracle vira fallback (`hetzner.institutoeducacionallogos.online`).
+- **Correção Cloudflare 404**: `/etc/cloudflared/config.yml` no Hetzner usava `hetzner.*` em vez de `www.*` — corrigido.
+- **Regra de pontuação ajustada**: Jurados discordam → público decide (100%/0%, não 50/50).
+- **P7/P8 externalResult**: Barracas e Rifas sem votação, admin insere valores.
