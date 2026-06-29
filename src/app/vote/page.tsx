@@ -107,9 +107,6 @@ export default function VotePage() {
     if (voting) return;
     setVoting(true);
 
-    setCaptchaError('');
-    setCaptchaError('Aguardando verificação de segurança...');
-
     const cfToken = await getTurnstileToken();
 
     const voterId = localStorage.getItem('voter_id') || '';
@@ -233,14 +230,7 @@ export default function VotePage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <h1 style={{ fontSize: '1.8rem', textAlign: 'center', color: 'var(--blue-brazil)', marginBottom: '0.5rem' }}>Votação do Público</h1>
-          <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 0.5rem 0' }}>
-            <div ref={turnstileContainer} style={{ width: 300, height: 65 }} />
-          </div>
-          {captchaError && (
-            <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center', margin: '-0.3rem 0 0.5rem 0' }}>
-              {captchaError}
-            </p>
-          )}
+          <div ref={turnstileContainer} style={{ width: 0, height: 0, overflow: 'hidden', position: 'absolute' }} />
           {teams.map((team: any) => (
             <button 
               key={team.id}

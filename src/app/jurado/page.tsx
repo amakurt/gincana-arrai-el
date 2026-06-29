@@ -146,9 +146,6 @@ export default function JuradoPage() {
 
   const handlePickWinner = useCallback(async (teamId: string) => {
     if (!jurado || !data) return;
-    setCaptchaError('');
-    setCaptchaError('Aguardando verificação de segurança...');
-
     const cfToken = await getTurnstileToken();
 
     const jurados = data.jurados || [];
@@ -390,15 +387,7 @@ export default function JuradoPage() {
                     Nenhuma equipe cadastrada.
                   </div>
                 )}
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 0.5rem 0' }}>
-                  <div ref={turnstileContainer} style={{ width: 300, height: 65 }} />
-                </div>
-
-                {captchaError && (
-                  <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center', margin: '-0.3rem 0 0.5rem 0' }}>
-                    {captchaError}
-                  </p>
-                )}
+                <div ref={turnstileContainer} style={{ width: 0, height: 0, overflow: 'hidden', position: 'absolute' }} />
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {teams.map((team: any) => {
