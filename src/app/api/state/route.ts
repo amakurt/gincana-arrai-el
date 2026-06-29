@@ -151,8 +151,10 @@ function saveSnapshot(fileData: any, provas: any[], teams: any[], scores: any) {
     return {
       id: team.id, name: team.name, color: team.color,
       publicVotes: teamScore.publicVotes || 0,
+      publicScore: teamScore.publicVotes || 0,
       j1: teamScore.j1 || 0,
       j2: teamScore.j2 || 0,
+      total: (prova.pointsAwarded?.[team.id] || 0),
       winnerPick: teamScore.j1 === 1 || teamScore.j2 === 1,
     };
   });
