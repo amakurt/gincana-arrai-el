@@ -196,113 +196,124 @@ export default function VotePage() {
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
-        {isExternalResult ? (
-          <div className="glass" style={{ padding: '3rem 2rem', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <ClipboardList size={48} style={{ color: 'var(--yellow-brazil)', opacity: 0.6, marginBottom: '1rem' }} />
-            <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>Prova sem Votação</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Esta prova não tem votação do público. O resultado será definido pelo administrador.
+      {!activeProva ? (
+        <div className="glass" style={{ padding: '3rem 2rem', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <ClipboardList size={48} style={{ color: 'var(--yellow-brazil)', opacity: 0.6, marginBottom: '1rem' }} />
+          <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>Aguardando Prova</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+            Nenhuma prova em andamento no momento. Aguarde o administrador iniciar a próxima apresentação.
+          </p>
+          <button
+            onClick={() => window.open('/screen', '_blank')}
+            className="btn"
+            style={{ background: 'var(--blue-brazil)', marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          >
+            <Monitor size={20} /> VER PLACAR COMPLETO
+          </button>
+        </div>
+      ) : isExternalResult ? (
+        <div className="glass" style={{ padding: '3rem 2rem', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <ClipboardList size={48} style={{ color: 'var(--yellow-brazil)', opacity: 0.6, marginBottom: '1rem' }} />
+          <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>Prova sem Votação</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+            Esta prova não tem votação do público. O resultado será definido pelo administrador.
+          </p>
+          <button
+            onClick={() => window.open('/screen', '_blank')}
+            className="btn"
+            style={{ background: 'var(--blue-brazil)', marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          >
+            <Monitor size={20} /> VER PLACAR COMPLETO
+          </button>
+        </div>
+      ) : hasVoted ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="glass" style={{ padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+            <CheckCircle2 size={48} color="#10b981" />
+            <h2 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0 }}>Voto Registrado!</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+              Você votou na <strong>{data.teams.find((t: any) => t.id === votedFor)?.name}</strong>
             </p>
-            <button
-              onClick={() => window.open('/screen', '_blank')}
-              className="btn"
-              style={{ background: 'var(--blue-brazil)', marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-            >
-              <Monitor size={20} /> VER PLACAR COMPLETO
-            </button>
-          </div>
-        ) : hasVoted ? (
-          <>
-            <div className="glass" style={{ padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-              <CheckCircle2 size={48} color="#10b981" />
-              <h2 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0 }}>Voto Registrado!</h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-                Você votou na <strong>{data.teams.find((t: any) => t.id === votedFor)?.name}</strong>
+            {data.singleVoteMode ? (
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.3rem' }}>
+                Cada pessoa pode votar apenas uma vez por prova.
               </p>
-              {data.singleVoteMode ? (
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.3rem' }}>
-                  Cada pessoa pode votar apenas uma vez por prova.
-                </p>
-              ) : (
-                <button className="btn" onClick={handleVoteAgain} style={{ marginTop: '0.5rem', background: 'var(--blue-brazil)', width: '100%', fontSize: '0.9rem' }}>
-                  VOTAR NOVAMENTE
-                </button>
-              )}
-            </div>
-
-            {activeProva && (
-              <div className="glass" style={{ padding: '1.2rem' }}>
-                <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Trophy size={18} color="var(--yellow-brazil)" /> Resultado Parcial
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                  {sortedTeams.map((team: any, index: number) => {
-                    const barWidth = (team.publicVotes / maxVotes) * 100;
-                    return (
-                      <div key={team.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                        <span style={{ width: '1.5rem', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)', textAlign: 'center' }}>
-                          {index + 1}º
-                        </span>
-                        <div style={{ width: '5rem', fontSize: '0.85rem', fontWeight: 700, color: team.color, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {team.name}
-                        </div>
-                        <div style={{ flex: 1, height: '1.5rem', borderRadius: 8, overflow: 'hidden', background: 'var(--warm-wood-border)' }}>
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.max(barWidth, 2)}%` }}
-                            transition={{ type: 'spring', stiffness: 50, damping: 15 }}
-                            style={{ height: '100%', background: team.color, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '0.4rem' }}
-                          >
-                            <span style={{ color: '#fff', fontSize: '0.75rem', fontWeight: 800 }}>{team.publicVotes}</span>
-                          </motion.div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={() => window.open('/screen', '_blank')}
-              className="btn"
-              style={{ background: 'var(--blue-brazil)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-            >
-              <Monitor size={20} /> VER PLACAR COMPLETO
-            </button>
-          </>
-        ) : (
-          <>
-            <h1 style={{ fontSize: '1.8rem', textAlign: 'center', color: 'var(--blue-brazil)', marginBottom: '0.5rem' }}>Votação do Público</h1>
-            {teams.map((team: any) => (
-              <button 
-                key={team.id}
-                className="btn" 
-                onClick={() => handleVote(team.id)}
-                disabled={!isActive || voting}
-                style={{ 
-                  height: '5rem', 
-                  minHeight: '60px',
-                  background: team.color, 
-                  fontSize: '1.4rem',
-                  opacity: voting ? 0.6 : 1,
-                }}
-              >
-                {voting ? <Loader2 size={24} className="animate-spin" /> : team.name.toUpperCase()}
+            ) : (
+              <button className="btn" onClick={handleVoteAgain} style={{ marginTop: '0.5rem', background: 'var(--blue-brazil)', width: '100%', fontSize: '0.9rem' }}>
+                VOTAR NOVAMENTE
               </button>
-            ))}
-            <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
-              <div ref={turnstileContainer} style={{ width: 300, height: 65 }} />
-            </div>
-            {captchaError && (
-              <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center', margin: '-0.3rem 0 0 0' }}>
-                {captchaError}
-              </p>
             )}
-          </>
-        )}
-      </div>
+          </div>
+
+          <div className="glass" style={{ padding: '1.2rem' }}>
+            <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Trophy size={18} color="var(--yellow-brazil)" /> Resultado Parcial
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+              {sortedTeams.map((team: any, index: number) => {
+                const barWidth = (team.publicVotes / maxVotes) * 100;
+                return (
+                  <div key={team.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <span style={{ width: '1.5rem', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)', textAlign: 'center' }}>
+                      {index + 1}º
+                    </span>
+                    <div style={{ width: '5rem', fontSize: '0.85rem', fontWeight: 700, color: team.color, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {team.name}
+                    </div>
+                    <div style={{ flex: 1, height: '1.5rem', borderRadius: 8, overflow: 'hidden', background: 'var(--warm-wood-border)' }}>
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.max(barWidth, 2)}%` }}
+                        transition={{ type: 'spring', stiffness: 50, damping: 15 }}
+                        style={{ height: '100%', background: team.color, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '0.4rem' }}
+                      >
+                        <span style={{ color: '#fff', fontSize: '0.75rem', fontWeight: 800 }}>{team.publicVotes}</span>
+                      </motion.div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <button
+            onClick={() => window.open('/screen', '_blank')}
+            className="btn"
+            style={{ background: 'var(--blue-brazil)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          >
+            <Monitor size={20} /> VER PLACAR COMPLETO
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <h1 style={{ fontSize: '1.8rem', textAlign: 'center', color: 'var(--blue-brazil)', marginBottom: '0.5rem' }}>Votação do Público</h1>
+          {teams.map((team: any) => (
+            <button 
+              key={team.id}
+              className="btn" 
+              onClick={() => handleVote(team.id)}
+              disabled={!isActive || voting}
+              style={{ 
+                height: '5rem', 
+                minHeight: '60px',
+                background: team.color, 
+                fontSize: '1.4rem',
+                opacity: voting ? 0.6 : 1,
+              }}
+            >
+              {voting ? <Loader2 size={24} className="animate-spin" /> : team.name.toUpperCase()}
+            </button>
+          ))}
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
+            <div ref={turnstileContainer} style={{ width: 300, height: 65 }} />
+          </div>
+          {captchaError && (
+            <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center', margin: '-0.3rem 0 0 0' }}>
+              {captchaError}
+            </p>
+          )}
+        </div>
+      )}
 
     </div>
   );
