@@ -97,7 +97,7 @@ export default function JuradosPage() {
   const startEditJurado = (j: any) => {
     setEditingJurado(j.id);
     setEditName(j.name);
-    setEditPin(j.pin || "");
+    setEditPin("");
   };
 
   const saveEditJurado = async (juradoId: string) => {
@@ -106,7 +106,9 @@ export default function JuradosPage() {
     setError("");
     try {
       const updated = data.jurados.map((j: any) =>
-        j.id === juradoId ? { ...j, name: editName, pin: editPin } : j
+        j.id === juradoId
+          ? { ...j, name: editName, ...(editPin ? { pin: editPin } : {}) }
+          : j
       );
       const res = await fetch("/api/state", {
         method: "POST",
@@ -303,13 +305,13 @@ export default function JuradosPage() {
                   }}
                   autoFocus
                 />
-                <input
-                  value={editPin}
-                  onChange={(e) => setEditPin(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && saveEditJurado(j.id)}
-                  maxLength={4}
-                  placeholder="PIN"
-                  style={{
+                  <input
+                      value={editPin}
+                      onChange={(e) => setEditPin(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && saveEditJurado(j.id)}
+                      maxLength={4}
+                      placeholder="Deixe vazio p/ manter o mesmo"
+                      style={{
                     width: "70px",
                     padding: "0.6rem",
                     borderRadius: "8px",
