@@ -394,6 +394,16 @@ export default function JuradoPage() {
                     Nenhuma equipe cadastrada.
                   </div>
                 )}
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 0.5rem 0' }}>
+                  <div ref={turnstileContainer} style={{ width: 300, height: 65 }} />
+                </div>
+
+                {captchaError && (
+                  <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center', margin: '-0.3rem 0 0.5rem 0' }}>
+                    {captchaError}
+                  </p>
+                )}
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {teams.map((team: any) => {
                     const isSelected = selectedTeam === team.id;
@@ -457,16 +467,6 @@ export default function JuradoPage() {
                     Seu voto foi registrado! Você escolheu <strong>{teams.find((t: any) => t.id === selectedTeam)?.name}</strong>
                   </div>
                 )}
-
-                {captchaError && (
-                  <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center', margin: '0.5rem 0 0' }}>
-                    {captchaError}
-                  </p>
-                )}
-
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
-                  <div ref={turnstileContainer} style={{ width: 300, height: 65 }} />
-                </div>
               </>
             ) : activeProva.externalResult ? (
               <>
