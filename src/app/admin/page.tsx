@@ -529,7 +529,7 @@ export default function AdminPage() {
             ) : activeProva?.externalResult ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Insira o valor de cada equipe (arrecadação, rifas vendidas, etc). A equipe com maior valor vence.
+                  Insira {activeProva.externalUnit === 'R$' ? 'o valor arrecadado (R$)' : 'a quantidade'} de cada equipe. A equipe com maior valor vence.
                 </p>
                 {(data.teams || []).map((team: any) => (
                   <div key={team.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -540,7 +540,7 @@ export default function AdminPage() {
                       value={externalValues[team.id] || ''}
                       onChange={(e) => setExternalValues(prev => ({ ...prev, [team.id]: e.target.value }))}
                       min={0}
-                      placeholder="Valor"
+                      placeholder={activeProva.externalUnit === 'R$' ? 'Valor em R$' : 'Quantidade'}
                       style={{ flex: 1, padding: '0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.9rem' }}
                     />
                   </div>

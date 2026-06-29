@@ -332,3 +332,8 @@ ssh root@<IP> "systemctl start cloudflared"
 - `src/app/screen/page.tsx` — banner Resultado Final
 - `src/app/vote/page.tsx` — Turnstile retry, try/catch, container position
 - `src/app/jurado/page.tsx` — Turnstile retry, polling 2s
+
+## Session 2026-06-29 (Parte 5)
+
+### Mudanças
+- **P8 Rifas agora em unidades** (`gincana-state.json`, `admin/page.tsx`, `final/page.tsx`): Adicionado campo `externalUnit` nas provas (`"R$"` para P7, `"unidades"` para P8). Admin mostra placeholder/label apropriados. Final page exibe como R$ ou inteiro conforme a unidade.
