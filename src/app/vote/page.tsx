@@ -221,6 +221,14 @@ export default function VotePage() {
           </div>
 
         </div>
+      ) : !isActive ? (
+        <div className="glass" style={{ padding: '3rem 2rem', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <ClipboardList size={48} style={{ color: 'var(--yellow-brazil)', opacity: 0.6, marginBottom: '1rem' }} />
+          <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>Aguardando Votação</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+            A votação para esta prova ainda não foi aberta. Aguarde o administrador liberar a votação.
+          </p>
+        </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <h1 style={{ fontSize: '1.8rem', textAlign: 'center', color: 'var(--blue-brazil)', marginBottom: '0.5rem' }}>Votação do Público</h1>
