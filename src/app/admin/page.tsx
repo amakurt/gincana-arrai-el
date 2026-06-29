@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from 'swr';
-import { Play, Square, RotateCcw, AlertTriangle, Users, Trophy, Monitor, Lock, ShieldAlert, Home, RefreshCw, Edit2, Save, X, BarChart3, History, TrendingUp, Clock, CheckCircle, ThumbsUp } from 'lucide-react';
+import { Play, Square, RotateCcw, AlertTriangle, Users, Trophy, Monitor, Lock, ShieldAlert, Home, RefreshCw, Edit2, Save, X, BarChart3, History, TrendingUp, Clock, CheckCircle, ThumbsUp, UserPlus, Trash2 } from 'lucide-react';
 import Timer from '@/components/Timer';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -33,6 +33,12 @@ export default function AdminPage() {
   const [showManualWinner, setShowManualWinner] = useState(false);
   const [finalizeError, setFinalizeError] = useState('');
   const [externalValues, setExternalValues] = useState<Record<string, string>>({});
+
+  const [newJuradoName, setNewJuradoName] = useState('');
+  const [newJuradoPin, setNewJuradoPin] = useState('');
+  const [editingJurado, setEditingJurado] = useState<string | null>(null);
+  const [editJuradoName, setEditJuradoName] = useState('');
+  const [editJuradoPin, setEditJuradoPin] = useState('');
 
   const [error, setError] = useState('');
 
@@ -127,6 +133,91 @@ export default function AdminPage() {
 
   const cancelEditTeam = () => {
     setEditingTeam(null);
+  };
+
+  const addJurado = async () => {
+    if (!newJuradoName) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'updateState',
+          jurados: [...(data?.jurados || []), { id: `j${Date.now()}`, name: newJuradoName, pin: newJuradoPin || '' }]
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Erro ao adicionar jurado');
+      }
+      setNewJuradoName('');
+      setNewJuradoPin('');
+      mutate();
+    } catch (e: any) {
+      setError(e.message || 'Erro de conexão com o servidor');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeJurado = async (id: string) => {
+    if (!data?.jurados) return;
+    setLoading(true);
+    try {
+      const remaining = data.jurados.filter((j: any) => j.id !== id);
+      const res = await fetch('/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateState', jurados: remaining })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Erro ao remover jurado');
+      }
+      mutate();
+    } catch (e: any) {
+      setError(e.message || 'Erro de conexão com o servidor');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startEditJurado = (j: any) => {
+    setEditingJurado(j.id);
+    setEditJuradoName(j.name);
+    setEditJuradoPin('');
+  };
+
+  const saveEditJurado = async (juradoId: string) => {
+    if (!editJuradoName || !data?.jurados) return;
+    setLoading(true);
+    try {
+      const updated = data.jurados.map((j: any) =>
+        j.id === juradoId
+          ? { ...j, name: editJuradoName, ...(editJuradoPin ? { pin: editJuradoPin } : {}) }
+          : j
+      );
+      const res = await fetch('/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateState', jurados: updated })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Erro ao editar jurado');
+      }
+      setEditingJurado(null);
+      mutate();
+    } catch (e: any) {
+      setError(e.message || 'Erro de conexão com o servidor');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelEditJurado = () => {
+    setEditingJurado(null);
   };
 
   const startEditProva = (prova: any) => {
@@ -663,6 +754,107 @@ export default function AdminPage() {
                 )}
               </li>
             ))}
+          </ul>
+        </div>
+
+        {/* Cadastro de Jurados */}
+        <div className="glass" style={{ padding: '2rem' }}>
+          <h2 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ShieldAlert /> Jurados</h2>
+
+          <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              placeholder="Nome do jurado"
+              value={newJuradoName}
+              onChange={(e) => setNewJuradoName(e.target.value)}
+              style={{ flex: 1, minWidth: '180px', padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontFamily: 'inherit', fontSize: '1rem' }}
+              onKeyDown={(e) => e.key === 'Enter' && addJurado()}
+            />
+            <input
+              type="text"
+              placeholder="PIN"
+              value={newJuradoPin}
+              maxLength={4}
+              onChange={(e) => setNewJuradoPin(e.target.value)}
+              style={{ width: '90px', padding: '0.8rem', borderRadius: '8px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontFamily: 'inherit', fontSize: '1rem', textAlign: 'center' }}
+              onKeyDown={(e) => e.key === 'Enter' && addJurado()}
+            />
+            <button
+              onClick={addJurado}
+              disabled={loading || !newJuradoName}
+              style={{ padding: '0 1rem', borderRadius: '8px', background: 'white', color: 'black', fontWeight: 'bold', cursor: loading || !newJuradoName ? 'not-allowed' : 'pointer', border: 'none', opacity: loading || !newJuradoName ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <UserPlus size={16} /> Add
+            </button>
+          </div>
+
+          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {(data.jurados || []).map((j: any) => (
+              <li key={j.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-card)', borderRadius: '8px' }}>
+                {editingJurado === j.id ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1 }}>
+                    <input
+                      type="text"
+                      value={editJuradoName}
+                      onChange={(e) => setEditJuradoName(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && saveEditJurado(j.id)}
+                      style={{ flex: 1, padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.95rem' }}
+                      autoFocus
+                    />
+                    <input
+                      type="text"
+                      value={editJuradoPin}
+                      onChange={(e) => setEditJuradoPin(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && saveEditJurado(j.id)}
+                      maxLength={4}
+                      placeholder="PIN"
+                      style={{ width: '70px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.85rem', textAlign: 'center' }}
+                    />
+                    <button onClick={() => saveEditJurado(j.id)} disabled={loading} style={{ background: 'transparent', color: '#10b981', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: loading ? 0.5 : 1 }}>
+                      <Save size={18} />
+                    </button>
+                    <button onClick={cancelEditJurado} disabled={loading} style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      <X size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                      <ShieldAlert size={18} style={{ color: 'var(--yellow-brazil)', opacity: 0.6 }} />
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{j.name}</div>
+                        {j.pin && (
+                          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                            PIN: {'●'.repeat(4)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => startEditJurado(j)}
+                        disabled={loading}
+                        style={{ background: 'transparent', color: '#f59e0b', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1, display: 'flex', alignItems: 'center' }}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => removeJurado(j.id)}
+                        disabled={loading}
+                        style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1, display: 'flex', alignItems: 'center' }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </li>
+            ))}
+            {(data.jurados || []).length === 0 && (
+              <li style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)', fontSize: '0.95rem', background: 'var(--bg-card)', borderRadius: '8px' }}>
+                Nenhum jurado cadastrado.
+              </li>
+            )}
           </ul>
         </div>
 
