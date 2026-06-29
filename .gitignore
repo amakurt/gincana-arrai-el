@@ -36,6 +36,11 @@ Chave-oracle/
 # env files
 .env.local
 
+# runtime state (server-local, não commitar)
+gincana-state.json
+resultados.json
+votacoes-historico.jsonl
+
 # vercel
 .vercel
 
