@@ -150,10 +150,6 @@ export default function JuradoPage() {
     setCaptchaError('Aguardando verificação de segurança...');
 
     const cfToken = await getTurnstileToken();
-    if (!cfToken) {
-      setCaptchaError('Verificação de segurança não disponível. Tente novamente.');
-      return;
-    }
 
     const jurados = data.jurados || [];
     const juradoIndex = jurados.findIndex((j: any) => j.id === jurado.id);

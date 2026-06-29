@@ -111,11 +111,6 @@ export default function VotePage() {
     setCaptchaError('Aguardando verificação de segurança...');
 
     const cfToken = await getTurnstileToken();
-    if (!cfToken) {
-      setCaptchaError('Verificação de segurança não disponível. Tente novamente.');
-      setVoting(false);
-      return;
-    }
 
     const voterId = localStorage.getItem('voter_id') || '';
 

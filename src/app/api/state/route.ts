@@ -293,11 +293,8 @@ export async function POST(request: Request) {
 
     if (body.action === 'vote' || body.action === 'juryVote') {
       const secret = process.env.TURNSTILE_SECRET_KEY;
-      if (secret && secret.length > 0) {
-        const cfToken = body.cfToken || '';
-        if (!cfToken) {
-          return NextResponse.json({ error: 'Aguardando verificação de segurança...' }, { status: 403 });
-        }
+      const cfToken = body.cfToken || '';
+      if (cfToken && secret && secret.length > 0) {
         try {
           const verify = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
             method: 'POST',
