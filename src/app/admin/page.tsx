@@ -90,7 +90,7 @@ export default function AdminPage() {
   };
 
   const resetGame = async () => {
-    if (!confirm('TEM CERTEZA? Isso vai apagar todos os votos e provas cadastradas no banco de dados!')) return;
+    if (!confirm('TEM CERTEZA? Isso vai zerar todos os votos, resultados e estados das provas. As equipes e provas cadastradas serão mantidas.')) return;
     setLoading(true);
     try {
       const res = await fetch('/api/state', {

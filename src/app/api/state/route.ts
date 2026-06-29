@@ -720,8 +720,17 @@ export async function POST(request: Request) {
       return readJsonState();
     }
 
-    // Ação: Zerar Tudo
+    // Ação: Zerar Tudo (mantém equipes, provas e jurados cadastrados)
     if (body.action === 'reset') {
+      const current = readStateFromFile();
+      const provasReset = (current.provas || []).map((p: any) => ({
+        ...p,
+        finalized: false,
+        winnerId: null,
+        pointsAwarded: {},
+        externalResult: undefined,
+        juryVotes: {}
+      }));
       writeStateToFile({
         status: 'waiting',
         viewMode: 'prova',
@@ -730,9 +739,9 @@ export async function POST(request: Request) {
         singleVoteMode: true,
         showJuryScores: true,
         timerStartedAt: null,
-        teams: [],
-        provas: [],
-        jurados: [],
+        teams: current.teams || [],
+        provas: provasReset,
+        jurados: current.jurados || [],
         scores: {}
       });
       writeFileSync(RESULTADOS_FILE, '[]');
