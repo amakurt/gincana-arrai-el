@@ -308,18 +308,6 @@ export default function JuradoPage() {
     return null;
   }
 
-  const getJuradoVote = (provaId: string) => {
-    const jurados = data?.jurados || [];
-    const idx = jurados.findIndex((j: any) => j.id === jurado?.id);
-    const slot = idx === 0 ? 'j1' : 'j2';
-    if (!slot) return null;
-    for (const team of teams) {
-      if (scores[provaId]?.[team.id]?.[slot] === 1) return team;
-    }
-    return null;
-  };
-
-  const provasRealizadas = provas.filter((p: any) => p.finalized);
   const provasRestantes = provas.filter((p: any) => !p.finalized && p.id !== data.currentProvaId);
   const showVoting = activeProva && data.status === 'active' && !activeProva.finalized;
 
@@ -479,54 +467,7 @@ export default function JuradoPage() {
           </div>
         )}
 
-        {provasRealizadas.length > 0 && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            {sectionHeader(<CheckCircle size={14} style={{ color: '#10b981' }} />, `Provas Realizadas (${provasRealizadas.length})`)}
-            {provasRealizadas.map((prova: any) => {
-              const myVote = getJuradoVote(prova.id);
-              const vencedor = teams.find((t: any) => t.id === prova.winnerId);
-              return (
-                <div key={prova.id} className="glass" style={{
-                  padding: '1rem 1.2rem',
-                  marginBottom: '0.6rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '0.8rem'
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                      {prova.name}
-                    </div>
-                    {prova.externalResult ? (
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                        🏆 Resultado definido pelo admin
-                      </div>
-                    ) : myVote ? (
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                        🗳 Seu voto: <span style={{ color: myVote.color, fontWeight: 700 }}>{myVote.name}</span>
-                        {vencedor && (
-                          <> · 🏆 Vencedor: <span style={{ color: vencedor.color, fontWeight: 700 }}>{vencedor.name}</span></>
-                        )}
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '0.2rem' }}>
-                        ⏳ Você não votou nesta prova
-                      </div>
-                    )}
-                  </div>
-                  {vencedor && (
-                    <div style={{
-                      width: 16, height: 16, borderRadius: '50%',
-                      background: vencedor.color,
-                      flexShrink: 0
-                    }} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+
 
         {provasRestantes.length > 0 && (
           <div style={{ marginBottom: '1.5rem' }}>
