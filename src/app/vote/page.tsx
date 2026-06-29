@@ -3,8 +3,7 @@
 import useSWR from 'swr';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSound } from '@/hooks/useSound';
-import { motion } from 'framer-motion';
-import { CheckCircle2, ShieldAlert, Trophy, Loader2, ClipboardList } from 'lucide-react';
+import { CheckCircle2, ShieldAlert, Loader2, ClipboardList } from 'lucide-react';
 import ShareButton from '@/components/ShareButton';
 import Timer from '@/components/Timer';
 
@@ -40,16 +39,20 @@ export default function VotePage() {
     if (typeof window !== 'undefined' && data?.currentProvaId) {
       if (data.singleVoteMode) {
         const voted = localStorage.getItem(`voted_prova_${data.currentProvaId}`);
-        if (voted) {
+        const storedReset = localStorage.getItem(`voted_reset_${data.currentProvaId}`);
+        if (voted && storedReset === String(data.voterResetAt)) {
           setHasVoted(true);
           setVotedFor(voted);
         } else {
+          if (voted) {
+            localStorage.removeItem(`voted_prova_${data.currentProvaId}`);
+          }
           setHasVoted(false);
           setVotedFor(null);
         }
       }
     }
-  }, [data?.currentProvaId, data?.singleVoteMode]);
+  }, [data?.currentProvaId, data?.singleVoteMode, data?.voterResetAt]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -128,6 +131,7 @@ export default function VotePage() {
     sound.voteConfirm();
     if (data.singleVoteMode) {
       localStorage.setItem(`voted_prova_${data.currentProvaId}`, teamId);
+      localStorage.setItem(`voted_reset_${data.currentProvaId}`, String(data.voterResetAt || 0));
     }
 
     setVoting(false);
@@ -154,21 +158,6 @@ export default function VotePage() {
   const isExternalResult = activeProva?.externalResult;
 
   const teams = data.teams || [];
-  const scores = data.scores || {};
-  const sortedTeams = teams.map((team: any) => {
-    let publicVotes = 0;
-    let publicScore = 0;
-    if (activeProva && scores[activeProva.id]) {
-      const pScores = scores[activeProva.id];
-      const maxPubVotes = Math.max(...Object.values(pScores).map((s: any) => s.publicVotes || 0), 0);
-      const teamScore = pScores[team.id] || { publicVotes: 0 };
-      publicVotes = teamScore.publicVotes;
-      publicScore = maxPubVotes > 0 ? Number(((publicVotes / maxPubVotes) * 10).toFixed(1)) : 0;
-    }
-    return { ...team, publicVotes, publicScore };
-  }).sort((a: any, b: any) => b.publicVotes - a.publicVotes);
-
-  const maxVotes = Math.max(...sortedTeams.map((t: any) => t.publicVotes), 1);
 
   return (
     <div className="mobile-container" style={{ position: 'relative', overflow: 'hidden' }}>
@@ -231,36 +220,6 @@ export default function VotePage() {
             )}
           </div>
 
-          <div className="glass" style={{ padding: '1.2rem' }}>
-            <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Trophy size={18} color="var(--yellow-brazil)" /> Resultado Parcial
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-              {sortedTeams.map((team: any, index: number) => {
-                const barWidth = (team.publicVotes / maxVotes) * 100;
-                return (
-                  <div key={team.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                    <span style={{ width: '1.5rem', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)', textAlign: 'center' }}>
-                      {index + 1}º
-                    </span>
-                    <div style={{ width: '5rem', fontSize: '0.85rem', fontWeight: 700, color: team.color, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {team.name}
-                    </div>
-                    <div style={{ flex: 1, height: '1.5rem', borderRadius: 8, overflow: 'hidden', background: 'var(--warm-wood-border)' }}>
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.max(barWidth, 2)}%` }}
-                        transition={{ type: 'spring', stiffness: 50, damping: 15 }}
-                        style={{ height: '100%', background: team.color, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '0.4rem' }}
-                      >
-                        <span style={{ color: '#fff', fontSize: '0.75rem', fontWeight: 800 }}>{team.publicVotes}</span>
-                      </motion.div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

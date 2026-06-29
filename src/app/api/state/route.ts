@@ -244,7 +244,8 @@ export async function GET() {
     singleVoteMode: fileData.singleVoteMode !== undefined ? fileData.singleVoteMode : true,
     showJuryScores: fileData.showJuryScores !== undefined ? fileData.showJuryScores : true,
     scores: fileData.scores || {},
-    timerStartedAt: fileData.timerStartedAt || null
+    timerStartedAt: fileData.timerStartedAt || null,
+    voterResetAt: fileData.voterResetAt || 0
   } : null;
 
   if (!base) {
@@ -596,12 +597,16 @@ export async function POST(request: Request) {
 
     // Ação: Resetar Votação (limpa VOTED_VOTERS para testes)
     if (body.action === 'resetVoters') {
-      const provaId = body.provaId || (readStateFromFile()?.currentProvaId);
+      const fileData = readStateFromFile();
+      if (!fileData) return readJsonState();
+      const provaId = body.provaId || fileData.currentProvaId;
       if (provaId) {
         VOTED_VOTERS.delete(provaId);
       } else {
         VOTED_VOTERS.clear();
       }
+      fileData.voterResetAt = Date.now();
+      writeStateToFile(fileData);
       return readJsonState();
     }
 

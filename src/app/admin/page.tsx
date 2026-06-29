@@ -394,7 +394,7 @@ export default function AdminPage() {
               className="btn"
               style={{ background: '#ef4444' }}
               disabled={loading || data.status === 'waiting'}
-              onClick={() => updateState({ status: 'waiting', message: 'Votação Pausada/Encerrada' })}
+              onClick={() => updateState({ status: 'waiting', message: 'Votação Encerrada' })}
             >
               PARAR VOTAÇÃO
             </button>
