@@ -2,13 +2,30 @@ import { NextResponse } from 'next/server';
 import { readFileSync, existsSync, writeFileSync } from 'fs';
 import path from 'path';
 
+const ALLOWED_HOSTS = new Set([
+  'localhost:3000',
+  'www.institutoeducacionallogos.online',
+  'institutoeducacionallogos.online',
+  'hetzner.institutoeducacionallogos.online',
+  '137.131.160.171',
+  '23.88.58.41',
+]);
+
 function checkOrigin(request: Request): boolean {
   const origin = request.headers.get('origin');
   const referer = request.headers.get('referer');
-  const host = request.headers.get('host') || 'localhost:3000';
-  const allowed = [host, 'www.institutoeducacionallogos.online', 'institutoeducacionallogos.online', '137.131.160.171'];
-  if (origin) return allowed.some(a => origin.includes(a));
-  if (referer) return allowed.some(a => referer.includes(a));
+  if (origin) {
+    try {
+      const u = new URL(origin);
+      if (ALLOWED_HOSTS.has(u.host) || ALLOWED_HOSTS.has(u.hostname)) return true;
+    } catch {}
+  }
+  if (referer) {
+    try {
+      const u = new URL(referer);
+      if (ALLOWED_HOSTS.has(u.host) || ALLOWED_HOSTS.has(u.hostname)) return true;
+    } catch {}
+  }
   return false;
 }
 
@@ -26,6 +43,14 @@ export async function GET() {
   return NextResponse.json(resultados);
 }
 
+const clearLimits = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIp(request: Request): string {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || '127.0.0.1';
+}
+
 export async function POST(request: Request) {
   try {
     if (!checkOrigin(request)) {
@@ -33,6 +58,21 @@ export async function POST(request: Request) {
     }
     const body = await request.json();
     if (body.action === 'clear') {
+      const ip = getClientIp(request);
+      const now = Date.now();
+      const entry = clearLimits.get(ip);
+      if (entry && now <= entry.resetAt && entry.count >= 2) {
+        return NextResponse.json({ error: 'Muitas requisições.' }, { status: 429 });
+      }
+      if (!entry || now > entry.resetAt) {
+        clearLimits.set(ip, { count: 1, resetAt: now + 10000 });
+      } else {
+        entry.count++;
+      }
+
+      if (!request.headers.get('cookie')?.includes('admin_verified=true')) {
+        return NextResponse.json({ error: 'Acesso não autorizado.' }, { status: 403 });
+      }
       writeFileSync(RESULTADOS_FILE, '[]');
       return NextResponse.json({ success: true });
     }

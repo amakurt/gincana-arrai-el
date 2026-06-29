@@ -29,14 +29,75 @@ setInterval(() => {
   }
 }, 300000);
 
+const ALLOWED_HOSTS = new Set([
+  'localhost:3000',
+  'www.institutoeducacionallogos.online',
+  'institutoeducacionallogos.online',
+  'hetzner.institutoeducacionallogos.online',
+  '137.131.160.171',
+  '23.88.58.41',
+]);
+
 function checkOrigin(request: Request): boolean {
   const origin = request.headers.get('origin');
   const referer = request.headers.get('referer');
-  const host = request.headers.get('host') || 'localhost:3000';
-  const allowed = [host, 'www.institutoeducacionallogos.online', 'institutoeducacionallogos.online', '137.131.160.171'];
-  if (origin) return allowed.some(a => origin.includes(a));
-  if (referer) return allowed.some(a => referer.includes(a));
+  if (origin) {
+    try {
+      const u = new URL(origin);
+      if (ALLOWED_HOSTS.has(u.host) || ALLOWED_HOSTS.has(u.hostname)) return true;
+    } catch {}
+  }
+  if (referer) {
+    try {
+      const u = new URL(referer);
+      if (ALLOWED_HOSTS.has(u.host) || ALLOWED_HOSTS.has(u.hostname)) return true;
+    } catch {}
+  }
   return false;
+}
+
+function checkAdminAuth(request: Request): boolean {
+  const cookieHeader = request.headers.get('cookie') || '';
+  return cookieHeader.includes('admin_verified=true');
+}
+
+function getCookieValue(request: Request, name: string): string | null {
+  const cookies = request.headers.get('cookie') || '';
+  const match = cookies.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+const VOTED_VOTERS = new Map<string, Set<string>>();
+
+function hasVoterVoted(provaId: string, voterId: string): boolean {
+  return VOTED_VOTERS.get(provaId)?.has(voterId) ?? false;
+}
+
+function markVoterVoted(provaId: string, voterId: string) {
+  if (!VOTED_VOTERS.has(provaId)) VOTED_VOTERS.set(provaId, new Set());
+  VOTED_VOTERS.get(provaId)!.add(voterId);
+}
+
+function hashPin(pin: string): string {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(pin, salt, 1000, 64, 'sha512').toString('hex');
+  return `${salt}:${hash}`;
+}
+
+function verifyPin(pin: string, stored: string): boolean {
+  if (!stored || !stored.includes(':')) return pin === stored;
+  const [salt, hash] = stored.split(':');
+  const verify = crypto.pbkdf2Sync(String(pin), salt, 1000, 64, 'sha512').toString('hex');
+  return hash === verify;
+}
+
+function hashJuradoPins(jurados: any[]): any[] {
+  return jurados.map((j: any) => {
+    if (j.pin && !j.pin.includes(':')) {
+      return { ...j, pin: hashPin(j.pin) };
+    }
+    return j;
+  });
 }
 
 const STATE_FILE = path.join(process.cwd(), 'gincana-state.json');
@@ -217,9 +278,13 @@ export async function POST(request: Request) {
     if ((body.action === 'vote' || body.action === 'juryVote') && !checkRateLimit(`${ip}:${body.action}`, 2)) {
       return NextResponse.json({ error: 'Muitas requisições. Aguarde alguns segundos.' }, { status: 429 });
     }
-    if (body.action === 'updateState' || body.action === 'finalizeProva') {
+    const adminActions = ['updateState', 'finalizeProva', 'externalResult', 'manualWinner', 'reopenProva', 'reset'];
+    if (adminActions.includes(body.action)) {
       if (!checkOrigin(request)) {
         return NextResponse.json({ error: 'Requisição rejeitada: origem inválida.' }, { status: 403 });
+      }
+      if (!checkAdminAuth(request)) {
+        return NextResponse.json({ error: 'Acesso não autorizado.' }, { status: 403 });
       }
     }
 
@@ -251,6 +316,15 @@ export async function POST(request: Request) {
       const fileData = readStateFromFile();
       if (fileData && body.teamId && fileData.currentProvaId) {
         const provaId = fileData.currentProvaId;
+        const voterId = body.voterId || '';
+
+        if (fileData.singleVoteMode && voterId) {
+          if (hasVoterVoted(provaId, voterId)) {
+            return NextResponse.json({ error: 'Você já votou nesta prova.' }, { status: 429 });
+          }
+          markVoterVoted(provaId, voterId);
+        }
+
         if (!fileData.scores) fileData.scores = {};
         if (!fileData.scores[provaId]) fileData.scores[provaId] = {};
         if (!fileData.scores[provaId][body.teamId]) fileData.scores[provaId][body.teamId] = { publicVotes: 0, j1: 0, j2: 0 };
@@ -262,7 +336,7 @@ export async function POST(request: Request) {
           type: 'public',
           provaId,
           teamId: body.teamId,
-          voterId: body.voterId || 'anon'
+          voterId: voterId || 'anon'
         });
 
         if (await checkSupabaseAvailable()) {
@@ -284,6 +358,20 @@ export async function POST(request: Request) {
         if (fileData && fileData.currentProvaId) {
           const pId = fileData.currentProvaId;
           const teams = fileData.teams || [];
+          const jurados = fileData.jurados || [];
+
+          // Verificar slot do jurado contra cookie
+          const juradoIdFromCookie = getCookieValue(request, 'jurado_id');
+          if (juradoIdFromCookie) {
+            const juradoIndex = jurados.findIndex((j: any) => j.id === juradoIdFromCookie);
+            if (juradoIndex >= 0) {
+              const expectedSlot = juradoIndex === 0 ? 'j1' : 'j2';
+              if (body.jurado !== expectedSlot) {
+                return NextResponse.json({ error: 'Slot de jurado inválido.' }, { status: 403 });
+              }
+            }
+          }
+
           if (!fileData.scores) fileData.scores = {};
           if (!fileData.scores[pId]) fileData.scores[pId] = {};
 
@@ -518,7 +606,7 @@ export async function POST(request: Request) {
       if (body.singleVoteMode !== undefined) fileData.singleVoteMode = body.singleVoteMode;
       if (body.showJuryScores !== undefined) fileData.showJuryScores = body.showJuryScores;
       if (body.teams !== undefined) fileData.teams = body.teams;
-      if (body.jurados !== undefined) fileData.jurados = body.jurados;
+      if (body.jurados !== undefined) fileData.jurados = hashJuradoPins(body.jurados);
       if (body.provas !== undefined) fileData.provas = body.provas;
       if (body.timerStartedAt !== undefined) fileData.timerStartedAt = body.timerStartedAt;
       writeStateToFile(fileData);
@@ -616,29 +704,23 @@ export async function POST(request: Request) {
 
     // Ação: Zerar Tudo
     if (body.action === 'reset') {
-      await supabase.from('scores').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('provas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('teams').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-
-      await supabase.from('config').upsert({
-        id: 1,
+      writeStateToFile({
         status: 'waiting',
-        view_mode: 'prova',
-        current_prova_id: null,
+        viewMode: 'prova',
+        currentProvaId: '',
         message: 'Arrai-el 2026 vai começar!',
-        show_jury_scores: true,
-        admin_pin: '1234',
-        jury_pin: '5678'
+        singleVoteMode: true,
+        showJuryScores: true,
+        timerStartedAt: null,
+        teams: [],
+        provas: [],
+        jurados: [],
+        scores: {}
       });
-
-      await supabase.from('teams').insert([
-        { name: 'Azul', color: '#3b82f6' },
-        { name: 'Vermelha', color: '#ef4444' },
-        { name: 'Verde', color: '#10b981' },
-        { name: 'Amarela', color: '#f59e0b' }
-      ]);
-
-      return GET();
+      writeFileSync(RESULTADOS_FILE, '[]');
+      writeFileSync(HISTORICO_FILE, '');
+      VOTED_VOTERS.clear();
+      return readJsonState();
     }
 
     return NextResponse.json({ error: 'Ação inválida.' }, { status: 400 });

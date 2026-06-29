@@ -44,12 +44,13 @@ export default function JuradoPage() {
   useEffect(() => {
     const checkTurnstile = () => {
       if (window.turnstile && turnstileContainer.current && !turnstileWidgetId.current) {
-        window.turnstile.render(turnstileContainer.current, {
+        const id = window.turnstile.render(turnstileContainer.current, {
           sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
           callback: (token: string) => { turnstileToken.current = token; },
           'expired-callback': () => { turnstileToken.current = null; },
           'error-callback': () => { turnstileToken.current = null; },
         });
+        turnstileWidgetId.current = id;
       }
     };
     const interval = setInterval(checkTurnstile, 200);
@@ -65,25 +66,24 @@ export default function JuradoPage() {
     setLoadingTimeout(false);
   }, [data, swrError]);
 
-  const getCookie = (cname: string) => {
-    if (typeof document === 'undefined') return null;
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${cname}=`);
-    if (parts.length === 2) return parts.pop()?.split(';').shift();
-    return null;
-  };
-
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const verified = getCookie('jurado_verified') === 'true';
-      if (verified) {
-        const jid = getCookie('jurado_id');
-        const jname = getCookie('jurado_name');
-        if (jid && jname) {
-          setJurado({ id: jid, name: decodeURIComponent(jname) });
-          setPinVerified(true);
-        }
-      }
+      fetch('/api/auth/check')
+        .then(r => r.json())
+        .then(d => {
+          if (d.verified) {
+            fetch('/api/auth/jurado-session')
+              .then(r => r.json())
+              .then(s => {
+                if (s.authenticated && s.jurado) {
+                  setJurado(s.jurado);
+                  setPinVerified(true);
+                }
+              })
+              .catch(() => {});
+          }
+        })
+        .catch(() => {});
     }
   }, []);
 

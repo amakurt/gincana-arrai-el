@@ -7,22 +7,112 @@
   "showJuryScores": true,
   "timerStartedAt": null,
   "teams": [
-    { "id": "t1", "name": "VERDE", "color": "#549504" },
-    { "id": "t2", "name": "AMARELO", "color": "#faf200" }
+    {
+      "id": "t1",
+      "name": "VERDE",
+      "color": "#549504"
+    },
+    {
+      "id": "t2",
+      "name": "AMARELO",
+      "color": "#faf200"
+    }
   ],
   "provas": [
-    { "id": "p1",  "name": "1ª Apresentação Mascote do Time",   "timer": 300, "points": 300, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {} },
-    { "id": "p2",  "name": "2ª Grito de Guerra",                "timer": 300, "points": 300, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {} },
-    { "id": "p3",  "name": "3ª Rei e Rainha do Time",           "timer": 300, "points": 300, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {} },
-    { "id": "p4",  "name": "4ª Cante e Encante",                "timer": 300, "points": 300, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {} },
-    { "id": "p5",  "name": "5ª Dança Típica",                   "timer": 480, "points": 300, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {} },
-    { "id": "p6",  "name": "6ª Ornamentação dos Corredores",    "timer": 0,   "points": 400, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {} },
-    { "id": "p7",  "name": "7ª Barracas (Maior Arrecadação)",   "timer": 0,   "points": 300, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {}, "externalResult": true },
-    { "id": "p8",  "name": "8ª Venda das Rifas",                "timer": 0,   "points": 600, "day": 1, "finalized": false, "winnerId": null, "pointsAwarded": {}, "externalResult": true }
+    {
+      "id": "p1",
+      "name": "1ª Apresentação Mascote do Time",
+      "timer": 300,
+      "points": 300,
+      "day": 1,
+      "finalized": false,
+      "winnerId": null,
+      "pointsAwarded": {}
+    },
+    {
+      "id": "p2",
+      "name": "2ª Grito de Guerra",
+      "timer": 300,
+      "points": 300,
+      "day": 1,
+      "finalized": false,
+      "winnerId": null,
+      "pointsAwarded": {}
+    },
+    {
+      "id": "p3",
+      "name": "3ª Rei e Rainha do Time",
+      "timer": 300,
+      "points": 300,
+      "day": 1,
+      "finalized": false,
+      "winnerId": null,
+      "pointsAwarded": {}
+    },
+    {
+      "id": "p4",
+      "name": "4ª Cante e Encante",
+      "timer": 300,
+      "points": 300,
+      "day": 1,
+      "finalized": false,
+      "winnerId": null,
+      "pointsAwarded": {}
+    },
+    {
+      "id": "p5",
+      "name": "5ª Dança Típica",
+      "timer": 480,
+      "points": 300,
+      "day": 1,
+      "finalized": false,
+      "winnerId": null,
+      "pointsAwarded": {}
+    },
+    {
+      "id": "p6",
+      "name": "6ª Ornamentação dos Corredores",
+      "timer": 0,
+      "points": 400,
+      "day": 1,
+      "finalized": false,
+      "winnerId": null,
+      "pointsAwarded": {}
+    },
+    {
+      "id": "p7",
+      "name": "7ª Barracas (Maior Arrecadação)",
+      "timer": 0,
+      "points": 300,
+      "day": 1,
+      "finalized": false,
+      "winnerId": null,
+      "pointsAwarded": {},
+      "externalResult": true
+    },
+    {
+      "id": "p8",
+      "name": "8ª Venda das Rifas",
+      "timer": 0,
+      "points": 600,
+      "day": 1,
+      "finalized": false,
+      "winnerId": null,
+      "pointsAwarded": {},
+      "externalResult": true
+    }
   ],
   "jurados": [
-    { "id": "j1", "name": "Jurado 1", "pin": "1234" },
-    { "id": "j2", "name": "Jurado 2", "pin": "5678" }
+    {
+      "id": "j1",
+      "name": "Jurado 1",
+      "pin": "8e24043b6183b245c5ffbcc835fb5be3:198f7e70fd8cdb6586be625e404576c752e0df9068a8b7b2175cf25a6f3128af74a3bfbe7154a64fe61a0e391b8c3e81c181a3e48a1a2a29fb7cbed030619d55"
+    },
+    {
+      "id": "j2",
+      "name": "Jurado 2",
+      "pin": "51b4aa4c6bc0ec7b4aeaaf172c6f3763:1f631133bd67bfb2aff39e1b95165ed912dd6273b362edf5ce3da4ee3d0f943d043590426361b68a933c02001d8fe476607c938dd588eafdadf90493d494110f"
+    }
   ],
   "scores": {}
 }
