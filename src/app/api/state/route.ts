@@ -871,23 +871,15 @@ export async function POST(request: Request) {
         writeResultadosFile(resultados);
       }
 
-      // Forçar provas não-finalizadas como finalizadas sem pontos
-      const provasFrozen = (current.provas || []).map((p: any) => {
-        if (!p.finalized) {
-          return { ...p, finalized: true, winnerId: p.winnerId || null, pointsAwarded: p.pointsAwarded || {} };
-        }
-        return p;
-      });
-
       writeStateToFile({
         ...current,
         status: 'waiting',
         viewMode: 'prova',
         currentProvaId: '',
-        message: 'Novo seguimento!',
+        message: 'Selecione uma prova do Dia 2!',
         timerStartedAt: null,
         scores: {},
-        provas: provasFrozen,
+        provas: current.provas,
       });
       VOTED_VOTERS.clear();
       return readJsonState();
