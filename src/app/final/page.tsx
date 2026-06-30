@@ -138,6 +138,8 @@ export default function FinalPage() {
               .sort((a: any, b: any) => b.pts - a.pts);
             const jury1 = data.jurados?.[0];
             const jury2 = data.jurados?.[1];
+            const jury1Label = data.showJuradoNames && jury1?.name ? jury1.name : 'Júri 1';
+            const jury2Label = data.showJuradoNames && jury2?.name ? jury2.name : 'Júri 2';
             return (
               <div key={prova.id} className="final-prova-card">
                 <div className="final-prova-header">
@@ -160,8 +162,8 @@ export default function FinalPage() {
                       ) : (
                         <>
                           <th style={{ textAlign: 'center' }}>Público</th>
-                          <th style={{ textAlign: 'center' }}>{jury1?.name || 'Júri 1'}</th>
-                          <th style={{ textAlign: 'center' }}>{jury2?.name || 'Júri 2'}</th>
+                          <th style={{ textAlign: 'center' }}>{jury1Label}</th>
+                          <th style={{ textAlign: 'center' }}>{jury2Label}</th>
                         </>
                       )}
                       <th style={{ textAlign: 'center' }}>Pontos</th>
@@ -207,8 +209,8 @@ export default function FinalPage() {
         <p>Resultado gerado em {new Date().toLocaleString('pt-BR')}</p>
       </div>
 
-      <div className="no-print">
-        <button className="btn" onClick={() => window.print()} style={{ background: 'var(--blue-brazil)', margin: '2rem auto', display: 'block', width: 'auto', padding: '1rem 2.5rem', fontSize: '1.1rem' }}>
+      <div className="no-print" style={{ textAlign: 'center', marginTop: '2rem' }}>
+        <button className="btn" onClick={() => window.print()} style={{ background: 'var(--blue-brazil)', display: 'inline-block', width: 'auto', padding: '1rem 2.5rem', fontSize: '1.1rem' }}>
           <Printer size={20} /> GERAR PDF / IMPRIMIR
         </button>
       </div>

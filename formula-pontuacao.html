@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Sistema de Pontuação — Gincana Arrai-el 2026</title>
+<style>
+  @page { margin: 2cm; size: A4; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1a1a2e; line-height: 1.7; }
+  h1 { font-size: 22pt; text-align: center; margin-bottom: 0.3cm; }
+  .sub { text-align: center; color: #666; font-size: 11pt; margin-bottom: 1cm; }
+  h2 { font-size: 15pt; margin-top: 0.8cm; margin-bottom: 0.3cm; color: #1a3a5c; border-bottom: 2px solid #1a3a5c; padding-bottom: 2pt; }
+  h3 { font-size: 12pt; margin-top: 0.5cm; margin-bottom: 0.2cm; color: #2a5a8c; }
+  p, li { font-size: 10pt; }
+  .box { background: #f4f6f9; border-left: 4px solid #1a3a5c; padding: 0.4cm 0.6cm; margin: 0.4cm 0; border-radius: 3pt; font-size: 10pt; }
+  .box.formula { background: #fffbe6; border-left-color: #e8b84b; font-family: 'Courier New', monospace; font-size: 11pt; text-align: center; padding: 0.5cm; }
+  table { width: 100%; border-collapse: collapse; margin: 0.3cm 0; font-size: 9.5pt; }
+  th { background: #1a3a5c; color: white; padding: 5pt 8pt; text-align: left; }
+  td { padding: 5pt 8pt; border-bottom: 1px solid #ddd; }
+  tr:nth-child(even) td { background: #f9f9f9; }
+  .footer { text-align: center; font-size: 8pt; color: #999; margin-top: 0.5cm; }
+  .page-break { page-break-before: always; }
+  .step { margin: 0.3cm 0; padding-left: 0.5cm; }
+  .step-num { display: inline-block; background: #1a3a5c; color: white; border-radius: 50%; width: 18pt; height: 18pt; text-align: center; line-height: 18pt; font-weight: bold; font-size: 9pt; margin-right: 4pt; }
+  .highlight { background: #fffbe6; padding: 0.2cm 0.4cm; border-radius: 3pt; }
+  .exemplo { background: #f0f7ff; padding: 0.3cm 0.5cm; border-radius: 3pt; margin: 0.3cm 0; border: 1px solid #cce5ff; }
+</style>
+</head>
+<body>
+
+<h1>Sistema de Pontuação — Gincana Arrai-el 2026</h1>
+<p class="sub">Regras de cálculo para provas com votação (júri + público) e sem votação (arrecadação)</p>
+
+<h2>1. Provas com Votação (P1 a P6)</h2>
+<p><strong>Fórmula 70/30:</strong> Jurados decidem 70% da nota, público decide 30%.</p>
+
+<div class="box formula">
+  Pontos da Equipe = [ 0,7 × (média_jurados / 450) + 0,3 × (votos_público / total_votos) ] × Pontos_Máximos
+</div>
+
+<h3>Passo a passo</h3>
+<div class="step">
+  <p><span class="step-num">1</span> <strong>Cada jurado</strong> escolhe um time vencedor</p>
+  <p style="margin-left: 1cm; color: #555;">Time escolhido → recebe <strong>300</strong> pontos daquele jurado<br>Outro time → recebe <strong>150</strong> pontos daquele jurado<br>Jurado que não votou → neutro (150 para ambos)</p>
+</div>
+<div class="step">
+  <p><span class="step-num">2</span> <strong>Média dos jurados</strong> para cada equipe</p>
+  <p style="margin-left: 1cm; color: #555;">Soma os pontos de J1 e J2, divide por 2</p>
+</div>
+<div class="step">
+  <p><span class="step-num">3</span> <strong>Ratio dos jurados</strong> = média_da_equipe / (média_timeA + média_timeB)</p>
+</div>
+<div class="step">
+  <p><span class="step-num">4</span> <strong>Ratio do público</strong> = votos_da_equipe / total_de_votos</p>
+</div>
+<div class="step">
+  <p><span class="step-num">5</span> <strong>Ratio final</strong> = 0,7 × ratio_jurados + 0,3 × ratio_público</p>
+</div>
+<div class="step">
+  <p><span class="step-num">6</span> <strong>Pontos</strong> = ratio_final × pontos_máximos_da_prova (arredondado)</p>
+</div>
+
+<h3>Exemplo — Prova de 300 pts</h3>
+<div class="exemplo">
+  <p><strong>Cenário:</strong> Jurados discordam (J1 escolhe VERDE, J2 escolhe AMARELO). Público: 60% VERDE, 40% AMARELO.</p>
+  <table>
+    <tr><th>Etapa</th><th>VERDE</th><th>AMARELO</th></tr>
+    <tr><td>J1 (300/150)</td><td>300</td><td>150</td></tr>
+    <tr><td>J2 (300/150)</td><td>150</td><td>300</td></tr>
+    <tr><td>Média jurados</td><td>(300+150)/2 = 225</td><td>(150+300)/2 = 225</td></tr>
+    <tr><td>Ratio jurados</td><td>225/450 = 0,500</td><td>225/450 = 0,500</td></tr>
+    <tr><td>Votos público</td><td>60%</td><td>40%</td></tr>
+    <tr><td><strong>Ratio final</strong></td><td>0,7×0,5 + 0,3×0,6 = <strong>0,530</strong></td><td>0,7×0,5 + 0,3×0,4 = <strong>0,470</strong></td></tr>
+    <tr><td><strong>Pontos finais</strong></td><td><strong>159</strong></td><td><strong>141</strong></td></tr>
+  </table>
+</div>
+
+<div class="page-break"></div>
+
+<h2>2. Provas sem Votação — Arrecadação (P7 Barracas e P8 Rifas)</h2>
+<p>Não há votação. O administrador insere o <strong>valor arrecadado em reais</strong> de cada equipe. Os pontos são distribuídos proporcionalmente.</p>
+
+<div class="box formula">
+  Pontos da Equipe = ( valor_da_equipe / valor_total ) × Pontos_Máximos
+</div>
+
+<h3>Passo a passo</h3>
+<div class="step">
+  <p><span class="step-num">1</span> Admin insere o valor arrecadado de cada equipe (R$)</p>
+</div>
+<div class="step">
+  <p><span class="step-num">2</span> Soma todos os valores → <strong>total arrecadado</strong></p>
+</div>
+<div class="step">
+  <p><span class="step-num">3</span> Divide o valor de cada equipe pelo total → <strong>proporção</strong></p>
+</div>
+<div class="step">
+  <p><span class="step-num">4</span> Multiplica a proporção pelos pontos máximos da prova</p>
+</div>
+<div class="step">
+  <p><span class="step-num">5</span> Arredonda e ajusta a última equipe para fechar a soma</p>
+</div>
+<div class="step">
+  <p><span class="step-num">6</span> <strong>Vencedor</strong> = equipe com <strong>maior valor arrecadado</strong> (não maior pontuação)</p>
+</div>
+
+<h3>Exemplo — P8 Rifas (600 pts)</h3>
+<div class="exemplo">
+  <table>
+    <tr><th>Equipe</th><th>Valor Arrecadado</th><th>Cálculo</th><th>Pontos</th></tr>
+    <tr><td>VERDE</td><td>R$ 2.000</td><td>(2.000 ÷ 7.000) × 600</td><td><strong>171</strong></td></tr>
+    <tr><td>AMARELO 🏆</td><td>R$ 5.000</td><td>(5.000 ÷ 7.000) × 600</td><td><strong>429</strong></td></tr>
+    <tr><td></td><td><strong>Total: R$ 7.000</strong></td><td></td><td><strong>600</strong></td></tr>
+  </table>
+</div>
+
+<h3>Exemplo — P7 Barracas (300 pts)</h3>
+<div class="exemplo">
+  <table>
+    <tr><th>Equipe</th><th>Valor Arrecadado</th><th>Cálculo</th><th>Pontos</th></tr>
+    <tr><td>VERDE</td><td>R$ 1.200</td><td>(1.200 ÷ 3.000) × 300</td><td><strong>120</strong></td></tr>
+    <tr><td>AMARELO 🏆</td><td>R$ 1.800</td><td>(1.800 ÷ 3.000) × 300</td><td><strong>180</strong></td></tr>
+    <tr><td></td><td><strong>Total: R$ 3.000</strong></td><td></td><td><strong>300</strong></td></tr>
+  </table>
+</div>
+
+<h3>Casos especiais</h3>
+<table>
+  <tr><th>Situação</th><th>O que acontece</th></tr>
+  <tr><td>Valor total = 0 (ninguém vendeu nada)</td><td>Pontos divididos igualmente entre as equipes</td></tr>
+  <tr><td>Empate no valor arrecadado</td><td>Não há vencedor (ambos recebem pontos iguais)</td></tr>
+</table>
+
+<div class="page-break"></div>
+
+<h2>3. Resumo Geral</h2>
+
+<table>
+  <tr><th>Prova</th><th>Tipo</th><th>Pontos</th><th>Quem decide</th></tr>
+  <tr><td>P1 — Mascote do Time</td><td>Votação (70/30)</td><td>300</td><td>Júri + Público</td></tr>
+  <tr><td>P2 — Grito de Guerra</td><td>Votação (70/30)</td><td>300</td><td>Júri + Público</td></tr>
+  <tr><td>P3 — Rei e Rainha do Time</td><td>Votação (70/30)</td><td>300</td><td>Júri + Público</td></tr>
+  <tr><td>P4 — Cante e Encante</td><td>Votação (70/30)</td><td>300</td><td>Júri + Público</td></tr>
+  <tr><td>P5 — Dança Típica</td><td>Votação (70/30)</td><td>480</td><td>Júri + Público</td></tr>
+  <tr><td>P6 — Ornamentação</td><td>Votação (70/30)</td><td>400</td><td>Júri + Público</td></tr>
+  <tr><td>P7 — Barracas</td><td>Arrecadação (proporcional)</td><td>300</td><td>Admin (valor em R$)</td></tr>
+  <tr><td>P8 — Rifas</td><td>Arrecadação (proporcional)</td><td>600</td><td>Admin (valor em R$)</td></tr>
+  <tr><td colspan="4" style="text-align: center; font-weight: bold;">Total: <strong>2.980 pontos</strong></td></tr>
+</table>
+
+<p class="footer">Gincana Arrai-el 2026 — Instituto Educacional Logos, Redenção-CE — Gerado em 29/06/2026</p>
+
+</body>
+</html>

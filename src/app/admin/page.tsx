@@ -668,6 +668,29 @@ export default function AdminPage() {
               }} />
             </button>
           </div>
+
+          <div className="glass" style={{ padding: '1.2rem', marginTop: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '1rem' }}>Revelar Nomes dos Jurados</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                {data.showJuradoNames ? 'Nomes visíveis em toda a plataforma' : 'Jurados exibidos como "Júri 1" / "Júri 2"'}
+              </div>
+            </div>
+            <button
+              onClick={() => updateState({ showJuradoNames: !data.showJuradoNames })}
+              style={{
+                width: 56, height: 30, borderRadius: 15, border: 'none', cursor: 'pointer',
+                background: data.showJuradoNames ? '#10b981' : 'rgba(255,255,255,0.15)',
+                position: 'relative', transition: 'background 0.2s'
+              }}
+            >
+              <div style={{
+                width: 24, height: 24, borderRadius: '50%', background: 'white',
+                position: 'absolute', top: 3, left: data.showJuradoNames ? 29 : 3,
+                transition: 'left 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+              }} />
+            </button>
+          </div>
         </div>
 
         {/* Cadastro de Equipes */}

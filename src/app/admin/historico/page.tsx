@@ -174,7 +174,7 @@ export default function HistoricoPage() {
                   <td style={{ padding: '0.5rem 0.8rem' }}>{voto.teamId || voto.pickedTeamId || '—'}</td>
                   <td style={{ padding: '0.5rem 0.8rem' }}>
                     {voto.type === 'jury_pick'
-                      ? (voto.juradoName || voto.jurado || '—')
+                      ? (stateData?.showJuradoNames ? (voto.juradoName || voto.jurado) : 'Júri')
                       : (voto.voterId && voto.voterId !== 'anon' ? `Votante ${voto.voterId.slice(0, 6)}...` : 'Anônimo')
                     }
                   </td>

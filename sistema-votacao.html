@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Sistema de Votação — Gincana Arrai-el 2026</title>
+<style>
+  @page { margin: 2cm; size: A4; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1a1a2e; line-height: 1.6; }
+  h1 { font-size: 22pt; text-align: center; margin-bottom: 0.3cm; }
+  .sub { text-align: center; color: #666; font-size: 11pt; margin-bottom: 1cm; }
+  h2 { font-size: 15pt; margin-top: 0.8cm; margin-bottom: 0.3cm; color: #1a3a5c; border-bottom: 2px solid #1a3a5c; padding-bottom: 2pt; }
+  h3 { font-size: 12pt; margin-top: 0.5cm; margin-bottom: 0.2cm; color: #2a5a8c; }
+  p, li { font-size: 10pt; }
+  .opcao { margin-bottom: 1cm; }
+  .opcao .numero { display: inline-block; background: #1a3a5c; color: white; border-radius: 50%; width: 24pt; height: 24pt; text-align: center; line-height: 24pt; font-weight: bold; font-size: 11pt; margin-right: 6pt; }
+  .rec { display: inline-block; background: #e8b84b; color: #1a1a2e; font-size: 8pt; font-weight: bold; padding: 1pt 6pt; border-radius: 3pt; margin-left: 6pt; vertical-align: middle; }
+  .box { background: #f4f6f9; border-left: 4px solid #1a3a5c; padding: 0.3cm 0.5cm; margin: 0.3cm 0; border-radius: 3pt; font-size: 9.5pt; }
+  table { width: 100%; border-collapse: collapse; margin: 0.3cm 0; font-size: 9.5pt; }
+  th { background: #1a3a5c; color: white; padding: 4pt 6pt; text-align: left; }
+  td { padding: 4pt 6pt; border-bottom: 1px solid #ddd; }
+  tr:nth-child(even) td { background: #f9f9f9; }
+  .footer { text-align: center; font-size: 8pt; color: #999; margin-top: 0.5cm; }
+  .page-break { page-break-before: always; }
+  .vantagens { font-size: 9.5pt; margin-top: 0.2cm; }
+  .vantagens li { margin-left: 0.5cm; }
+</style>
+</head>
+<body>
+
+<h1>Sistema de Votação — Gincana Arrai-el 2026</h1>
+<p class="sub">Propostas para ponderação entre votos dos jurados e do público</p>
+
+<p style="margin-bottom:0.5cm">Cada prova tem pontuação máxima <strong>X</strong> (ex: 300, 400 ou 600 pts).<br>
+Todas as opções abaixo dividem os X pontos entre as duas equipes (Verde e Amarelo).</p>
+
+<div class="opcao">
+  <h2><span class="numero">1</span> Jurados 70% + Público 30% <span class="rec">RECOMENDADO</span></h2>
+  <p><strong>Como funciona:</strong> Cada jurado dá 300 ao time que escolher e 150 ao outro. A média dos jurados vale 70% da nota. A votação do público define os 30% restantes.</p>
+  <div class="box">
+    <strong>Fórmula:</strong><br>
+    Participação da equipe = 0,7 × (média_jurados_da_equipe / 450) + 0,3 × (votos_da_equipe / total_votos)<br>
+    Pontos = Participação × X
+  </div>
+
+  <h3>Exemplos (prova de 300 pts)</h3>
+  <table>
+    <tr><th>Cenário</th><th>Verde</th><th>Amarelo</th></tr>
+    <tr><td>Jurados concordam (Verde) + Público 60% Verde</td><td><strong>194 pts</strong></td><td>106 pts</td></tr>
+    <tr><td>Jurados discordam + Público 60% Verde</td><td><strong>159 pts</strong></td><td>141 pts</td></tr>
+    <tr><td>Jurados discordam + Público 50/50</td><td>150 pts</td><td>150 pts</td></tr>
+    <tr><td>Jurados concordam (Verde) + Público 100% Verde</td><td><strong>210 pts</strong></td><td>90 pts</td></tr>
+  </table>
+
+  <ul class="vantagens">
+    <li>Jurados têm peso maior (70%) — decidem o resultado principal</li>
+    <li>Quando concordam, diferença é grande (~88 pts); quando discordam, público desempata (~18 pts)</li>
+    <li>Soma sempre fecha exatamente X</li>
+    <li>Público ainda participa e pode influenciar até 90 pts (30% de 300)</li>
+  </ul>
+</div>
+
+<div class="page-break"></div>
+
+<div class="opcao">
+  <h2><span class="numero">2</span> Só Jurados (público não pontua)</h2>
+  <p><strong>Como funciona:</strong> Cada jurado dá 300 ao vencedor, 150 ao outro. A média define o resultado. Público vota apenas para acompanhar, sem impacto na pontuação.</p>
+  <div class="box">
+    <strong>Fórmula:</strong><br>
+    Pontos Verde = X × média_jurados_Verde / (média_Verde + média_Amarelo)
+  </div>
+
+  <h3>Exemplos (prova de 300 pts)</h3>
+  <table>
+    <tr><th>Cenário</th><th>Verde</th><th>Amarelo</th></tr>
+    <tr><td>Ambos jurados escolhem Verde</td><td><strong>200 pts</strong></td><td>100 pts</td></tr>
+    <tr><td>Jurados discordam</td><td>150 pts</td><td>150 pts</td></tr>
+  </table>
+
+  <ul class="vantagens">
+    <li>Simples, sem contas complexas</li>
+    <li>Jurados decidem tudo</li>
+    <li>Desvantagem: público perde interesse (voto não vale nada)</li>
+  </ul>
+</div>
+
+<div class="opcao">
+  <h2><span class="numero">3</span> Acordo Binário com Peso do Público</h2>
+  <p><strong>Como funciona:</strong> Se jurados concordam, o time vencedor leva tudo. Se discordam, cada time já garante 50% e o público decide a divisão dos 50% restantes.</p>
+  <div class="box">
+    <strong>Fórmula (quando discordam):</strong><br>
+    Time A = X × (0,5 + 0,5 × votos_A / total_votos)<br>
+    Time B = X − Time A
+  </div>
+
+  <h3>Exemplos (prova de 300 pts)</h3>
+  <table>
+    <tr><th>Cenário</th><th>Verde</th><th>Amarelo</th></tr>
+    <tr><td>Jurados concordam (Verde)</td><td><strong>300 pts</strong></td><td>0 pts</td></tr>
+    <tr><td>Discordam + Público 60% Verde</td><td><strong>240 pts</strong></td><td>60 pts</td></tr>
+    <tr><td>Discordam + Público 50/50</td><td>150 pts</td><td>150 pts</td></tr>
+  </table>
+
+  <ul class="vantagens">
+    <li>Jurados concordando = decisão clara (tudo ou nada)</li>
+    <li>Discordando = público decide, mas com partida de 50% garantida</li>
+    <li>Pode gerar placares extremos (240 × 60)</li>
+  </ul>
+</div>
+
+<div class="page-break"></div>
+
+<div class="opcao">
+  <h2><span class="numero">4</span> Três Pesos Independentes (35% / 35% / 30%)</h2>
+  <p><strong>Como funciona:</strong> Cada jurado e o público têm pesos individuais. Jurado 1 = 35%, Jurado 2 = 35%, Público = 30%. Cada jurado dá 300/150 aos times. Público define percentual.</p>
+  <div class="box">
+    <strong>Fórmula:</strong><br>
+    Pontos Verde = X × (0,35 × J1_Verde/450 + 0,35 × J2_Verde/450 + 0,30 × votos_Verde/total)
+  </div>
+
+  <h3>Exemplos (prova de 300 pts)</h3>
+  <table>
+    <tr><th>Cenário</th><th>Verde</th><th>Amarelo</th></tr>
+    <tr><td>Ambos escolhem Verde + Público 60% Verde</td><td><strong>194 pts</strong></td><td>106 pts</td></tr>
+    <tr><td>Discordam + Público 60% Verde</td><td><strong>159 pts</strong></td><td>141 pts</td></tr>
+    <tr><td>Discordam + Público 50/50</td><td>150 pts</td><td>150 pts</td></tr>
+  </table>
+
+  <ul class="vantagens">
+    <li>Resultado idêntico à Opção 1 na prática</li>
+    <li>Lógica mais intuitiva (cada um com seu peso)</li>
+    <li>Denominador 450 (300+150) ao invés de tratar como percentual — ligeiramente diferente no cálculo</li>
+  </ul>
+</div>
+
+<div class="opcao">
+  <h2><span class="numero">5</span> Pontos Fixos por Jurado + Bônus Público</h2>
+  <p><strong>Como funciona:</strong> Se ambos jurados escolhem o mesmo time, esse time leva todos os X pontos da prova. Se discordam, o time com mais votos do público leva os X pontos.</p>
+
+  <h3>Exemplos (prova de 300 pts)</h3>
+  <table>
+    <tr><th>Cenário</th><th>Verde</th><th>Amarelo</th></tr>
+    <tr><td>Jurados concordam (Verde)</td><td><strong>300 pts</strong></td><td>0 pts</td></tr>
+    <tr><td>Discordam + Público vota Verde</td><td><strong>300 pts</strong></td><td>0 pts</td></tr>
+    <tr><td>Discordam + Público 50/50</td><td>150 pts</td><td>150 pts</td></tr>
+  </table>
+
+  <ul class="vantagens">
+    <li>Mais simples de entender</li>
+    <li>Parecida com a regra atual (100%/0%)</li>
+    <li>Desvantagem: placares extremos (300×0) podem desmotivar</li>
+  </ul>
+</div>
+
+<h2>Comparativo Rápido</h2>
+<table>
+  <tr><th>Opção</th><th>Jurados concordam</th><th>Jurados discordam</th><th>Público influencia</th><th>Complexidade</th></tr>
+  <tr><td><strong>1 — 70/30</strong></td><td>Diferença grande (~88 pts)</td><td>Diferença pequena (~18 pts)</td><td>30%</td><td>Média</td></tr>
+  <tr><td>2 — Só Jurados</td><td>200 × 100</td><td>150 × 150</td><td>0%</td><td>Baixa</td></tr>
+  <tr><td>3 — Acordo Binário</td><td>300 × 0</td><td>240 × 60</td><td>Define vencedor</td><td>Baixa</td></tr>
+  <tr><td>4 — Pesos Individuais</td><td>Diferença grande (~88 pts)</td><td>Diferença pequena (~18 pts)</td><td>30%</td><td>Média</td></tr>
+  <tr><td>5 — Pontos Fixos</td><td>300 × 0</td><td>Define vencedor</td><td>Desempate</td><td>Baixa</td></tr>
+</table>
+
+<p class="footer">Gincana Arrai-el 2026 — Documento gerado em 29/06/2026</p>
+
+</body>
+</html>
