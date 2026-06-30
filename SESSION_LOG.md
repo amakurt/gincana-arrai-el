@@ -400,3 +400,21 @@ ssh root@<IP> "systemctl start cloudflared"
 ### Key Files Changed
 - `src/app/api/state/route.ts` — ação `newSegment`
 - `src/app/admin/page.tsx` — botão Novo Seguimento
+
+## Session 2026-06-30 (Parte 4) — Correções Novo Seguimento + Separação Dia 1 / Dia 2
+
+### Mudanças
+- **Correção newSegment**: Deixava de forçar `finalized: true` em todas as provas (incluindo p9/p10 do Dia 2). Agora zera só `scores` e mantém o estado de finalização original. Backup + snapshots preservados.
+- **`duplicateForDay2`**: Nova ação que clona p1-p8 como p11-p18 para o Dia 2, renomeia p9 (Teatro → 6ª) e p10 (Instagram → 10ª) com numeração correta, e ordena 1ª a 10ª: Mascote, Grito, Rei/Rainha, Cante e Encante, Dança, Teatro, Ornamentação, Barracas, Rifas, Instagram.
+- **Separação visual no admin**: Provas divididas em "🏆 Dia 1 — Finalizadas" (opacidade reduzida, sem ações) e "🎯 Dia 2 — Disponíveis" (editável, removível). Select "Prova Ativa" também separado por `optgroup` com Day 1 desabilitado.
+- **Ordenação**: Provas do Dia 2 ordenadas por número (1ª..10ª) tanto na lista quanto no select.
+- **Ocultação cross-day**: Jurado, Votação, Telão e Final filtram provas do Dia 1 — só exibem conteúdo do Dia 2.
+- **Deploy**: Correções enviadas para Hetzner + Oracle (6 commits, 8 arquivos alterados).
+
+### Key Files Changed
+- `src/app/api/state/route.ts` — `newSegment` corrigido + ação `duplicateForDay2`
+- `src/app/admin/page.tsx` — separação Dia 1/Dia 2 na lista + select, botão Duplicar, ordenação
+- `src/app/jurado/page.tsx` — filtro Day 1
+- `src/app/vote/page.tsx` — sem alteração (já só mostra ativa)
+- `src/app/screen/page.tsx` — filtro Day 1
+- `src/app/final/page.tsx` — filtro Day 1

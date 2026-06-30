@@ -222,3 +222,21 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `src/app/api/historico/route.ts` + `admin/historico/page.tsx` — histórico votação
 - `SESSION_LOG.md` — atualizado
 
+## Session 2026-06-30 (Parte 4) — Dia 2 Setup + Separação
+
+### Mudanças
+- **newSegment corrigido**: Não finaliza provas do Dia 2, só zera scores
+- **duplicateForDay2**: Clona p1-p8 como p11-p18 pro Dia 2, reordena p9/p10 (1ª a 10ª)
+- **Separação visual**: Admin lista dividida em Dia 1 (finalizadas) e Dia 2 (disponíveis); select por optgroup
+- **Cross-day oculto**: Jurado/votação/telão/final filtram provas do Dia 1
+- **Deploy**: 8 arquivos alterados, 6 commits
+
+### Key Files Changed
+- `src/app/api/state/route.ts` — `newSegment` fix + `duplicateForDay2`
+- `src/app/admin/page.tsx` — separação Dia 1/Dia 2, botão Duplicar, ordenação
+- `src/app/jurado/page.tsx`, `src/app/vote/page.tsx`, `src/app/screen/page.tsx`, `src/app/final/page.tsx` — filtro Day 1
+
+### Provas no Servidor
+- Hetzner: p1-p8 (Dia 1 finalized), p9-p18 (Dia 2 available, 1ª a 10ª)
+- Oracle: mesmo estado
+
