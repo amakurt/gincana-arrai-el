@@ -22,6 +22,7 @@ export default function AdminPage() {
   const [newProvaTimer, setNewProvaTimer] = useState(0);
   const [newProvaPoints, setNewProvaPoints] = useState(300);
   const [newProvaExternal, setNewProvaExternal] = useState(false);
+  const [newProvaWinnerTakesAll, setNewProvaWinnerTakesAll] = useState(false);
   const [editingTeam, setEditingTeam] = useState<string | null>(null);
   const [editingProva, setEditingProva] = useState<string | null>(null);
   const [editTeamName, setEditTeamName] = useState('');
@@ -29,6 +30,7 @@ export default function AdminPage() {
   const [editProvaName, setEditProvaName] = useState('');
   const [editProvaTimer, setEditProvaTimer] = useState(0);
   const [editProvaPoints, setEditProvaPoints] = useState(300);
+  const [editProvaWinnerTakesAll, setEditProvaWinnerTakesAll] = useState(false);
   const [finalizeLoading, setFinalizeLoading] = useState(false);
   const [showManualWinner, setShowManualWinner] = useState(false);
   const [finalizeError, setFinalizeError] = useState('');
@@ -225,12 +227,13 @@ export default function AdminPage() {
     setEditProvaName(prova.name);
     setEditProvaTimer(prova.timer || 0);
     setEditProvaPoints(prova.points || 300);
+    setEditProvaWinnerTakesAll(prova.winnerTakesAll || false);
   };
 
   const saveEditProva = (provaId: string) => {
     if (!editProvaName) return;
     const updated = data.provas.map((p: any) =>
-      p.id === provaId ? { ...p, name: editProvaName, timer: editProvaTimer || 0, points: editProvaPoints } : p
+      p.id === provaId ? { ...p, name: editProvaName, timer: editProvaTimer || 0, points: editProvaPoints, winnerTakesAll: p.externalResult ? editProvaWinnerTakesAll : false } : p
     );
     updateState({ provas: updated });
     setEditingProva(null);
@@ -547,7 +550,7 @@ export default function AdminPage() {
             ) : activeProva?.externalResult ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Insira {activeProva.externalUnit === 'R$' ? 'o valor arrecadado (R$)' : 'a quantidade'} de cada equipe. A equipe com maior valor vence.
+                  Insira {activeProva.externalUnit === 'R$' ? 'o valor arrecadado (R$)' : 'a quantidade'} de cada equipe.{activeProva.winnerTakesAll ? ' Quem arrecadar mais leva TODOS os pontos.' : ' A equipe com maior valor vence.'}
                 </p>
                 {(data.teams || []).map((team: any) => (
                   <div key={team.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -964,17 +967,24 @@ export default function AdminPage() {
             />
             <span style={{ display: 'flex', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>pts</span>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
-              <input type="checkbox" checked={newProvaExternal} onChange={(e) => setNewProvaExternal(e.target.checked)} />
+              <input type="checkbox" checked={newProvaExternal} onChange={(e) => { setNewProvaExternal(e.target.checked); if (!e.target.checked) setNewProvaWinnerTakesAll(false); }} />
               s/ voto
             </label>
+            {newProvaExternal && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                <input type="checkbox" checked={newProvaWinnerTakesAll} onChange={(e) => setNewProvaWinnerTakesAll(e.target.checked)} />
+                vencedor leva tudo
+              </label>
+            )}
             <button 
               onClick={() => {
                 if(newProvaName) {
-                  updateState({ provas: [...(data.provas || []), { id: 'p'+Date.now(), name: newProvaName, timer: newProvaTimer || 0, points: newProvaPoints, externalResult: newProvaExternal, day: 1, finalized: false }] });
+                  updateState({ provas: [...(data.provas || []), { id: 'p'+Date.now(), name: newProvaName, timer: newProvaTimer || 0, points: newProvaPoints, externalResult: newProvaExternal, winnerTakesAll: newProvaExternal ? newProvaWinnerTakesAll : false, day: 1, finalized: false }] });
                   setNewProvaName('');
                   setNewProvaTimer(0);
                   setNewProvaPoints(300);
                   setNewProvaExternal(false);
+                  setNewProvaWinnerTakesAll(false);
                 }
               }}
               disabled={loading}
@@ -1003,6 +1013,7 @@ export default function AdminPage() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
                         <span>{p.name}</span>
                         <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--blue-brazil)', background: 'rgba(37, 99, 235, 0.1)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>{p.points || 300}pts</span>
+                        {p.winnerTakesAll && <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>TUDO OU NADA</span>}
                         <span style={{ fontSize: '0.75rem', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✓ Finalizada</span>
                       </div>
                     </li>
@@ -1040,6 +1051,12 @@ export default function AdminPage() {
                             style={{ width: '60px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.85rem' }}
                             placeholder="pts"
                           />
+                          {p.externalResult && (
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                              <input type="checkbox" checked={editProvaWinnerTakesAll} onChange={(e) => setEditProvaWinnerTakesAll(e.target.checked)} />
+                              vencedor leva tudo
+                            </label>
+                          )}
                           <button onClick={() => saveEditProva(p.id)} style={{ background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                             <Save size={18} />
                           </button>
@@ -1053,6 +1070,7 @@ export default function AdminPage() {
                             <span>{p.name}</span>
                             {p.timer > 0 && <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}><Clock size={12} /> {p.timer}s</span>}
                             <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--blue-brazil)', background: 'rgba(37, 99, 235, 0.1)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>{p.points || 300}pts</span>
+                            {p.winnerTakesAll && <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>TUDO OU NADA</span>}
                           </div>
                           <div style={{ display: 'flex', gap: '0.3rem', flexShrink: 0 }}>
                             <button

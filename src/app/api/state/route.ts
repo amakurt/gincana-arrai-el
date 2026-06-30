@@ -542,32 +542,57 @@ export async function POST(request: Request) {
 
       const vals = body.externalValues as Record<string, number>;
 
-      // Calcular total arrecadado
-      let totalVal = 0;
-      for (const team of teams) {
-        totalVal += Math.max(0, vals[team.id] || 0);
-      }
-
-      // Distribuir pontos proporcionalmente
-      if (totalVal > 0) {
-        let totalPts = 0;
-        const teamIds = teams.map((t: any) => t.id);
-        for (let i = 0; i < teamIds.length; i++) {
-          const tid = teamIds[i];
-          const rawPts = (Math.max(0, vals[tid] || 0) / totalVal) * points;
-          const rounded = i < teamIds.length - 1 ? Math.round(rawPts) : points - totalPts;
-          pointsAwarded[tid] = rounded;
-          totalPts += rounded;
+      if (prova.winnerTakesAll) {
+        // Winner-takes-all: maior valor leva todos os pontos
+        let maxVal = -1;
+        let winnerTeamId: string | null = null;
+        for (const team of teams) {
+          const v = Math.max(0, vals[team.id] || 0);
+          if (v > maxVal) {
+            maxVal = v;
+            winnerTeamId = team.id;
+          }
+        }
+        const tiedTeams = teams.filter((t: any) => Math.max(0, vals[t.id] || 0) === maxVal && maxVal >= 0);
+        if (tiedTeams.length > 1 && maxVal > 0) {
+          // Empate: dividir igualmente
+          const splitPts = Math.round(points / tiedTeams.length);
+          for (const team of tiedTeams) {
+            pointsAwarded[team.id] = splitPts;
+          }
+          const sum = Object.values(pointsAwarded).reduce((a: number, b: number) => a + b, 0);
+          if (sum !== points && tiedTeams.length > 0) {
+            pointsAwarded[tiedTeams[tiedTeams.length - 1].id] += points - sum;
+          }
+        } else if (winnerTeamId && maxVal > 0) {
+          // Vencedor leva tudo
+          pointsAwarded[winnerTeamId] = points;
         }
       } else {
-        // Se não há valores, dividir igualmente
+        // Distribuir pontos proporcionalmente
+        let totalVal = 0;
         for (const team of teams) {
-          pointsAwarded[team.id] = Math.round(points / teams.length);
+          totalVal += Math.max(0, vals[team.id] || 0);
         }
-        // Ajustar arredondamento
-        const sum = Object.values(pointsAwarded).reduce((a: number, b: number) => a + b, 0);
-        if (sum !== points && teams.length > 0) {
-          pointsAwarded[teams[teams.length - 1].id] += points - sum;
+
+        if (totalVal > 0) {
+          let totalPts = 0;
+          const teamIds = teams.map((t: any) => t.id);
+          for (let i = 0; i < teamIds.length; i++) {
+            const tid = teamIds[i];
+            const rawPts = (Math.max(0, vals[tid] || 0) / totalVal) * points;
+            const rounded = i < teamIds.length - 1 ? Math.round(rawPts) : points - totalPts;
+            pointsAwarded[tid] = rounded;
+            totalPts += rounded;
+          }
+        } else {
+          for (const team of teams) {
+            pointsAwarded[team.id] = Math.round(points / teams.length);
+          }
+          const sum = Object.values(pointsAwarded).reduce((a: number, b: number) => a + b, 0);
+          if (sum !== points && teams.length > 0) {
+            pointsAwarded[teams[teams.length - 1].id] += points - sum;
+          }
         }
       }
 
