@@ -21,9 +21,19 @@ export async function GET() {
     }
     const raw = readFileSync(HISTORICO_FILE, 'utf-8');
     const linhas = raw.trim().split('\n').filter(Boolean);
-    const entries = linhas.map((linha: string) => {
+    let entries = linhas.map((linha: string) => {
       try { return JSON.parse(linha); } catch { return null; }
     }).filter(Boolean);
+
+    // Filtrar apenas provas do Dia 2
+    const STATE_FILE = path.join(process.cwd(), 'gincana-state.json');
+    if (existsSync(STATE_FILE)) {
+      const state = JSON.parse(readFileSync(STATE_FILE, 'utf-8'));
+      const day2Ids = new Set((state.provas || []).filter((p: any) => p.day === 2).map((p: any) => p.id));
+      if (day2Ids.size > 0) {
+        entries = entries.filter((e: any) => day2Ids.has(e.provaId));
+      }
+    }
 
     // Retorna do mais recente para o mais antigo
     entries.reverse();
