@@ -458,21 +458,25 @@ export default function AdminPage() {
               style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontWeight: 600, colorScheme: 'dark' }}
             >
               <option value="">Selecione uma prova...</option>
-              {(() => {
-                const provas = data.provas || [];
-                const day1 = provas.filter((p: any) => p.finalized && (p.day === 1 || !p.day));
-                const day2 = provas.filter((p: any) => !day1.includes(p));
-                return (
-                  <>
-                    <optgroup label="── Dia 1 (Finalizadas) ──">
-                      {day1.map((p: any) => <option key={p.id} value={p.id} disabled>{p.name}</option>)}
-                    </optgroup>
-                    <optgroup label="── Dia 2 ──">
-                      {day2.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </optgroup>
-                  </>
-                );
-              })()}
+                  {(() => {
+                    const provas = data.provas || [];
+                    const day1 = provas.filter((p: any) => p.finalized && (p.day === 1 || !p.day));
+                    const day2 = [...provas.filter((p: any) => !day1.includes(p))].sort((a: any, b: any) => {
+                      const na = parseInt(a.name) || 0;
+                      const nb = parseInt(b.name) || 0;
+                      return na - nb;
+                    });
+                    return (
+                      <>
+                        <optgroup label="── Dia 1 (Finalizadas) ──">
+                          {day1.map((p: any) => <option key={p.id} value={p.id} disabled>{p.name}</option>)}
+                        </optgroup>
+                        <optgroup label="── Dia 2 ──">
+                          {day2.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </optgroup>
+                      </>
+                    );
+                  })()}
             </select>
           </div>
 
@@ -983,7 +987,11 @@ export default function AdminPage() {
           {(() => {
             const provas = data.provas || [];
             const day1 = provas.filter((p: any) => p.finalized && (p.day === 1 || !p.day));
-            const day2 = provas.filter((p: any) => !day1.includes(p));
+            const day2 = [...provas.filter((p: any) => !day1.includes(p))].sort((a: any, b: any) => {
+              const na = parseInt(a.name) || 0;
+              const nb = parseInt(b.name) || 0;
+              return na - nb;
+            });
             return (
               <>
                 <h4 style={{ margin: '1rem 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
