@@ -245,26 +245,6 @@ export default function AdminPage() {
     setFinalizeError('');
     setShowManualWinner(false);
     try {
-      if (activeProva?.instagramMode) {
-        const vals: Record<string, number> = {};
-        for (const team of (data?.teams || [])) {
-          vals[team.id] = Number(externalValues[team.id]) || 0;
-        }
-        const res = await fetch('/api/state', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'instagramResult', externalValues: vals })
-        });
-        if (!res.ok) {
-          const err = await res.json();
-          setFinalizeError(err.error || 'Erro ao calcular Instagram.');
-          return;
-        }
-        const newData = await res.json();
-        mutate(newData, false);
-        return;
-      }
-
       if (activeProva?.externalResult) {
         const vals: Record<string, number> = {};
         for (const team of (data?.teams || [])) {
@@ -292,7 +272,7 @@ export default function AdminPage() {
       });
       if (!res.ok) {
         const err = await res.json();
-        if (err.details?.includes('Definir vencedor manualmente') || err.details?.includes('consenso')) {
+        if (err.details?.includes('Definir vencedor manualmente')) {
           setShowManualWinner(true);
           setFinalizeError(err.details);
         } else {
@@ -592,7 +572,7 @@ export default function AdminPage() {
                       <ThumbsUp size={16} /> Definir Vencedor Manualmente
                     </div>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.8rem' }}>
-                      Jurados não chegaram a um consenso (3 jurados). Escolha o vencedor:
+                      Jurados discordaram e público empatou. Escolha o vencedor:
                     </p>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       {(data.teams || []).map((team: any) => (
@@ -693,7 +673,7 @@ export default function AdminPage() {
             <div>
               <div style={{ fontWeight: 700, fontSize: '1rem' }}>Revelar Nomes dos Jurados</div>
               <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                {data.showJuradoNames ? 'Nomes visíveis em toda a plataforma' : 'Jurados exibidos como "Júri 1", "Júri 2", "Júri 3"'}
+                {data.showJuradoNames ? 'Nomes visíveis em toda a plataforma' : 'Jurados exibidos como "Júri 1" / "Júri 2"'}
               </div>
             </div>
             <button

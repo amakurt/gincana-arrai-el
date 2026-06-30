@@ -147,16 +147,15 @@ function saveSnapshot(fileData: any, provas: any[], teams: any[], scores: any) {
   const pScores = scores[provaId];
 
   const teamResults = teams.map((team: any) => {
-    const teamScore = pScores[team.id] || { publicVotes: 0, j1: 0, j2: 0, j3: 0 };
+    const teamScore = pScores[team.id] || { publicVotes: 0, j1: 0, j2: 0 };
     return {
       id: team.id, name: team.name, color: team.color,
       publicVotes: teamScore.publicVotes || 0,
       publicScore: teamScore.publicVotes || 0,
       j1: teamScore.j1 || 0,
       j2: teamScore.j2 || 0,
-      j3: teamScore.j3 || 0,
       total: (prova.pointsAwarded?.[team.id] || 0),
-      winnerPick: teamScore.j1 === 1 || teamScore.j2 === 1 || teamScore.j3 === 1,
+      winnerPick: teamScore.j1 === 1 || teamScore.j2 === 1,
     };
   });
 
@@ -182,20 +181,18 @@ function saveSnapshot(fileData: any, provas: any[], teams: any[], scores: any) {
 
 function getJuryPicks(provaId: string, scores: any, teams: any[]) {
   const pScores = scores[provaId];
-  if (!pScores) return { j1Pick: null, j2Pick: null, j3Pick: null };
+  if (!pScores) return { j1Pick: null, j2Pick: null };
 
   let j1Pick: string | null = null;
   let j2Pick: string | null = null;
-  let j3Pick: string | null = null;
 
   for (const team of teams) {
-    const s = pScores[team.id] || { publicVotes: 0, j1: 0, j2: 0, j3: 0 };
+    const s = pScores[team.id] || { publicVotes: 0, j1: 0, j2: 0 };
     if (s.j1 === 1) j1Pick = team.id;
     if (s.j2 === 1) j2Pick = team.id;
-    if (s.j3 === 1) j3Pick = team.id;
   }
 
-  return { j1Pick, j2Pick, j3Pick };
+  return { j1Pick, j2Pick };
 }
 
 function getPublicVotes(provaId: string, scores: any, teams: any[]) {
@@ -218,16 +215,18 @@ function getAudienceWinner(provaId: string, scores: any, teams: any[]) {
   return null;
 }
 
-function calculateDay1Points(prova: any, j1Pick: string | null, j2Pick: string | null, teams: any[], scores: any) {
+function calculateProvaPoints(prova: any, j1Pick: string | null, j2Pick: string | null, teams: any[], scores: any) {
   const provaPoints = prova.points || 0;
   const provaId = prova.id;
   const pointsAwarded: Record<string, number> = {};
 
+  // Score de cada jurado: 300 para o escolhido, 150 para o outro
   function juryScore(pick: string | null, teamId: string): number {
-    if (!pick) return 150;
+    if (!pick) return 150; // jurado não votou = neutro
     return pick === teamId ? 300 : 150;
   }
 
+  // Média dos jurados para cada equipe
   const juryAvgs: Record<string, number> = {};
   let totalJuryAvg = 0;
   for (const team of teams) {
@@ -236,9 +235,11 @@ function calculateDay1Points(prova: any, j1Pick: string | null, j2Pick: string |
     totalJuryAvg += avg;
   }
 
+  // Votos do público
   const publicVotes = getPublicVotes(provaId, scores, teams);
   const totalPublicVotes = Object.values(publicVotes).reduce((a: number, b: number) => a + b, 0);
 
+  // Calcular pontos
   let totalPoints = 0;
   const teamPoints: Record<string, number> = {};
   const teamIds = teams.map((t: any) => t.id);
@@ -252,11 +253,13 @@ function calculateDay1Points(prova: any, j1Pick: string | null, j2Pick: string |
     totalPoints += pts;
   }
 
+  // Ajustar diferença de arredondamento
   const diff = provaPoints - totalPoints;
   if (diff !== 0 && teams.length > 0) {
     teamPoints[teamIds[teamIds.length - 1]] += diff;
   }
 
+  // Determinar vencedor
   let winnerId: string | null = null;
   let maxPts = -1;
   for (const team of teams) {
@@ -267,6 +270,7 @@ function calculateDay1Points(prova: any, j1Pick: string | null, j2Pick: string |
     }
   }
 
+  // Se houver empate, usar o voto do público como desempate
   if (winnerId) {
     const tiedTeams = teams.filter((t: any) => teamPoints[t.id] === maxPts);
     if (tiedTeams.length > 1) {
@@ -278,50 +282,6 @@ function calculateDay1Points(prova: any, j1Pick: string | null, j2Pick: string |
   }
 
   return { pointsAwarded, winnerId };
-}
-
-function calculateDay2Points(prova: any, j1Pick: string | null, j2Pick: string | null, j3Pick: string | null, teams: any[], scores: any) {
-  const provaPoints = prova.points || 0;
-  const pointsAwarded: Record<string, number> = {};
-
-  // Contar votos dos jurados para cada equipe
-  const juryCounts: Record<string, number> = {};
-  for (const team of teams) {
-    juryCounts[team.id] = 0;
-  }
-
-  if (j1Pick) juryCounts[j1Pick] = (juryCounts[j1Pick] || 0) + 1;
-  if (j2Pick) juryCounts[j2Pick] = (juryCounts[j2Pick] || 0) + 1;
-  if (j3Pick) juryCounts[j3Pick] = (juryCounts[j3Pick] || 0) + 1;
-
-  // Vencedor = maioria dos jurados (2+)
-  let winnerId: string | null = null;
-  let maxCount = 0;
-  for (const team of teams) {
-    if (juryCounts[team.id] > maxCount) {
-      maxCount = juryCounts[team.id];
-      winnerId = team.id;
-    }
-  }
-
-  // Se não há maioria clara (empate 1-1-1 ou 0 votos), não decide
-  if (!winnerId || maxCount < 2) {
-    return { pointsAwarded, winnerId: null };
-  }
-
-  // 1º lugar: 100% dos pontos, 2º lugar: 50%
-  for (const team of teams) {
-    pointsAwarded[team.id] = team.id === winnerId ? provaPoints : Math.round(provaPoints * 0.5);
-  }
-
-  return { pointsAwarded, winnerId };
-}
-
-function calculateProvaPoints(prova: any, j1Pick: string | null, j2Pick: string | null, j3Pick: string | null, teams: any[], scores: any) {
-  if (prova.day === 2) {
-    return calculateDay2Points(prova, j1Pick, j2Pick, j3Pick, teams, scores);
-  }
-  return calculateDay1Points(prova, j1Pick, j2Pick, teams, scores);
 }
 
 export async function GET() {
@@ -376,7 +336,7 @@ export async function POST(request: Request) {
     if ((body.action === 'vote' || body.action === 'juryVote') && !checkRateLimit(`${ip}:${body.action}`, 2)) {
       return NextResponse.json({ error: 'Muitas requisições. Aguarde alguns segundos.' }, { status: 429 });
     }
-    const adminActions = ['updateState', 'finalizeProva', 'externalResult', 'instagramResult', 'manualWinner', 'reopenProva', 'reset', 'resetVoters'];
+    const adminActions = ['updateState', 'finalizeProva', 'externalResult', 'manualWinner', 'reopenProva', 'reset', 'resetVoters'];
     if (adminActions.includes(body.action)) {
       if (!checkOrigin(request)) {
         return NextResponse.json({ error: 'Requisição rejeitada: origem inválida.' }, { status: 403 });
@@ -460,8 +420,7 @@ export async function POST(request: Request) {
           if (juradoIdFromCookie) {
             const juradoIndex = jurados.findIndex((j: any) => j.id === juradoIdFromCookie);
             if (juradoIndex >= 0) {
-              const slots = ['j1', 'j2', 'j3'];
-              const expectedSlot = slots[juradoIndex] || 'j' + (juradoIndex + 1);
+              const expectedSlot = juradoIndex === 0 ? 'j1' : 'j2';
               if (body.jurado !== expectedSlot) {
                 return NextResponse.json({ error: 'Slot de jurado inválido.' }, { status: 403 });
               }
@@ -471,8 +430,9 @@ export async function POST(request: Request) {
           if (!fileData.scores) fileData.scores = {};
           if (!fileData.scores[pId]) fileData.scores[pId] = {};
 
+          // Set j1=1 for chosen team, j1=0 for other team
           for (const team of teams) {
-            if (!fileData.scores[pId][team.id]) fileData.scores[pId][team.id] = { publicVotes: 0, j1: 0, j2: 0, j3: 0 };
+            if (!fileData.scores[pId][team.id]) fileData.scores[pId][team.id] = { publicVotes: 0, j1: 0, j2: 0 };
             fileData.scores[pId][team.id][body.jurado] = team.id === body.teamId ? 1 : 0;
           }
           writeStateToFile(fileData);
@@ -530,26 +490,17 @@ export async function POST(request: Request) {
       const teams = fileData.teams || [];
       const scores = fileData.scores || {};
 
-      const { j1Pick, j2Pick, j3Pick } = getJuryPicks(provaId, scores, teams);
+      const { j1Pick, j2Pick } = getJuryPicks(provaId, scores, teams);
       const audienceWinner = getAudienceWinner(provaId, scores, teams);
 
-      if (!j1Pick && !j2Pick && !j3Pick) {
+      if (!j1Pick && !j2Pick) {
         return NextResponse.json({
           error: 'Nenhum jurado votou.',
           details: 'Aguardar votos dos jurados.'
         }, { status: 400 });
       }
 
-      const { pointsAwarded, winnerId } = calculateProvaPoints(prova, j1Pick, j2Pick, j3Pick, teams, scores);
-
-      if (!winnerId && prova.day === 2) {
-        const details = `Jurados não chegaram a um consenso. J1: ${j1Pick || '-'}, J2: ${j2Pick || '-'}, J3: ${j3Pick || '-'}. Definir vencedor manualmente.`;
-        return NextResponse.json({ error: 'Sem maioria entre os jurados.', details }, { status: 400 });
-      }
-
-      if (!winnerId) {
-        return NextResponse.json({ error: 'Não foi possível determinar vencedor.', details: 'Definir vencedor manualmente.' }, { status: 400 });
-      }
+      const { pointsAwarded, winnerId } = calculateProvaPoints(prova, j1Pick, j2Pick, teams, scores);
 
       provas[provaIdx] = { ...prova, finalized: true, winnerId, pointsAwarded };
       fileData.provas = provas;
@@ -559,57 +510,7 @@ export async function POST(request: Request) {
 
       appendHistorico({
         timestamp: new Date().toISOString(),
-        type: 'finalize', provaId, winnerId, pointsAwarded, j1Pick, j2Pick, j3Pick, audienceWinner,
-      });
-
-      return readJsonState();
-    }
-
-    // Ação: Instagram (views → pontos)
-    if (body.action === 'instagramResult') {
-      const fileData = readStateFromFile();
-      if (!fileData) return NextResponse.json({ error: 'Servidor não configurado.' }, { status: 500 });
-
-      const provaId = body.provaId || fileData.currentProvaId;
-      if (!provaId) return NextResponse.json({ error: 'Nenhuma prova selecionada.' }, { status: 400 });
-      if (!body.externalValues || typeof body.externalValues !== 'object') {
-        return NextResponse.json({ error: 'Informe as visualizações de cada equipe.' }, { status: 400 });
-      }
-
-      const provas = fileData.provas || [];
-      const provaIdx = provas.findIndex((p: any) => p.id === provaId);
-      if (provaIdx < 0) return NextResponse.json({ error: 'Prova não encontrada.' }, { status: 400 });
-
-      const prova = provas[provaIdx];
-      const teams = fileData.teams || [];
-      const vals = body.externalValues as Record<string, number>;
-
-      const pointsAwarded: Record<string, number> = {};
-      let maxVal = -1;
-      let winnerId: string | null = null;
-
-      for (const team of teams) {
-        const v = Math.max(0, vals[team.id] || 0);
-        pointsAwarded[team.id] = v; // pontos = visualizações
-        if (v > maxVal) { maxVal = v; winnerId = team.id; }
-      }
-
-      provas[provaIdx] = { ...prova, finalized: true, winnerId, pointsAwarded };
-      fileData.provas = provas;
-
-      if (!fileData.scores) fileData.scores = {};
-      if (!fileData.scores[provaId]) fileData.scores[provaId] = {};
-      for (const team of teams) {
-        if (!fileData.scores[provaId][team.id]) fileData.scores[provaId][team.id] = { publicVotes: 0, j1: 0, j2: 0, j3: 0 };
-        fileData.scores[provaId][team.id].externalValue = vals[team.id] || 0;
-      }
-
-      writeStateToFile(fileData);
-      saveSnapshot(fileData, fileData.provas, fileData.teams, fileData.scores);
-
-      appendHistorico({
-        timestamp: new Date().toISOString(),
-        type: 'instagramResult', provaId, winnerId, externalValues: vals, pointsAwarded,
+        type: 'finalize', provaId, winnerId, pointsAwarded, j1Pick, j2Pick, audienceWinner,
       });
 
       return readJsonState();
@@ -641,44 +542,43 @@ export async function POST(request: Request) {
 
       const vals = body.externalValues as Record<string, number>;
 
+      // Calcular total arrecadado
+      let totalVal = 0;
+      for (const team of teams) {
+        totalVal += Math.max(0, vals[team.id] || 0);
+      }
+
+      // Distribuir pontos proporcionalmente
+      if (totalVal > 0) {
+        let totalPts = 0;
+        const teamIds = teams.map((t: any) => t.id);
+        for (let i = 0; i < teamIds.length; i++) {
+          const tid = teamIds[i];
+          const rawPts = (Math.max(0, vals[tid] || 0) / totalVal) * points;
+          const rounded = i < teamIds.length - 1 ? Math.round(rawPts) : points - totalPts;
+          pointsAwarded[tid] = rounded;
+          totalPts += rounded;
+        }
+      } else {
+        // Se não há valores, dividir igualmente
+        for (const team of teams) {
+          pointsAwarded[team.id] = Math.round(points / teams.length);
+        }
+        // Ajustar arredondamento
+        const sum = Object.values(pointsAwarded).reduce((a: number, b: number) => a + b, 0);
+        if (sum !== points && teams.length > 0) {
+          pointsAwarded[teams[teams.length - 1].id] += points - sum;
+        }
+      }
+
       // Determinar vencedor (maior valor)
       let winnerId: string | null = null;
       let maxVal = -1;
       for (const team of teams) {
-        const v = Math.max(0, vals[team.id] || 0);
-        if (v > maxVal) { maxVal = v; winnerId = team.id; }
-      }
-
-      if (prova.day === 2) {
-        // Dia 2: 1º lugar 100%, 2º lugar 50%
-        for (const team of teams) {
-          pointsAwarded[team.id] = team.id === winnerId ? points : Math.round(points * 0.5);
-        }
-      } else {
-        // Dia 1: distribuição proporcional
-        let totalVal = 0;
-        for (const team of teams) {
-          totalVal += Math.max(0, vals[team.id] || 0);
-        }
-
-        if (totalVal > 0) {
-          let totalPts = 0;
-          const teamIds = teams.map((t: any) => t.id);
-          for (let i = 0; i < teamIds.length; i++) {
-            const tid = teamIds[i];
-            const rawPts = (Math.max(0, vals[tid] || 0) / totalVal) * points;
-            const rounded = i < teamIds.length - 1 ? Math.round(rawPts) : points - totalPts;
-            pointsAwarded[tid] = rounded;
-            totalPts += rounded;
-          }
-        } else {
-          for (const team of teams) {
-            pointsAwarded[team.id] = Math.round(points / teams.length);
-          }
-          const sum = Object.values(pointsAwarded).reduce((a: number, b: number) => a + b, 0);
-          if (sum !== points && teams.length > 0) {
-            pointsAwarded[teams[teams.length - 1].id] += points - sum;
-          }
+        const v = vals[team.id];
+        if (v !== undefined && v > maxVal) {
+          maxVal = v;
+          winnerId = team.id;
         }
       }
 

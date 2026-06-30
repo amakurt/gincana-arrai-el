@@ -28,7 +28,7 @@ export async function GET() {
         return {
           id: t.id, name: t.name, color: t.color,
           publicVotes: t.publicVotes || 0,
-          j1: t.j1 || 0, j2: t.j2 || 0, j3: t.j3 || 0,
+          j1: t.j1 || 0, j2: t.j2 || 0,
           pointsAwarded,
           winner: r.winnerId === t.id,
           total: pointsAwarded,

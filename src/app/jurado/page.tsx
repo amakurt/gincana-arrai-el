@@ -96,8 +96,7 @@ export default function JuradoPage() {
     if (t.length > 0 && apId) {
       const jurados = data.jurados || [];
       const juradoIndex = jurados.findIndex((j: any) => j.id === jurado.id);
-      const slots = ['j1', 'j2', 'j3'];
-      const mySlot = slots[juradoIndex] || 'j' + (juradoIndex + 1);
+      const mySlot = juradoIndex === 0 ? 'j1' : 'j2';
       const pickedTeam = t.find((team: any) => s[apId]?.[team.id]?.[mySlot] === 1);
       if (pickedTeam) {
         setSelectedTeam(pickedTeam.id);
@@ -150,8 +149,7 @@ export default function JuradoPage() {
 
     const jurados = data.jurados || [];
     const juradoIndex = jurados.findIndex((j: any) => j.id === jurado.id);
-    const slots = ['j1', 'j2', 'j3'];
-    const mySlot = slots[juradoIndex] || 'j' + (juradoIndex + 1);
+    const mySlot = juradoIndex === 0 ? 'j1' : 'j2';
     setSaving(true);
     try {
       const res = await fetch('/api/state', {

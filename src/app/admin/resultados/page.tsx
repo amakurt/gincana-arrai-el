@@ -93,7 +93,6 @@ export default function ResultadosPage() {
                       <th style={{ textAlign: "center", padding: "0.5rem 0.5rem" }}>Público</th>
                       <th style={{ textAlign: "center", padding: "0.5rem 0.5rem" }}>Júri 1</th>
                       <th style={{ textAlign: "center", padding: "0.5rem 0.5rem" }}>Júri 2</th>
-                      <th style={{ textAlign: "center", padding: "0.5rem 0.5rem" }}>Júri 3</th>
                       <th style={{ textAlign: "center", padding: "0.5rem 0.5rem", fontWeight: 900, color: "var(--text-primary)" }}>Total</th>
                     </tr>
                   </thead>
@@ -111,7 +110,6 @@ export default function ResultadosPage() {
                         <td style={{ textAlign: "center", padding: "0.7rem 0.5rem" }}>{team.publicScore}</td>
                         <td style={{ textAlign: "center", padding: "0.7rem 0.5rem" }}>{team.j1}</td>
                         <td style={{ textAlign: "center", padding: "0.7rem 0.5rem" }}>{team.j2}</td>
-                        <td style={{ textAlign: "center", padding: "0.7rem 0.5rem" }}>{team.j3 || 0}</td>
                         <td style={{ textAlign: "center", padding: "0.7rem 0.5rem", fontWeight: 900, fontSize: "1.2rem", color: "var(--text-primary)" }}>
                           {team.total}
                         </td>

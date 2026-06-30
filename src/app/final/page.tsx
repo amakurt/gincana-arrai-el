@@ -132,17 +132,14 @@ export default function FinalPage() {
                   publicVotes: s.publicVotes || 0,
                   j1pick: s.j1 === 1,
                   j2pick: s.j2 === 1,
-                  j3pick: s.j3 === 1,
                   externalValue: s.externalValue || 0
                 };
               })
               .sort((a: any, b: any) => b.pts - a.pts);
             const jury1 = data.jurados?.[0];
             const jury2 = data.jurados?.[1];
-            const jury3 = data.jurados?.[2];
             const jury1Label = data.showJuradoNames && jury1?.name ? jury1.name : 'Júri 1';
             const jury2Label = data.showJuradoNames && jury2?.name ? jury2.name : 'Júri 2';
-            const jury3Label = data.showJuradoNames && jury3?.name ? jury3.name : 'Júri 3';
             return (
               <div key={prova.id} className="final-prova-card">
                 <div className="final-prova-header">
@@ -167,7 +164,6 @@ export default function FinalPage() {
                           <th style={{ textAlign: 'center' }}>Público</th>
                           <th style={{ textAlign: 'center' }}>{jury1Label}</th>
                           <th style={{ textAlign: 'center' }}>{jury2Label}</th>
-                          <th style={{ textAlign: 'center' }}>{jury3Label}</th>
                         </>
                       )}
                       <th style={{ textAlign: 'center' }}>Pontos</th>
@@ -186,7 +182,7 @@ export default function FinalPage() {
                             {data.showExternalValues
                               ? (prova.externalUnit === 'R$'
                                 ? `R$ ${team.externalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                : (prova.instagramMode ? String(team.externalValue) + ' views' : String(team.externalValue)))
+                                : String(team.externalValue))
                               : '●●●●'
                             }
                           </td>
@@ -195,7 +191,6 @@ export default function FinalPage() {
                             <td style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>{team.publicVotes}</td>
                             <td style={{ textAlign: 'center' }}>{team.j1pick ? '✓' : '—'}</td>
                             <td style={{ textAlign: 'center' }}>{team.j2pick ? '✓' : '—'}</td>
-                            <td style={{ textAlign: 'center' }}>{team.j3pick ? '✓' : '—'}</td>
                           </>
                         )}
                         <td style={{ textAlign: 'center', fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>

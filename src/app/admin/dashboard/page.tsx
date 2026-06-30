@@ -20,10 +20,10 @@ const medalColors = ["#f59e0b", "#94a3b8", "#8b5cf6"];
   csv += '\n';
   (data.provas || []).forEach((p: any) => {
     csv += `\nProva: ${p.provaName} (${p.points} pts)\n`;
-    csv += 'Posição;Equipe;Votos Público;Júri 1;Júri 2;Júri 3;Pontos Recebidos;Vencedor\n';
+    csv += 'Posição;Equipe;Votos Público;Júri 1;Júri 2;Pontos Recebidos;Vencedor\n';
     const sorted = [...(p.teams || [])].sort((a: any, b: any) => b.pointsAwarded - a.pointsAwarded);
     sorted.forEach((t: any, i: number) => {
-      csv += `${i + 1};${t.name};${t.publicVotes};${t.j1};${t.j2};${t.j3};${t.pointsAwarded};${t.winner ? 'Sim' : 'Não'}\n`;
+      csv += `${i + 1};${t.name};${t.publicVotes};${t.j1};${t.j2};${t.pointsAwarded};${t.winner ? 'Sim' : 'Não'}\n`;
     });
   });
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -179,7 +179,6 @@ export default function DashboardPage() {
                       <span>Público: {team.publicVotes} votos</span>
                       <span>Júri 1: {team.j1 === 1 ? '✓' : '—'}</span>
                       <span>Júri 2: {team.j2 === 1 ? '✓' : '—'}</span>
-                      <span>Júri 3: {team.j3 === 1 ? '✓' : '—'}</span>
                     </div>
                   </div>
                 ))}
