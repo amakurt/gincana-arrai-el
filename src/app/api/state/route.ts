@@ -297,6 +297,7 @@ export async function GET() {
     singleVoteMode: fileData.singleVoteMode !== undefined ? fileData.singleVoteMode : true,
     showJuryScores: fileData.showJuryScores !== undefined ? fileData.showJuryScores : true,
     showJuradoNames: fileData.showJuradoNames !== undefined ? fileData.showJuradoNames : false,
+    showExternalValues: fileData.showExternalValues !== undefined ? fileData.showExternalValues : false,
     scores: fileData.scores || {},
     timerStartedAt: fileData.timerStartedAt || null,
     voterResetAt: fileData.voterResetAt || 0
@@ -694,6 +695,7 @@ export async function POST(request: Request) {
       if (body.singleVoteMode !== undefined) fileData.singleVoteMode = body.singleVoteMode;
       if (body.showJuryScores !== undefined) fileData.showJuryScores = body.showJuryScores;
       if (body.showJuradoNames !== undefined) fileData.showJuradoNames = body.showJuradoNames;
+      if (body.showExternalValues !== undefined) fileData.showExternalValues = body.showExternalValues;
       if (body.teams !== undefined) fileData.teams = body.teams;
       if (body.jurados !== undefined) fileData.jurados = hashJuradoPins(body.jurados);
       if (body.provas !== undefined) fileData.provas = body.provas;
@@ -809,6 +811,7 @@ export async function POST(request: Request) {
         singleVoteMode: true,
         showJuryScores: true,
         showJuradoNames: false,
+        showExternalValues: false,
         timerStartedAt: null,
         teams: current.teams || [],
         provas: provasReset,
@@ -850,6 +853,7 @@ function readJsonState() {
     singleVoteMode: fileData.singleVoteMode !== undefined ? fileData.singleVoteMode : true,
     showJuryScores: fileData.showJuryScores !== undefined ? fileData.showJuryScores : true,
     showJuradoNames: fileData.showJuradoNames !== undefined ? fileData.showJuradoNames : false,
+    showExternalValues: fileData.showExternalValues !== undefined ? fileData.showExternalValues : false,
     timerStartedAt: fileData.timerStartedAt || null,
     scores
   });

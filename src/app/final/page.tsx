@@ -158,7 +158,7 @@ export default function FinalPage() {
                     <tr>
                       <th>Equipe</th>
                       {isExternal ? (
-                        <th style={{ textAlign: 'center' }}>{prova.externalUnit === 'R$' ? 'Valor Arrecadado' : 'Quantidade'}</th>
+                        <th style={{ textAlign: 'center' }}>{data.showExternalValues ? (prova.externalUnit === 'R$' ? 'Valor Arrecadado' : 'Quantidade') : 'Valor Arrecadado'}</th>
                       ) : (
                         <>
                           <th style={{ textAlign: 'center' }}>Público</th>
@@ -179,9 +179,11 @@ export default function FinalPage() {
                         </td>
                         {isExternal ? (
                           <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--text-primary)' }}>
-                            {prova.externalUnit === 'R$'
-                              ? `R$ ${team.externalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                              : String(team.externalValue)
+                            {data.showExternalValues
+                              ? (prova.externalUnit === 'R$'
+                                ? `R$ ${team.externalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                : String(team.externalValue))
+                              : '●●●●'
                             }
                           </td>
                         ) : (

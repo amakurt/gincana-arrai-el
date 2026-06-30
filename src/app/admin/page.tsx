@@ -691,6 +691,29 @@ export default function AdminPage() {
               }} />
             </button>
           </div>
+
+          <div className="glass" style={{ padding: '1.2rem', marginTop: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '1rem' }}>Revelar Valores Arrecadados</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                {data.showExternalValues ? 'Valores visíveis nos relatórios' : 'Valores ocultos nos relatórios (P7 Barracas)'}
+              </div>
+            </div>
+            <button
+              onClick={() => updateState({ showExternalValues: !data.showExternalValues })}
+              style={{
+                width: 56, height: 30, borderRadius: 15, border: 'none', cursor: 'pointer',
+                background: data.showExternalValues ? '#10b981' : 'rgba(255,255,255,0.15)',
+                position: 'relative', transition: 'background 0.2s'
+              }}
+            >
+              <div style={{
+                width: 24, height: 24, borderRadius: '50%', background: 'white',
+                position: 'absolute', top: 3, left: data.showExternalValues ? 29 : 3,
+                transition: 'left 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+              }} />
+            </button>
+          </div>
         </div>
 
         {/* Cadastro de Equipes */}
