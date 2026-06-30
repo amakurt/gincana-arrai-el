@@ -17,6 +17,8 @@ export default function HistoricoPage() {
   const [provaFilter, setProvaFilter] = useState("");
 
   const provas = (stateData?.provas || []) as Array<{ id: string; name: string }>;
+  const teams = (stateData?.teams || []) as Array<{ id: string; name: string; color: string }>;
+  const teamsMap = new Map(teams.map((t: any) => [t.id, t]));
 
   const filtered = useMemo(() => {
     if (!Array.isArray(data)) return [];
@@ -125,6 +127,13 @@ export default function HistoricoPage() {
         </select>
       </div>
 
+      <div className="print-only" style={{ display: 'none', textAlign: 'center', marginBottom: '6pt', borderBottom: '0.5pt solid #999', paddingBottom: '4pt' }}>
+        <strong style={{ fontSize: '10pt' }}>INSTITUTO EDUCACIONAL LOGOS — REDENÇÃO-CE</strong><br />
+        <span style={{ fontSize: '7pt' }}>Histórico de Votações — Arrai-el 2026</span>
+        {provaFilter && <span style={{ fontSize: '6.5pt' }}> | Prova: {provas.find((p: any) => p.id === provaFilter)?.name || provaFilter}</span>}
+        <span style={{ fontSize: '6.5pt' }}> | {new Date().toLocaleString('pt-BR')}</span>
+      </div>
+
       {error && (
         <div style={{ padding: '1rem', borderRadius: '8px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <AlertTriangle size={18} /> Erro ao carregar histórico.
@@ -139,7 +148,7 @@ export default function HistoricoPage() {
         </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+          <table className="historico-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--warm-wood-border)', color: 'var(--text-secondary)' }}>
                 <th style={{ textAlign: 'left', padding: '0.6rem 0.8rem' }}>Data/Hora</th>
@@ -151,27 +160,23 @@ export default function HistoricoPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((voto: any, i: number) => (
-                <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              {filtered.map((voto: any, i: number) => {
+                const provaNome = provas.find((p: any) => p.id === voto.provaId)?.name || voto.provaId;
+                const teamId = voto.teamId || voto.pickedTeamId || '';
+                const teamNome = teamsMap.get(teamId)?.name || teamId || '—';
+                const teamCor = teamsMap.get(teamId)?.color || 'var(--text-primary)';
+                return (
+                <tr key={i} className="historico-row">
                   <td style={{ padding: '0.5rem 0.8rem', whiteSpace: 'nowrap', fontFamily: 'monospace', fontSize: '0.8rem' }}>
                     {new Date(voto.timestamp).toLocaleString('pt-BR')}
                   </td>
                   <td style={{ padding: '0.5rem 0.8rem' }}>
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '0.15rem 0.5rem',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      background: voto.type === 'jury_pick' ? 'rgba(245,158,11,0.2)' : 'rgba(59,130,246,0.2)',
-                      color: voto.type === 'jury_pick' ? '#f59e0b' : '#3b82f6'
-                    }}>
+                    <span className="historico-tag" data-type={voto.type}>
                       {voto.type === 'jury_pick' ? 'Júri' : voto.type === 'public' ? 'Público' : voto.type}
                     </span>
                   </td>
-                  <td style={{ padding: '0.5rem 0.8rem' }}>{voto.provaId}</td>
-                  <td style={{ padding: '0.5rem 0.8rem' }}>{voto.teamId || voto.pickedTeamId || '—'}</td>
+                  <td style={{ padding: '0.5rem 0.8rem', fontSize: '0.85rem' }}>{provaNome}</td>
+                  <td style={{ padding: '0.5rem 0.8rem', fontWeight: 600, color: teamCor }}>{teamNome}</td>
                   <td style={{ padding: '0.5rem 0.8rem' }}>
                     {voto.type === 'jury_pick'
                       ? (stateData?.showJuradoNames ? (voto.juradoName || voto.jurado) : 'Júri')
@@ -182,7 +187,8 @@ export default function HistoricoPage() {
                     {voto.type === 'jury_pick' ? '✓' : '✓'}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -221,12 +227,36 @@ export default function HistoricoPage() {
       `}</style>
       <style>{`
         @media print {
-          body { background: white !important; color: black !important; }
+          body { background: white !important; color: black !important; margin: 0; padding: 0; }
           .nav-btn, button, input, select, .no-print { display: none !important; }
-          table { font-size: 9pt !important; }
-          th { color: #333 !important; border-bottom: 1px solid #999 !important; }
-          td { border-bottom: 1px solid #ddd !important; }
-          h1 { color: #1a3a5c !important; }
+          .print-only { display: block !important; }
+          h1 { color: #1a3a5c !important; font-size: 14pt !important; margin: 0 0 4pt 0 !important; }
+          h1 svg { display: none !important; }
+          .historico-table { font-size: 6.5pt !important; width: 100% !important; }
+          .historico-table th { 
+            padding: 2pt 3pt !important; font-size: 6pt !important; 
+            color: #333 !important; border-bottom: 0.5pt solid #999 !important; 
+            text-transform: uppercase; letter-spacing: 0.03em;
+          }
+          .historico-table td { 
+            padding: 1.5pt 3pt !important; border-bottom: 0.3pt solid #ddd !important; 
+            line-height: 1.15 !important;
+          }
+          .historico-table td:first-child { font-size: 5.5pt !important; }
+          .historico-row { break-inside: avoid; }
+          .historico-tag { 
+            font-size: 5.5pt !important; padding: 0.5pt 3pt !important; 
+            font-weight: 700 !important; text-transform: uppercase !important;
+            background: #f0f0f0 !important; color: #555 !important; 
+            border-radius: 2pt !important;
+          }
+          .historico-tag[data-type="jury_pick"] { background: #fef3c7 !important; color: #92400e !important; }
+          .historico-tag[data-type="public"] { background: #dbeafe !important; color: #1e40af !important; }
+          [style*="flex"] { gap: 2pt !important; }
+          div[style*="max-width"] { max-width: 100% !important; padding: 6pt 8pt !important; }
+          div[style*="overflow"] { overflow: visible !important; }
+          thead { display: table-header-group; }
+          @page { margin: 8pt 10pt; size: A4 portrait; }
         }
       `}</style>
     </div>
