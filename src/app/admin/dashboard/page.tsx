@@ -105,7 +105,7 @@ export default function DashboardPage() {
                     ({team.wins} vitória{team.wins !== 1 ? 's' : ''} · {team.provasCount} prova{team.provasCount !== 1 ? 's' : ''})
                   </span>
                 </div>
-                <span style={{ fontSize: '1.4rem', fontWeight: 800 }}>{team.totalPoints} pts</span>
+                <span className="print-hide-pts" style={{ fontSize: '1.4rem', fontWeight: 800 }}>{team.totalPoints} pts</span>
               </div>
               <div style={{
                 height: '28px', background: 'rgba(255,255,255,0.08)', borderRadius: '14px',
@@ -118,7 +118,7 @@ export default function DashboardPage() {
                   borderRadius: '14px', transition: 'width 0.6s ease',
                   display: 'flex', alignItems: 'center', paddingLeft: '8px'
                 }}>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'white', mixBlendMode: 'difference' }}>
+                  <span className="print-hide-pts" style={{ fontSize: '0.7rem', fontWeight: 700, color: 'white', mixBlendMode: 'difference' }}>
                     {team.totalPoints} pts
                   </span>
                 </div>
@@ -165,7 +165,7 @@ export default function DashboardPage() {
                           <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 700 }}>✓ Vencedor</span>
                         )}
                       </div>
-                      <span style={{ fontWeight: 700 }}>{team.pointsAwarded} pts</span>
+                      <span className="print-hide-pts" style={{ fontWeight: 700 }}>{team.pointsAwarded} pts</span>
                     </div>
                     <div style={{ height: '20px', background: 'rgba(255,255,255,0.06)', borderRadius: '10px', overflow: 'hidden' }}>
                       <div style={{
@@ -223,6 +223,7 @@ export default function DashboardPage() {
           .nav-btn, button, input, select, .no-print { display: none !important; }
           .print-only { display: block !important; }
           .print-hide-votes { display: none !important; }
+          .print-hide-pts { display: none !important; }
           h1, h1 svg, h2, h2 svg { font-size: 12pt !important; color: #1a3a5c !important; margin: 0 0 4pt 0 !important; }
           h1 svg, h2 svg { display: none; }
           .glass {
