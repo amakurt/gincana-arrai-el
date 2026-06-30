@@ -3,7 +3,7 @@
 import useSWR from "swr";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { BarChart3, Trophy, ArrowLeft, Medal, TrendingUp, Download } from "lucide-react";
+import { BarChart3, Trophy, ArrowLeft, Medal, TrendingUp, Download, Printer } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -66,6 +66,7 @@ export default function DashboardPage() {
         </h1>
         <button onClick={() => mutate()} className="nav-btn"><TrendingUp size={16} /> Atualizar</button>
         <button onClick={() => exportCSV(data)} className="nav-btn"><Download size={16} /> Exportar CSV</button>
+        <button onClick={() => window.print()} className="nav-btn" style={{ background: 'var(--yellow-brazil)', color: 'var(--text-primary)', fontWeight: 700 }}><Printer size={16} /> Imprimir</button>
       </div>
 
       {error && (
@@ -125,6 +126,12 @@ export default function DashboardPage() {
             </div>
           ))
         )}
+      </div>
+
+      <div className="print-only" style={{ display: 'none', textAlign: 'center', marginBottom: '6pt', borderBottom: '0.5pt solid #999', paddingBottom: '4pt' }}>
+        <strong style={{ fontSize: '10pt' }}>INSTITUTO EDUCACIONAL LOGOS — REDENÇÃO-CE</strong><br />
+        <span style={{ fontSize: '7pt' }}>Dashboard de Resultados — Arrai-el 2026</span>
+        <span style={{ fontSize: '6.5pt' }}> | {new Date().toLocaleString('pt-BR')}</span>
       </div>
 
       {/* Por Prova */}
@@ -209,6 +216,31 @@ export default function DashboardPage() {
         }
         .nav-btn:active {
           transform: translateY(0);
+        }
+        @media print {
+          body { background: white !important; color: black !important; margin: 0; padding: 0; }
+          .nav-btn, button, input, select, .no-print { display: none !important; }
+          .print-only { display: block !important; }
+          h1, h1 svg, h2, h2 svg { font-size: 12pt !important; color: #1a3a5c !important; margin: 0 0 4pt 0 !important; }
+          h1 svg, h2 svg { display: none; }
+          .glass {
+            background: white !important; border: 0.5pt solid #ddd !important;
+            backdrop-filter: none !important; padding: 6pt 8pt !important;
+            margin-bottom: 6pt !important; break-inside: avoid;
+          }
+          .glass h3 { font-size: 8pt !important; margin: 0 0 3pt 0 !important; }
+          strong { font-size: 7pt !important; }
+          span { font-size: 6pt !important; }
+          [style*="font-size"] { font-size: 6pt !important; }
+          [style*="height: 28px"] { height: 12px !important; }
+          [style*="height: 20px"] { height: 10px !important; }
+          [style*="padding: 2rem"] { padding: 6pt !important; }
+          [style*="margin-bottom: 1.2rem"] { margin-bottom: 4pt !important; }
+          [style*="gap: 1.5rem"] { gap: 6pt !important; }
+          [style*="gap: 0.6rem"] { gap: 2pt !important; }
+          [style*="gap: 0.4rem"] { gap: 2pt !important; }
+          [style*="max-width: 1000px"] { max-width: 100% !important; padding: 6pt 8pt !important; }
+          @page { margin: 8pt 10pt; size: A4 portrait; }
         }
       `}</style>
     </div>
