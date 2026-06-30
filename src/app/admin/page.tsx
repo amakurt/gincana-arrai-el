@@ -1035,15 +1035,42 @@ export default function AdminPage() {
           </ul>
 
           <hr style={{ borderColor: 'var(--border-light)', margin: '2rem 0' }} />
-            
-          <button 
-            className="btn"
-            style={{ background: 'transparent', border: '1px solid #ef4444', color: '#ef4444' }}
-            disabled={loading}
-            onClick={resetGame}
-          >
-            <RotateCcw /> RESETAR TUDO (PERIGO)
-          </button>
+
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <button 
+              className="btn"
+              style={{ background: '#0891b2' }}
+              disabled={loading}
+              onClick={async () => {
+                if (!confirm('Iniciar novo seguimento? As provas atuais serão congeladas e os votos zerados. OS RESULTADOS DO DIA ATUAL SERÃO PRESERVADOS.')) return;
+                setLoading(true);
+                try {
+                  const res = await fetch('/api/state', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'newSegment' })
+                  });
+                  if (!res.ok) throw new Error((await res.json()).error);
+                  mutate();
+                } catch (e: any) {
+                  setError(e.message);
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            >
+              NOVO SEGUIMENTO
+            </button>
+
+            <button 
+              className="btn"
+              style={{ background: 'transparent', border: '1px solid #ef4444', color: '#ef4444' }}
+              disabled={loading}
+              onClick={resetGame}
+            >
+              <RotateCcw /> RESETAR TUDO (PERIGO)
+            </button>
+          </div>
         </div>
 
       </div>

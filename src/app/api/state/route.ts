@@ -336,7 +336,7 @@ export async function POST(request: Request) {
     if ((body.action === 'vote' || body.action === 'juryVote') && !checkRateLimit(`${ip}:${body.action}`, 2)) {
       return NextResponse.json({ error: 'Muitas requisições. Aguarde alguns segundos.' }, { status: 429 });
     }
-    const adminActions = ['updateState', 'finalizeProva', 'externalResult', 'manualWinner', 'reopenProva', 'reset', 'resetVoters'];
+    const adminActions = ['updateState', 'finalizeProva', 'externalResult', 'manualWinner', 'reopenProva', 'reset', 'resetVoters', 'newSegment'];
     if (adminActions.includes(body.action)) {
       if (!checkOrigin(request)) {
         return NextResponse.json({ error: 'Requisição rejeitada: origem inválida.' }, { status: 403 });
@@ -820,6 +820,45 @@ export async function POST(request: Request) {
       });
       writeFileSync(RESULTADOS_FILE, '[]');
       writeFileSync(HISTORICO_FILE, '');
+      VOTED_VOTERS.clear();
+      return readJsonState();
+    }
+
+    // Ação: Novo Seguimento (congela Dia 1, limpa votos, mantém resultados)
+    if (body.action === 'newSegment') {
+      const current = readStateFromFile();
+      if (!current) return NextResponse.json({ error: 'Servidor não configurado.' }, { status: 500 });
+
+      // Backup de segurança
+      try {
+        writeFileSync(path.join(process.cwd(), 'backup-seguimento.json'), JSON.stringify(current, null, 2));
+      } catch {}
+
+      // Salvar snapshot de todas as provas finalizadas
+      for (const prova of (current.provas || [])) {
+        if (prova.finalized || prova.winnerId) {
+          saveSnapshot(current, current.provas, current.teams || [], current.scores || {});
+        }
+      }
+
+      // Forçar provas não-finalizadas como finalizadas sem pontos
+      const provasFrozen = (current.provas || []).map((p: any) => {
+        if (!p.finalized) {
+          return { ...p, finalized: true, winnerId: p.winnerId || null, pointsAwarded: p.pointsAwarded || {} };
+        }
+        return p;
+      });
+
+      writeStateToFile({
+        ...current,
+        status: 'waiting',
+        viewMode: 'prova',
+        currentProvaId: '',
+        message: 'Novo seguimento!',
+        timerStartedAt: null,
+        scores: {},
+        provas: provasFrozen,
+      });
       VOTED_VOTERS.clear();
       return readJsonState();
     }
