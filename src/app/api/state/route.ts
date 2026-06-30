@@ -836,9 +836,39 @@ export async function POST(request: Request) {
 
       // Salvar snapshot de todas as provas finalizadas
       for (const prova of (current.provas || [])) {
-        if (prova.finalized || prova.winnerId) {
-          saveSnapshot(current, current.provas, current.teams || [], current.scores || {});
+        if (!prova.finalized && !prova.winnerId) continue;
+        const pScores = current.scores?.[prova.id];
+        if (!pScores) continue;
+        const teamResults = (current.teams || []).map((team: any) => {
+          const teamScore = pScores[team.id] || { publicVotes: 0, j1: 0, j2: 0 };
+          return {
+            id: team.id, name: team.name, color: team.color,
+            publicVotes: teamScore.publicVotes || 0,
+            publicScore: teamScore.publicVotes || 0,
+            j1: teamScore.j1 || 0,
+            j2: teamScore.j2 || 0,
+            total: (prova.pointsAwarded?.[team.id] || 0),
+            winnerPick: teamScore.j1 === 1 || teamScore.j2 === 1,
+          };
+        });
+        const resultados = readResultadosFile();
+        const idx = resultados.findIndex((r: any) => r.provaId === prova.id);
+        const entry = {
+          provaId: prova.id, provaName: prova.name,
+          points: prova.points || 0,
+          day: prova.day || 1,
+          finalized: true,
+          winnerId: prova.winnerId || null,
+          pointsAwarded: prova.pointsAwarded || {},
+          teams: teamResults,
+          backupDate: new Date().toISOString()
+        };
+        if (idx >= 0) {
+          resultados[idx] = entry;
+        } else {
+          resultados.push(entry);
         }
+        writeResultadosFile(resultados);
       }
 
       // Forçar provas não-finalizadas como finalizadas sem pontos

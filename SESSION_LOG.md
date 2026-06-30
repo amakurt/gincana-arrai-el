@@ -388,3 +388,15 @@ ssh root@<IP> "systemctl start cloudflared"
 
 ### Key Files Changed
 - `gincana-state.json` — +2 provas (p9 Teatro, p10 Instagram)
+
+## Session 2026-06-30 (Parte 3) — Novo Seguimento + Deploy
+
+### Mudanças
+- **Novo Seguimento**: Ação `newSegment` na API — congela todas as provas atuais (preservando `pointsAwarded`), zera votos ao vivo (`scores`), mantém equipes, jurados e resultados do Dia 1 intactos. Cria `backup-seguimento.json` automaticamente.
+- **Botão no admin**: "NOVO SEGUIMENTO" ao lado do "RESETAR TUDO" com confirmação.
+- **Instagram**: Mantido como `externalResult` — admin insere valor manualmente.
+- **Deploy**: Hetzner + Oracle atualizados com git pull, build e PM2 restart.
+
+### Key Files Changed
+- `src/app/api/state/route.ts` — ação `newSegment`
+- `src/app/admin/page.tsx` — botão Novo Seguimento
