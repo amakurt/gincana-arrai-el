@@ -354,3 +354,27 @@ ssh root@<IP> "systemctl start cloudflared"
 - Pontuação proporcional (70% júri + 30% público)
 - Rate limiting, CSRF, Turnstile CAPTCHA ativos
 - HA failover entre Hetzner (principal) e Oracle (fallback)
+
+## Session 2026-06-30
+
+### Mudanças
+
+- **Ocultar nomes dos jurados** (global): Adicionado campo `showJuradoNames` no estado (default `false`). Toggle no admin controla visibilidade em todas as páginas.
+  - `final/page.tsx`: Colunas "Júri 1"/"Júri 2" em vez de nomes reais
+  - `admin/historico/page.tsx`: "Votante" mostra "Júri" em vez do nome
+  - `admin/page.tsx`: Card Jurados mostra "Jurado 1"/"Jurado 2" quando oculto; botão toggle no cabeçalho do card
+
+- **Ocultar valores arrecadados** (P7 Barracas): Adicionado `showExternalValues` (default `false`). Toggle no admin. Valores aparecem como `●●●●` no `/final` quando oculto.
+
+- **Deploy Hetzner**: Corrigido merge conflict que deletou `resultados.json` — recuperado do Oracle e regerado do `gincana-state.json`.
+
+- **Impressão compacta**:
+  - `/admin/historico`: Fonte 6.5pt, padding reduzido, nomes reais de prova/equipe, cabeçalho de impressão, cores preservadas
+  - `/admin/dashboard`: Botão Imprimir adicionado, `print-color-adjust` para cores nas barras, `print-hide-pts` oculta números de pontos na impressão (só barras visíveis)
+
+### Key Files Changed
+- `src/app/api/state/route.ts` — `showJuradoNames`, `showExternalValues` fields
+- `src/app/admin/page.tsx` — toggles + jurados card hide
+- `src/app/final/page.tsx` — hide jurado names + external values
+- `src/app/admin/historico/page.tsx` — compact print, hide jurado names
+- `src/app/admin/dashboard/page.tsx` — print button + compact styles + hide pts
