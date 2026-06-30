@@ -1062,6 +1062,31 @@ export default function AdminPage() {
               NOVO SEGUIMENTO
             </button>
 
+            <button
+              className="btn"
+              style={{ background: '#7c3aed' }}
+              disabled={loading}
+              onClick={async () => {
+                if (!confirm('Duplicar provas do Dia 1 para o Dia 2? As novas provas aparecerão como disponíveis.')) return;
+                setLoading(true);
+                try {
+                  const res = await fetch('/api/state', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'duplicateForDay2' })
+                  });
+                  if (!res.ok) throw new Error((await res.json()).error);
+                  mutate();
+                } catch (e: any) {
+                  setError(e.message);
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            >
+              DUPLICAR PROVAS DIA 1 → DIA 2
+            </button>
+
             <button 
               className="btn"
               style={{ background: 'transparent', border: '1px solid #ef4444', color: '#ef4444' }}

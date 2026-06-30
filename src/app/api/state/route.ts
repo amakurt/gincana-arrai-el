@@ -336,7 +336,7 @@ export async function POST(request: Request) {
     if ((body.action === 'vote' || body.action === 'juryVote') && !checkRateLimit(`${ip}:${body.action}`, 2)) {
       return NextResponse.json({ error: 'Muitas requisições. Aguarde alguns segundos.' }, { status: 429 });
     }
-    const adminActions = ['updateState', 'finalizeProva', 'externalResult', 'manualWinner', 'reopenProva', 'reset', 'resetVoters', 'newSegment'];
+    const adminActions = ['updateState', 'finalizeProva', 'externalResult', 'manualWinner', 'reopenProva', 'reset', 'resetVoters', 'newSegment', 'duplicateForDay2'];
     if (adminActions.includes(body.action)) {
       if (!checkOrigin(request)) {
         return NextResponse.json({ error: 'Requisição rejeitada: origem inválida.' }, { status: 403 });
@@ -882,6 +882,66 @@ export async function POST(request: Request) {
         provas: current.provas,
       });
       VOTED_VOTERS.clear();
+      return readJsonState();
+    }
+
+    // Ação: Duplicar provas do Dia 1 para o Dia 2
+    if (body.action === 'duplicateForDay2') {
+      const current = readStateFromFile();
+      if (!current) return NextResponse.json({ error: 'Servidor não configurado.' }, { status: 500 });
+
+      const day1List = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
+      const nameMap: Record<string, string> = {
+        p1: '1ª Apresentação Mascote do Time',
+        p2: '2ª Grito de Guerra',
+        p3: '3ª Rei e Rainha do Time',
+        p4: '4ª Cante e Encante',
+        p5: '5ª Dança Típica',
+        p6: '6ª Ornamentação dos Corredores',
+        p7: '7ª Barracas (Maior Arrecadação)',
+        p8: '8ª Venda das Rifas',
+      };
+
+      const cloneById = (id: string) => {
+        const original = (current.provas || []).find((p: any) => p.id === id);
+        if (!original) return null;
+        return { ...original, finalized: false, winnerId: null, pointsAwarded: {}, juryVotes: {}, day: 2 };
+      };
+
+      const day2Order = [
+        { id: 'p11', name: '1ª Apresentação Mascote do Time', from: 'p1' },
+        { id: 'p12', name: '2ª Grito de Guerra', from: 'p2' },
+        { id: 'p13', name: '3ª Rei e Rainha do Time', from: 'p3' },
+        { id: 'p14', name: '4ª Cante e Encante', from: 'p4' },
+        { id: 'p15', name: '5ª Dança Típica', from: 'p5' },
+        { id: 'p9',  name: '6ª Teatro', from: 'p9' },
+        { id: 'p16', name: '7ª Ornamentação dos Corredores', from: 'p6' },
+        { id: 'p17', name: '8ª Barracas (Maior Arrecadação)', from: 'p7' },
+        { id: 'p18', name: '9ª Venda das Rifas', from: 'p8' },
+        { id: 'p10', name: '10ª Instagram', from: 'p10' },
+      ];
+
+      const allProvas = [...(current.provas || [])];
+      let updatedNames: Record<string, string> = {};
+
+      for (const entry of day2Order) {
+        const existingIdx = allProvas.findIndex((p: any) => p.id === entry.id);
+        if (existingIdx >= 0) {
+          // Atualizar nome e garantia de finalized false
+          allProvas[existingIdx] = { ...allProvas[existingIdx], name: entry.name, finalized: false, day: 2 };
+        } else {
+          // Clonar do Dia 1
+          const source = allProvas.find((p: any) => p.id === entry.from);
+          if (source) {
+            allProvas.push({ ...source, id: entry.id, name: entry.name, finalized: false, winnerId: null, pointsAwarded: {}, juryVotes: {}, day: 2 });
+          }
+        }
+      }
+
+      writeStateToFile({
+        ...current,
+        provas: allProvas,
+      });
       return readJsonState();
     }
 
