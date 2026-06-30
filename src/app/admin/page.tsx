@@ -966,73 +966,96 @@ export default function AdminPage() {
             </button>
           </div>
 
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {(data.provas || []).map((p: any) => (
-              <li key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-card)', borderRadius: '8px' }}>
-                {editingProva === p.id ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, flexWrap: 'wrap' }}>
-                    <input
-                      type="text"
-                      value={editProvaName}
-                      onChange={(e) => setEditProvaName(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && saveEditProva(p.id)}
-                      style={{ flex: '1 1 120px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.95rem' }}
-                      autoFocus
-                    />
-                    <input
-                      type="number"
-                      value={editProvaTimer}
-                      onChange={(e) => setEditProvaTimer(Number(e.target.value))}
-                      min={0}
-                      style={{ width: '60px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.85rem' }}
-                      placeholder="seg"
-                    />
-                    <input
-                      type="number"
-                      value={editProvaPoints}
-                      onChange={(e) => setEditProvaPoints(Number(e.target.value))}
-                      min={0}
-                      style={{ width: '60px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.85rem' }}
-                      placeholder="pts"
-                    />
-                    <button onClick={() => saveEditProva(p.id)} style={{ background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                      <Save size={18} />
-                    </button>
-                    <button onClick={cancelEditProva} style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                      <X size={18} />
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
-                      <span>{p.name}</span>
-                      {p.timer > 0 && <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}><Clock size={12} /> {p.timer}s</span>}
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--blue-brazil)', background: 'rgba(37, 99, 235, 0.1)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>{p.points || 300}pts</span>
-                      {p.finalized && <span style={{ fontSize: '0.75rem', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✓ Finalizada</span>}
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.3rem', flexShrink: 0 }}>
-                      <button
-                        onClick={() => startEditProva(p)}
-                        disabled={loading}
-                        style={{ background: 'transparent', color: '#f59e0b', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1, display: 'flex', alignItems: 'center' }}
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      {!p.finalized && (
-                        <button
-                          onClick={() => updateState({ provas: data.provas.filter((prova: any) => prova.id !== p.id) })}
-                          disabled={loading}
-                          style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}
-                        >
-                          Remover
-                        </button>
+          {(() => {
+            const provas = data.provas || [];
+            const day1 = provas.filter((p: any) => p.finalized && (p.day === 1 || !p.day));
+            const day2 = provas.filter((p: any) => !day1.includes(p));
+            return (
+              <>
+                <h4 style={{ margin: '1rem 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  🏆 Dia 1 — Finalizadas
+                </h4>
+                <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {day1.map((p: any) => (
+                    <li key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-card)', borderRadius: '8px', opacity: 0.6 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                        <span>{p.name}</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--blue-brazil)', background: 'rgba(37, 99, 235, 0.1)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>{p.points || 300}pts</span>
+                        <span style={{ fontSize: '0.75rem', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✓ Finalizada</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <h4 style={{ margin: '1rem 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  🎯 Dia 2 — Disponíveis
+                </h4>
+                <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {day2.map((p: any) => (
+                    <li key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-card)', borderRadius: '8px' }}>
+                      {editingProva === p.id ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, flexWrap: 'wrap' }}>
+                          <input
+                            type="text"
+                            value={editProvaName}
+                            onChange={(e) => setEditProvaName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && saveEditProva(p.id)}
+                            style={{ flex: '1 1 120px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.95rem' }}
+                            autoFocus
+                          />
+                          <input
+                            type="number"
+                            value={editProvaTimer}
+                            onChange={(e) => setEditProvaTimer(Number(e.target.value))}
+                            min={0}
+                            style={{ width: '60px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.85rem' }}
+                            placeholder="seg"
+                          />
+                          <input
+                            type="number"
+                            value={editProvaPoints}
+                            onChange={(e) => setEditProvaPoints(Number(e.target.value))}
+                            min={0}
+                            style={{ width: '60px', padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.5)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontSize: '0.85rem' }}
+                            placeholder="pts"
+                          />
+                          <button onClick={() => saveEditProva(p.id)} style={{ background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                            <Save size={18} />
+                          </button>
+                          <button onClick={cancelEditProva} style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                            <X size={18} />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                            <span>{p.name}</span>
+                            {p.timer > 0 && <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}><Clock size={12} /> {p.timer}s</span>}
+                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--blue-brazil)', background: 'rgba(37, 99, 235, 0.1)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>{p.points || 300}pts</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.3rem', flexShrink: 0 }}>
+                            <button
+                              onClick={() => startEditProva(p)}
+                              disabled={loading}
+                              style={{ background: 'transparent', color: '#f59e0b', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1, display: 'flex', alignItems: 'center' }}
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => updateState({ provas: data.provas.filter((prova: any) => prova.id !== p.id) })}
+                              disabled={loading}
+                              style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}
+                            >
+                              Remover
+                            </button>
+                          </div>
+                        </>
                       )}
-                    </div>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            );
+          })()}
 
           <hr style={{ borderColor: 'var(--border-light)', margin: '2rem 0' }} />
 
