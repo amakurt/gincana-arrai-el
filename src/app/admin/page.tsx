@@ -782,7 +782,19 @@ export default function AdminPage() {
 
         {/* Cadastro de Jurados */}
         <div className="glass" style={{ padding: '2rem' }}>
-          <h2 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ShieldAlert /> Jurados</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ShieldAlert /> Jurados</h2>
+            <button
+              onClick={() => updateState({ showJuradoNames: !data.showJuradoNames })}
+              title={data.showJuradoNames ? 'Ocultar nomes' : 'Revelar nomes'}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem',
+                color: data.showJuradoNames ? '#10b981' : 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600
+              }}
+            >
+              {data.showJuradoNames ? '🔓 Nomes visíveis' : '🔒 Nomes ocultos'}
+            </button>
+          </div>
 
           <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
             <input
@@ -845,7 +857,7 @@ export default function AdminPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                       <ShieldAlert size={18} style={{ color: 'var(--yellow-brazil)', opacity: 0.6 }} />
                       <div>
-                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{j.name}</div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{data.showJuradoNames ? j.name : `Jurado ${data.jurados.indexOf(j) + 1}`}</div>
                         {j.pin && (
                           <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
                             PIN: {'●'.repeat(4)}
