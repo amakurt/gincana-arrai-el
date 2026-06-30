@@ -10,6 +10,9 @@ export async function GET() {
     const state = existsSync(STATE_FILE) ? JSON.parse(readFileSync(STATE_FILE, 'utf-8')) : null;
     const resultados = existsSync(RESULTADOS_FILE) ? JSON.parse(readFileSync(RESULTADOS_FILE, 'utf-8')) : [];
 
+    // Mostrar apenas resultados do Dia 2
+    const day2Results = (resultados || []).filter((r: any) => r.day === 2);
+
     const teams = state?.teams || [];
 
     const teamTotals: Record<string, { name: string; color: string; totalPoints: number; provasCount: number; wins: number }> = {};
@@ -17,7 +20,7 @@ export async function GET() {
       teamTotals[t.id] = { name: t.name, color: t.color, totalPoints: 0, provasCount: 0, wins: 0 };
     }
 
-    const provasData = resultados.map((r: any) => {
+    const provasData = day2Results.map((r: any) => {
       const provaTeams = (r.teams || []).map((t: any) => {
         const pointsAwarded = r.pointsAwarded?.[t.id] || 0;
         if (teamTotals[t.id]) {
