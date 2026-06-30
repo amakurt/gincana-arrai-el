@@ -175,7 +175,7 @@ export default function DashboardPage() {
                         borderRadius: '10px', transition: 'width 0.4s ease'
                       }} />
                     </div>
-                    <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                    <div className="print-hide-votes" style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
                       <span>Público: {team.publicVotes} votos</span>
                       <span>Júri 1: {team.j1 === 1 ? '✓' : '—'}</span>
                       <span>Júri 2: {team.j2 === 1 ? '✓' : '—'}</span>
@@ -222,6 +222,7 @@ export default function DashboardPage() {
           body { background: white !important; color: black !important; margin: 0; padding: 0; }
           .nav-btn, button, input, select, .no-print { display: none !important; }
           .print-only { display: block !important; }
+          .print-hide-votes { display: none !important; }
           h1, h1 svg, h2, h2 svg { font-size: 12pt !important; color: #1a3a5c !important; margin: 0 0 4pt 0 !important; }
           h1 svg, h2 svg { display: none; }
           .glass {
