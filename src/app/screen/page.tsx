@@ -56,15 +56,17 @@ export default function ScreenPage() {
   // Determine jury picks for current active prova
   const getJuryPicks = (provaId: string) => {
     const pScores = scores[provaId];
-    if (!pScores) return { j1Pick: null, j2Pick: null };
+    if (!pScores) return { j1Pick: null, j2Pick: null, j3Pick: null };
     let j1Pick: string | null = null;
     let j2Pick: string | null = null;
+    let j3Pick: string | null = null;
     for (const team of teams) {
       const s = pScores[team.id] || {};
       if (s.j1 === 1) j1Pick = team.id;
       if (s.j2 === 1) j2Pick = team.id;
+      if (s.j3 === 1) j3Pick = team.id;
     }
-    return { j1Pick, j2Pick };
+    return { j1Pick, j2Pick, j3Pick };
   };
 
   // Calcular pontos das equipes
@@ -73,6 +75,7 @@ export default function ScreenPage() {
     let publicVotes = 0;
     let j1Pick = false;
     let j2Pick = false;
+    let j3Pick = false;
 
     if (isGeral) {
       provas.forEach((prova: any) => {
@@ -91,10 +94,11 @@ export default function ScreenPage() {
         publicVotes = teamScore.publicVotes || 0;
         if (teamScore.j1 === 1) j1Pick = true;
         if (teamScore.j2 === 1) j2Pick = true;
+        if (teamScore.j3 === 1) j3Pick = true;
       }
     }
 
-    return { ...team, totalPoints, publicVotes, j1Pick, j2Pick };
+    return { ...team, totalPoints, publicVotes, j1Pick, j2Pick, j3Pick };
   });
 
   calculatedTeams = calculatedTeams.sort((a: any, b: any) => b.totalPoints - a.totalPoints);
@@ -140,7 +144,7 @@ export default function ScreenPage() {
           const maxScore = isGeral ? Math.max(maxTotalPoints, 10) : (activeProva?.finalized ? maxTotalPoints : Math.max(maxTotalPoints, 10));
           const percentage = maxScore > 0 ? (team.totalPoints / maxScore) * 100 : 0;
 
-          const juryPicks = !isGeral && activeProva ? getJuryPicks(activeProva.id) : { j1Pick: null, j2Pick: null };
+          const juryPicks = !isGeral && activeProva ? getJuryPicks(activeProva.id) : { j1Pick: null, j2Pick: null, j3Pick: null };
           
           return (
             <div key={team.id} className="glass screen-bar-padding" style={{ display: 'flex', alignItems: 'center', gap: '2.5rem', padding: '1.2rem 2.5rem' }}>
@@ -174,6 +178,7 @@ export default function ScreenPage() {
                       <>
                         <span>{jurados[0]?.name || 'Jurado 1'}: {juryPicks.j1Pick === team.id ? '✓' : '—'}</span>
                         <span>{jurados[1]?.name || 'Jurado 2'}: {juryPicks.j2Pick === team.id ? '✓' : '—'}</span>
+                        <span>{jurados[2]?.name || 'Jurado 3'}: {juryPicks.j3Pick === team.id ? '✓' : '—'}</span>
                       </>
                     )}
                   </div>

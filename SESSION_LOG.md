@@ -378,3 +378,48 @@ ssh root@<IP> "systemctl start cloudflared"
 - `src/app/final/page.tsx` — hide jurado names + external values
 - `src/app/admin/historico/page.tsx` — compact print, hide jurado names
 - `src/app/admin/dashboard/page.tsx` — print button + compact styles + hide pts
+
+## Session 2026-06-30 (Parte 2) — Preparação para o Dia 2 🎪
+
+### Mudanças
+
+- **Dia 2 configurado**: 10 novas provas (p9-p18) adicionadas ao `gincana-state.json` sem apagar dados do Dia 1. Tema: "ARRAI-EL SHOW DE BOLA!".
+
+- **3º jurado**: Adicionado j3 em todas as camadas — scores, jury picks, slots, telão, admin, dashboard, resultados, final. Jurado page mapeia index 0→j1, 1→j2, 2→j3.
+
+- **Pontuação Dia 2**: Reformulado `calculateProvaPoints` para ser *day-aware*:
+  - **Dia 1** (proporcional): 70% júri + 30% público (preservado)
+  - **Dia 2** (100%/50%): 3 jurados, maioria (2+) decide o vencedor. 1º lugar leva 100% dos pontos, 2º lugar 50%. Sem empates possíveis com 3 jurados.
+
+- **Regra de desempate**: Se jurados não chegarem a consenso (<2 votos para o mesmo time), admin é solicitado a definir vencedor manualmente.
+
+- **Instagram (P15)**: Nova ação `instagramResult` — admin insere visualizações por equipe, pontos = visualizações diretamente. Exibido como "views" na página final.
+
+- **externalResult Dia 2**: Barracas (P17) e Rifas (P18) agora usam 100%/50% em vez de distribuição proporcional do Dia 1.
+
+### Provas do Dia 2
+
+| ID | Nome | Pontos | Timer | Tipo |
+|----|------|--------|-------|------|
+| p9 | 1ª Apresentação Mascote do Time | 300 | 300s | Júri |
+| p10 | 2ª Grito de Guerra | 300 | 300s | Júri |
+| p11 | 3ª Rei e Rainha do Time | 300 | 300s | Júri |
+| p12 | 4ª Cante e Encante | 300 | 300s | Júri |
+| p13 | 5ª Dança Típica | 300 | 480s | Júri |
+| p14 | 6ª Teatro | 300 | 480s | Júri |
+| p15 | 7ª Instagram | views | — | Instagram (external) |
+| p16 | 8ª Ornamentação dos Corredores | 300 | — | Júri |
+| p17 | 9ª Barracas | 300 | — | External (R$) |
+| p18 | 10ª Venda das Rifas | 600 | — | External (unidades) |
+
+### Key Files Changed
+- `gincana-state.json` — +10 provas Dia 2, +j3 jurado, novo tema
+- `src/app/api/state/route.ts` — j3 everywhere, Day 1/2 scoring split, `instagramResult` action, externalResult day-aware
+- `src/app/api/dashboard/route.ts` — j3 no CSV e display
+- `src/app/admin/page.tsx` — Instagram UI, 3 jurados, manual winner com 3 slots
+- `src/app/jurado/page.tsx` — mapeamento dinâmico j1/j2/j3 por índice
+- `src/app/final/page.tsx` — coluna Júri 3, Instagram externalValue display
+- `src/app/screen/page.tsx` — j3Pick display na barra
+- `src/app/admin/dashboard/page.tsx` — j3 no CSV + exibição
+- `src/app/admin/resultados/page.tsx` — coluna Júri 3
+- `AGENTS.md`, `SESSION_LOG.md` — logs
