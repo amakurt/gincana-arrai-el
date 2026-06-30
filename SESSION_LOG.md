@@ -337,3 +337,20 @@ ssh root@<IP> "systemctl start cloudflared"
 
 ### Mudanças
 - **P8 Rifas agora em unidades** (`gincana-state.json`, `admin/page.tsx`, `final/page.tsx`): Adicionado campo `externalUnit` nas provas (`"R$"` para P7, `"unidades"` para P8). Admin mostra placeholder/label apropriados. Final page exibe como R$ ou inteiro conforme a unidade.
+
+## Session 2026-06-29 (Parte 6) — 1º Dia da Gincana ✅
+
+### Mudanças
+- **QR Code da votação** (`public/qrcode-vote.png`): Gerado para `https://institutoeducacionallogos.online/vote` com as cores do tema (azul marinho).
+
+### Deploy
+- **Hetzner** e **Oracle** atualizados com `git pull` + `npm run build` + `pm2 restart`.
+- JSON dos servidores corrigido com `externalUnit` via SSH.
+
+### Status Final do 1º Dia
+- 8 provas configuradas (P7 Barracas R$, P8 Rifas unidades)
+- 2 equipes (VERDE/AMARELO)
+- 2 jurados
+- Pontuação proporcional (70% júri + 30% público)
+- Rate limiting, CSRF, Turnstile CAPTCHA ativos
+- HA failover entre Hetzner (principal) e Oracle (fallback)
