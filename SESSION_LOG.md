@@ -378,3 +378,13 @@ ssh root@<IP> "systemctl start cloudflared"
 - `src/app/final/page.tsx` — hide jurado names + external values
 - `src/app/admin/historico/page.tsx` — compact print, hide jurado names
 - `src/app/admin/dashboard/page.tsx` — print button + compact styles + hide pts
+
+## Session 2026-06-30 (Parte 2) — Preparação para o Dia 2
+
+### Mudanças
+- **Adicionadas 2 provas** ao `gincana-state.json`: Teatro (p9, 300pts, 480s timer) e Instagram (p10, externalResult, visualizações).
+- **Sistema inalterado**: 2 jurados, pontuação proporcional (70% júri + 30% público), mesmo fluxo do Dia 1.
+- **Instagram**: Adicionado como `externalResult` (admin insere valores, pontuação proporcional). Sistema de pontuação ainda indefinido.
+
+### Key Files Changed
+- `gincana-state.json` — +2 provas (p9 Teatro, p10 Instagram)
