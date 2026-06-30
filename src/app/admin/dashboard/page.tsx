@@ -218,6 +218,7 @@ export default function DashboardPage() {
           transform: translateY(0);
         }
         @media print {
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           body { background: white !important; color: black !important; margin: 0; padding: 0; }
           .nav-btn, button, input, select, .no-print { display: none !important; }
           .print-only { display: block !important; }
