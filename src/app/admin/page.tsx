@@ -458,7 +458,21 @@ export default function AdminPage() {
               style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontWeight: 600, colorScheme: 'dark' }}
             >
               <option value="">Selecione uma prova...</option>
-              {(data.provas || []).map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              {(() => {
+                const provas = data.provas || [];
+                const day1 = provas.filter((p: any) => p.finalized && (p.day === 1 || !p.day));
+                const day2 = provas.filter((p: any) => !day1.includes(p));
+                return (
+                  <>
+                    <optgroup label="── Dia 1 (Finalizadas) ──">
+                      {day1.map((p: any) => <option key={p.id} value={p.id} disabled>{p.name}</option>)}
+                    </optgroup>
+                    <optgroup label="── Dia 2 ──">
+                      {day2.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </optgroup>
+                  </>
+                );
+              })()}
             </select>
           </div>
 
