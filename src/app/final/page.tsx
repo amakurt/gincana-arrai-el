@@ -15,7 +15,7 @@ export default function FinalPage() {
   );
 
   const teams = data.teams || [];
-  const provas = data.provas || [];
+  const provas = (data.provas || []).filter((p: any) => !(p.finalized && (p.day === 1 || p.day === undefined)));
   const scores = data.scores || {};
   const finalizedProvas = provas.filter((p: any) => p.finalized);
   const allFinalized = provas.length > 0 && provas.every((p: any) => p.finalized);

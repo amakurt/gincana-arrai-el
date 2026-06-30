@@ -226,7 +226,7 @@ export default function JuradoPage() {
 
   const teams = data.teams || [];
   const scores = data.scores || {};
-  const provas = data.provas || [];
+  const provas = (data.provas || []).filter((p: any) => !(p.finalized && (p.day === 1 || p.day === undefined)));
   const activeProva = provas.find((p: any) => p.id === data.currentProvaId);
 
   if (!pinVerified) {

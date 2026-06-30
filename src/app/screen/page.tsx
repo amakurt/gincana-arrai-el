@@ -45,7 +45,7 @@ export default function ScreenPage() {
   }
 
   const teams = data.teams || [];
-  const provas = data.provas || [];
+  const provas = (data.provas || []).filter((p: any) => !(p.finalized && (p.day === 1 || p.day === undefined)));
   const scores = data.scores || {};
   const jurados = data.jurados || [];
 
