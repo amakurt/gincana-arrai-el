@@ -23,6 +23,7 @@ export default function AdminPage() {
   const [newProvaPoints, setNewProvaPoints] = useState(300);
   const [newProvaExternal, setNewProvaExternal] = useState(false);
   const [newProvaWinnerTakesAll, setNewProvaWinnerTakesAll] = useState(false);
+  const [newProvaPointsAsValue, setNewProvaPointsAsValue] = useState(false);
   const [editingTeam, setEditingTeam] = useState<string | null>(null);
   const [editingProva, setEditingProva] = useState<string | null>(null);
   const [editTeamName, setEditTeamName] = useState('');
@@ -31,6 +32,7 @@ export default function AdminPage() {
   const [editProvaTimer, setEditProvaTimer] = useState(0);
   const [editProvaPoints, setEditProvaPoints] = useState(300);
   const [editProvaWinnerTakesAll, setEditProvaWinnerTakesAll] = useState(false);
+  const [editProvaPointsAsValue, setEditProvaPointsAsValue] = useState(false);
   const [finalizeLoading, setFinalizeLoading] = useState(false);
   const [showManualWinner, setShowManualWinner] = useState(false);
   const [finalizeError, setFinalizeError] = useState('');
@@ -228,12 +230,13 @@ export default function AdminPage() {
     setEditProvaTimer(prova.timer || 0);
     setEditProvaPoints(prova.points || 300);
     setEditProvaWinnerTakesAll(prova.winnerTakesAll || false);
+    setEditProvaPointsAsValue(prova.pointsAsValue || false);
   };
 
   const saveEditProva = (provaId: string) => {
     if (!editProvaName) return;
     const updated = data.provas.map((p: any) =>
-      p.id === provaId ? { ...p, name: editProvaName, timer: editProvaTimer || 0, points: editProvaPoints, winnerTakesAll: p.externalResult ? editProvaWinnerTakesAll : false } : p
+      p.id === provaId ? { ...p, name: editProvaName, timer: editProvaTimer || 0, points: editProvaPoints, winnerTakesAll: p.externalResult ? editProvaWinnerTakesAll : false, pointsAsValue: p.externalResult ? editProvaPointsAsValue : false } : p
     );
     updateState({ provas: updated });
     setEditingProva(null);
@@ -971,20 +974,27 @@ export default function AdminPage() {
               s/ voto
             </label>
             {newProvaExternal && (
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
-                <input type="checkbox" checked={newProvaWinnerTakesAll} onChange={(e) => setNewProvaWinnerTakesAll(e.target.checked)} />
-                vencedor leva tudo
-              </label>
+              <>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={newProvaWinnerTakesAll} onChange={(e) => setNewProvaWinnerTakesAll(e.target.checked)} />
+                  vencedor leva tudo
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={newProvaPointsAsValue} onChange={(e) => setNewProvaPointsAsValue(e.target.checked)} />
+                  pontos = valor
+                </label>
+              </>
             )}
             <button 
               onClick={() => {
                 if(newProvaName) {
-                  updateState({ provas: [...(data.provas || []), { id: 'p'+Date.now(), name: newProvaName, timer: newProvaTimer || 0, points: newProvaPoints, externalResult: newProvaExternal, winnerTakesAll: newProvaExternal ? newProvaWinnerTakesAll : false, day: 1, finalized: false }] });
+                  updateState({ provas: [...(data.provas || []), { id: 'p'+Date.now(), name: newProvaName, timer: newProvaTimer || 0, points: newProvaPoints, externalResult: newProvaExternal, winnerTakesAll: newProvaExternal ? newProvaWinnerTakesAll : false, pointsAsValue: newProvaExternal ? newProvaPointsAsValue : false, day: 1, finalized: false }] });
                   setNewProvaName('');
                   setNewProvaTimer(0);
                   setNewProvaPoints(300);
                   setNewProvaExternal(false);
                   setNewProvaWinnerTakesAll(false);
+                  setNewProvaPointsAsValue(false);
                 }
               }}
               disabled={loading}
@@ -1052,10 +1062,16 @@ export default function AdminPage() {
                             placeholder="pts"
                           />
                           {p.externalResult && (
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
-                              <input type="checkbox" checked={editProvaWinnerTakesAll} onChange={(e) => setEditProvaWinnerTakesAll(e.target.checked)} />
-                              vencedor leva tudo
-                            </label>
+                            <>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                                <input type="checkbox" checked={editProvaWinnerTakesAll} onChange={(e) => setEditProvaWinnerTakesAll(e.target.checked)} />
+                                vencedor leva tudo
+                              </label>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                                <input type="checkbox" checked={editProvaPointsAsValue} onChange={(e) => setEditProvaPointsAsValue(e.target.checked)} />
+                                pontos = valor
+                              </label>
+                            </>
                           )}
                           <button onClick={() => saveEditProva(p.id)} style={{ background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                             <Save size={18} />

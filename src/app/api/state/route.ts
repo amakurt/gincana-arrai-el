@@ -553,20 +553,24 @@ export async function POST(request: Request) {
             winnerTeamId = team.id;
           }
         }
-        const tiedTeams = teams.filter((t: any) => Math.max(0, vals[t.id] || 0) === maxVal && maxVal >= 0);
-        if (tiedTeams.length > 1 && maxVal > 0) {
-          // Empate: dividir igualmente
-          const splitPts = Math.round(points / tiedTeams.length);
-          for (const team of tiedTeams) {
-            pointsAwarded[team.id] = splitPts;
+
+        if (prova.pointsAsValue && winnerTeamId && maxVal > 0) {
+          // Pontos = valor do vencedor (Instagram)
+          pointsAwarded[winnerTeamId] = maxVal;
+        } else {
+          const tiedTeams = teams.filter((t: any) => Math.max(0, vals[t.id] || 0) === maxVal && maxVal >= 0);
+          if (tiedTeams.length > 1 && maxVal > 0) {
+            const splitPts = Math.round(points / tiedTeams.length);
+            for (const team of tiedTeams) {
+              pointsAwarded[team.id] = splitPts;
+            }
+            const sum = Object.values(pointsAwarded).reduce((a: number, b: number) => a + b, 0);
+            if (sum !== points && tiedTeams.length > 0) {
+              pointsAwarded[tiedTeams[tiedTeams.length - 1].id] += points - sum;
+            }
+          } else if (winnerTeamId && maxVal > 0) {
+            pointsAwarded[winnerTeamId] = points;
           }
-          const sum = Object.values(pointsAwarded).reduce((a: number, b: number) => a + b, 0);
-          if (sum !== points && tiedTeams.length > 0) {
-            pointsAwarded[tiedTeams[tiedTeams.length - 1].id] += points - sum;
-          }
-        } else if (winnerTeamId && maxVal > 0) {
-          // Vencedor leva tudo
-          pointsAwarded[winnerTeamId] = points;
         }
       } else {
         // Distribuir pontos proporcionalmente
