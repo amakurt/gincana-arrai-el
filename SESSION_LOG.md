@@ -418,3 +418,25 @@ ssh root@<IP> "systemctl start cloudflared"
 - `src/app/vote/page.tsx` — sem alteração (já só mostra ativa)
 - `src/app/screen/page.tsx` — filtro Day 1
 - `src/app/final/page.tsx` — filtro Day 1
+
+## Session 2026-06-30 (Parte 5) — Ajustes Dia 2 ao Vivo
+
+### Mudanças
+
+- **Winner-takes-all Barracas/Rifas**: Adicionado campo `winnerTakesAll` em provas `externalResult`. Quem arrecadar mais leva TODOS os pontos, perdedor fica com 0. Ativado em p7/p8 (Dia 1) e p17/p18 (Dia 2).
+- **Admin page**: Checkbox "vencedor leva tudo" no form de criar/editar provas (só aparece em `externalResult`), badge `TUDO OU NADA` na lista.
+- **Dashboard filtrado por Dia 2**: `/api/dashboard` filtra `resultados.json` para `day === 2`.
+- **Histórico filtrado por Dia 2**: `/api/historico` cruza com `gincana-state.json` e filtra entradas apenas de provas `day === 2`.
+- **Instagram pointsAsValue**: Nova flag `pointsAsValue` — pontos = valor do vencedor (ex: 154 visualizações = 154 pts). Checkbox "pontos = valor" no admin. Ativado em p10 com `winnerTakesAll`.
+- **Correção state.json**: Arquivo corrompido (0 bytes) durante pipe SSH no Hetzner. Reconstruído manualmente com dados lidos anteriormente; p13/p14/p15 restaurados de snapshots do `resultados.json`.
+
+### Files Changed
+- `src/app/api/state/route.ts` — `winnerTakesAll` + `pointsAsValue` no `externalResult`
+- `src/app/api/dashboard/route.ts` — filtro `day === 2`
+- `src/app/api/historico/route.ts` — filtro por Day 2
+- `src/app/admin/page.tsx` — checkboxes winnerTakesAll, pointsAsValue; badge TUDO OU NADA
+- `gincana-state.json` — winnerTakesAll em p7/p8
+
+### Estado Final do Servidor (Hetzner)
+- Dia 2: 10 provas, todas finalizadas
+- Próximo passo: resultado final e cerimônia de encerramento

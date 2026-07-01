@@ -542,7 +542,12 @@ export async function POST(request: Request) {
 
       const vals = body.externalValues as Record<string, number>;
 
-      if (prova.winnerTakesAll) {
+      if (prova.pointsAsValue) {
+        // Pontos = valor de cada equipe (Instagram)
+        for (const team of teams) {
+          pointsAwarded[team.id] = Math.max(0, vals[team.id] || 0);
+        }
+      } else if (prova.winnerTakesAll) {
         // Winner-takes-all: maior valor leva todos os pontos
         let maxVal = -1;
         let winnerTeamId: string | null = null;
@@ -554,23 +559,18 @@ export async function POST(request: Request) {
           }
         }
 
-        if (prova.pointsAsValue && winnerTeamId && maxVal > 0) {
-          // Pontos = valor do vencedor (Instagram)
-          pointsAwarded[winnerTeamId] = maxVal;
-        } else {
-          const tiedTeams = teams.filter((t: any) => Math.max(0, vals[t.id] || 0) === maxVal && maxVal >= 0);
-          if (tiedTeams.length > 1 && maxVal > 0) {
-            const splitPts = Math.round(points / tiedTeams.length);
-            for (const team of tiedTeams) {
-              pointsAwarded[team.id] = splitPts;
-            }
-            const sum = Object.values(pointsAwarded).reduce((a: number, b: number) => a + b, 0);
-            if (sum !== points && tiedTeams.length > 0) {
-              pointsAwarded[tiedTeams[tiedTeams.length - 1].id] += points - sum;
-            }
-          } else if (winnerTeamId && maxVal > 0) {
-            pointsAwarded[winnerTeamId] = points;
+        const tiedTeams = teams.filter((t: any) => Math.max(0, vals[t.id] || 0) === maxVal && maxVal >= 0);
+        if (tiedTeams.length > 1 && maxVal > 0) {
+          const splitPts = Math.round(points / tiedTeams.length);
+          for (const team of tiedTeams) {
+            pointsAwarded[team.id] = splitPts;
           }
+          const sum = Object.values(pointsAwarded).reduce((a: number, b: number) => a + b, 0);
+          if (sum !== points && tiedTeams.length > 0) {
+            pointsAwarded[tiedTeams[tiedTeams.length - 1].id] += points - sum;
+          }
+        } else if (winnerTeamId && maxVal > 0) {
+          pointsAwarded[winnerTeamId] = points;
         }
       } else {
         // Distribuir pontos proporcionalmente
