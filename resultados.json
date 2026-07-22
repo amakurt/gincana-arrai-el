@@ -1,0 +1,670 @@
+[
+  {
+    "provaId": "p1",
+    "provaName": "1ª Apresentação Mascote do Time",
+    "points": 300,
+    "day": 1,
+    "finalized": true,
+    "winnerId": "t1",
+    "pointsAwarded": {
+      "t1": 191,
+      "t2": 109
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 241,
+        "publicScore": 241,
+        "j1": 1,
+        "j2": 1,
+        "total": 191,
+        "winnerPick": true
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 186,
+        "publicScore": 186,
+        "j1": 0,
+        "j2": 0,
+        "total": 109,
+        "winnerPick": false
+      }
+    ],
+    "backupDate": "2026-06-30T18:55:07.043Z"
+  },
+  {
+    "provaId": "p2",
+    "provaName": "2ª Grito de Guerra",
+    "points": 300,
+    "day": 1,
+    "finalized": true,
+    "winnerId": "t2",
+    "pointsAwarded": {
+      "t1": 118,
+      "t2": 182
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 159,
+        "publicScore": 159,
+        "j1": 0,
+        "j2": 0,
+        "total": 118,
+        "winnerPick": false
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 137,
+        "publicScore": 137,
+        "j1": 1,
+        "j2": 1,
+        "total": 182,
+        "winnerPick": true
+      }
+    ],
+    "backupDate": "2026-06-30T18:55:07.043Z"
+  },
+  {
+    "provaId": "p3",
+    "provaName": "3ª Rei e Rainha do Time",
+    "points": 300,
+    "day": 1,
+    "finalized": true,
+    "winnerId": "t1",
+    "pointsAwarded": {
+      "t1": 160,
+      "t2": 140
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 297,
+        "publicScore": 297,
+        "j1": 0,
+        "j2": 1,
+        "total": 160,
+        "winnerPick": true
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 187,
+        "publicScore": 187,
+        "j1": 1,
+        "j2": 0,
+        "total": 140,
+        "winnerPick": true
+      }
+    ],
+    "backupDate": "2026-06-30T18:55:07.044Z"
+  },
+  {
+    "provaId": "p4",
+    "provaName": "4ª Cante e Encante",
+    "points": 300,
+    "day": 1,
+    "finalized": true,
+    "winnerId": "t1",
+    "pointsAwarded": {
+      "t1": 190,
+      "t2": 110
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 271,
+        "publicScore": 271,
+        "j1": 1,
+        "j2": 1,
+        "total": 190,
+        "winnerPick": true
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 213,
+        "publicScore": 213,
+        "j1": 0,
+        "j2": 0,
+        "total": 110,
+        "winnerPick": false
+      }
+    ],
+    "backupDate": "2026-06-30T18:55:07.044Z"
+  },
+  {
+    "provaId": "p5",
+    "provaName": "5ª Dança Típica",
+    "points": 300,
+    "day": 1,
+    "finalized": true,
+    "winnerId": "t1",
+    "pointsAwarded": {
+      "t1": 196,
+      "t2": 104
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 272,
+        "publicScore": 272,
+        "j1": 1,
+        "j2": 1,
+        "total": 196,
+        "winnerPick": true
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 170,
+        "publicScore": 170,
+        "j1": 0,
+        "j2": 0,
+        "total": 104,
+        "winnerPick": false
+      }
+    ],
+    "backupDate": "2026-06-30T18:55:07.045Z"
+  },
+  {
+    "provaId": "p6",
+    "provaName": "6ª Ornamentação dos Corredores",
+    "points": 400,
+    "day": 1,
+    "finalized": true,
+    "winnerId": "t1",
+    "pointsAwarded": {
+      "t1": 260,
+      "t2": 140
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 238,
+        "publicScore": 238,
+        "j1": 1,
+        "j2": 1,
+        "total": 260,
+        "winnerPick": true
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 150,
+        "publicScore": 150,
+        "j1": 0,
+        "j2": 0,
+        "total": 140,
+        "winnerPick": false
+      }
+    ],
+    "backupDate": "2026-06-30T18:55:07.045Z"
+  },
+  {
+    "provaId": "p7",
+    "provaName": "7ª Barracas (Maior Arrecadação)",
+    "points": 300,
+    "day": 1,
+    "finalized": true,
+    "winnerId": "t1",
+    "pointsAwarded": {
+      "t1": 161,
+      "t2": 139
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 0,
+        "publicScore": 0,
+        "j1": 0,
+        "j2": 0,
+        "total": 161,
+        "winnerPick": false
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 0,
+        "publicScore": 0,
+        "j1": 0,
+        "j2": 0,
+        "total": 139,
+        "winnerPick": false
+      }
+    ],
+    "backupDate": "2026-06-30T18:55:07.046Z"
+  },
+  {
+    "provaId": "p8",
+    "provaName": "8ª Venda das Rifas",
+    "points": 600,
+    "day": 1,
+    "finalized": true,
+    "winnerId": "t2",
+    "pointsAwarded": {
+      "t1": 290,
+      "t2": 310
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 0,
+        "publicScore": 0,
+        "j1": 0,
+        "j2": 0,
+        "total": 290,
+        "winnerPick": false
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 0,
+        "publicScore": 0,
+        "j1": 0,
+        "j2": 0,
+        "total": 310,
+        "winnerPick": false
+      }
+    ],
+    "backupDate": "2026-06-30T18:55:07.046Z"
+  },
+  {
+    "provaId": "p11",
+    "provaName": "1ª Apresentação Mascote do Time",
+    "points": 300,
+    "day": 2,
+    "finalized": true,
+    "winnerId": "t1",
+    "pointsAwarded": {
+      "t1": 152,
+      "t2": 148
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 252,
+        "publicScore": 252,
+        "j1": 1,
+        "j2": 0,
+        "total": 152,
+        "winnerPick": true
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 230,
+        "publicScore": 230,
+        "j1": 0,
+        "j2": 1,
+        "total": 148,
+        "winnerPick": true
+      }
+    ],
+    "backupDate": "2026-06-30T22:56:40.903Z"
+  },
+  {
+    "provaId": "p12",
+    "provaName": "2ª Grito de Guerra",
+    "points": 300,
+    "day": 2,
+    "finalized": true,
+    "winnerId": "t2",
+    "pointsAwarded": {
+      "t1": 148,
+      "t2": 152
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 320,
+        "publicScore": 320,
+        "j1": 0,
+        "j2": 1,
+        "total": 148,
+        "winnerPick": true
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 355,
+        "publicScore": 355,
+        "j1": 1,
+        "j2": 0,
+        "total": 152,
+        "winnerPick": true
+      }
+    ],
+    "backupDate": "2026-06-30T23:02:11.310Z"
+  },
+  {
+    "provaId": "p13",
+    "provaName": "3ª Rei e Rainha do Time",
+    "points": 300,
+    "day": 2,
+    "finalized": true,
+    "winnerId": "t2",
+    "pointsAwarded": {
+      "t1": 145,
+      "t2": 155
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 314,
+        "publicScore": 314,
+        "j1": 1,
+        "j2": 0,
+        "total": 145,
+        "winnerPick": true
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 392,
+        "publicScore": 392,
+        "j1": 0,
+        "j2": 1,
+        "total": 155,
+        "winnerPick": true
+      }
+    ],
+    "backupDate": "2026-06-30T23:19:15.748Z"
+  },
+  {
+    "provaId": "p14",
+    "provaName": "4ª Cante e Encante",
+    "points": 300,
+    "day": 2,
+    "finalized": true,
+    "winnerId": "t2",
+    "pointsAwarded": {
+      "t1": 111,
+      "t2": 189
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 291,
+        "publicScore": 291,
+        "j1": 0,
+        "j2": 0,
+        "total": 111,
+        "winnerPick": false
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 342,
+        "publicScore": 342,
+        "j1": 1,
+        "j2": 1,
+        "total": 189,
+        "winnerPick": true
+      }
+    ],
+    "backupDate": "2026-06-30T23:34:28.215Z"
+  },
+  {
+    "provaId": "p15",
+    "provaName": "5ª Dança Típica",
+    "points": 300,
+    "day": 2,
+    "finalized": true,
+    "winnerId": "t2",
+    "pointsAwarded": {
+      "t1": 150,
+      "t2": 150
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 323,
+        "publicScore": 323,
+        "j1": 0,
+        "j2": 1,
+        "total": 150,
+        "winnerPick": true
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 329,
+        "publicScore": 329,
+        "j1": 1,
+        "j2": 0,
+        "total": 150,
+        "winnerPick": true
+      }
+    ],
+    "backupDate": "2026-06-30T23:49:14.856Z"
+  },
+  {
+    "provaId": "p9",
+    "provaName": "6ª Teatro",
+    "points": 300,
+    "day": 2,
+    "finalized": true,
+    "winnerId": "t1",
+    "pointsAwarded": {
+      "t1": 150,
+      "t2": 150
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 230,
+        "publicScore": 230,
+        "j1": 1,
+        "j2": 0,
+        "total": 150,
+        "winnerPick": true
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 228,
+        "publicScore": 228,
+        "j1": 0,
+        "j2": 1,
+        "total": 150,
+        "winnerPick": true
+      }
+    ],
+    "backupDate": "2026-07-01T00:12:21.340Z"
+  },
+  {
+    "provaId": "p16",
+    "provaName": "7ª Ornamentação dos Corredores",
+    "points": 300,
+    "day": 2,
+    "finalized": true,
+    "winnerId": "t1",
+    "pointsAwarded": {
+      "t1": 186,
+      "t2": 114
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 259,
+        "publicScore": 259,
+        "j1": 1,
+        "j2": 1,
+        "total": 186,
+        "winnerPick": true
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 252,
+        "publicScore": 252,
+        "j1": 0,
+        "j2": 0,
+        "total": 114,
+        "winnerPick": false
+      }
+    ],
+    "backupDate": "2026-07-01T00:15:24.742Z"
+  },
+  {
+    "provaId": "p17",
+    "provaName": "8ª Barracas (Maior Arrecadação)",
+    "points": 300,
+    "day": 2,
+    "finalized": true,
+    "winnerId": "t1",
+    "pointsAwarded": {
+      "t1": 300,
+      "t2": 0
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 0,
+        "publicScore": 0,
+        "j1": 0,
+        "j2": 0,
+        "total": 300,
+        "winnerPick": false
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 0,
+        "publicScore": 0,
+        "j1": 0,
+        "j2": 0,
+        "total": 0,
+        "winnerPick": false
+      }
+    ],
+    "backupDate": "2026-07-01T00:17:29.511Z"
+  },
+  {
+    "provaId": "p18",
+    "provaName": "9ª Venda das Rifas",
+    "points": 600,
+    "day": 2,
+    "finalized": true,
+    "winnerId": "t2",
+    "pointsAwarded": {
+      "t1": 0,
+      "t2": 600
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 0,
+        "publicScore": 0,
+        "j1": 0,
+        "j2": 0,
+        "total": 0,
+        "winnerPick": false
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 0,
+        "publicScore": 0,
+        "j1": 0,
+        "j2": 0,
+        "total": 600,
+        "winnerPick": false
+      }
+    ],
+    "backupDate": "2026-07-01T00:31:53.330Z"
+  },
+  {
+    "provaId": "p10",
+    "provaName": "10ª Instagram",
+    "points": 0,
+    "day": 2,
+    "finalized": true,
+    "winnerId": "t2",
+    "pointsAwarded": {
+      "t1": 98,
+      "t2": 154
+    },
+    "teams": [
+      {
+        "id": "t1",
+        "name": "VERDE",
+        "color": "#549504",
+        "publicVotes": 0,
+        "publicScore": 0,
+        "j1": 0,
+        "j2": 0,
+        "total": 98,
+        "winnerPick": false,
+        "externalValue": 98
+      },
+      {
+        "id": "t2",
+        "name": "AMARELO",
+        "color": "#faf200",
+        "publicVotes": 0,
+        "publicScore": 0,
+        "j1": 0,
+        "j2": 0,
+        "total": 154,
+        "winnerPick": true,
+        "externalValue": 154
+      }
+    ],
+    "backupDate": "2026-07-01T00:30:15.536Z"
+  }
+]

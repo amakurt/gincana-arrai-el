@@ -1,0 +1,276 @@
+{
+  "status": "waiting",
+  "viewMode": "geral",
+  "currentProvaId": null,
+  "message": "Votação Encerrada",
+  "singleVoteMode": true,
+  "showJuryScores": false,
+  "timerStartedAt": 1782776021311,
+  "teams": [
+    {
+      "id": "t1",
+      "name": "VERDE",
+      "color": "#549504"
+    },
+    {
+      "id": "t2",
+      "name": "AMARELO",
+      "color": "#faf200"
+    }
+  ],
+  "provas": [
+    {
+      "id": "p1",
+      "name": "1ª Apresentação Mascote do Time",
+      "timer": 300,
+      "points": 300,
+      "day": 1,
+      "finalized": true,
+      "winnerId": "t1",
+      "pointsAwarded": {
+        "t1": 191,
+        "t2": 109
+      },
+      "juryVotes": {}
+    },
+    {
+      "id": "p2",
+      "name": "2ª Grito de Guerra",
+      "timer": 300,
+      "points": 300,
+      "day": 1,
+      "finalized": true,
+      "winnerId": "t2",
+      "pointsAwarded": {
+        "t1": 118,
+        "t2": 182
+      },
+      "juryVotes": {}
+    },
+    {
+      "id": "p3",
+      "name": "3ª Rei e Rainha do Time",
+      "timer": 300,
+      "points": 300,
+      "day": 1,
+      "finalized": true,
+      "winnerId": "t1",
+      "pointsAwarded": {
+        "t1": 160,
+        "t2": 140
+      },
+      "juryVotes": {}
+    },
+    {
+      "id": "p4",
+      "name": "4ª Cante e Encante",
+      "timer": 300,
+      "points": 300,
+      "day": 1,
+      "finalized": true,
+      "winnerId": "t1",
+      "pointsAwarded": {
+        "t1": 190,
+        "t2": 110
+      },
+      "juryVotes": {}
+    },
+    {
+      "id": "p5",
+      "name": "5ª Dança Típica",
+      "timer": 480,
+      "points": 300,
+      "day": 1,
+      "finalized": true,
+      "winnerId": "t1",
+      "pointsAwarded": {
+        "t1": 196,
+        "t2": 104
+      },
+      "juryVotes": {}
+    },
+    {
+      "id": "p6",
+      "name": "6ª Ornamentação dos Corredores",
+      "timer": 0,
+      "points": 400,
+      "day": 1,
+      "finalized": true,
+      "winnerId": "t1",
+      "pointsAwarded": {
+        "t1": 260,
+        "t2": 140
+      },
+      "juryVotes": {}
+    },
+    {
+      "id": "p7",
+      "name": "7ª Barracas (Maior Arrecadação)",
+      "timer": 0,
+      "points": 300,
+      "day": 1,
+      "finalized": true,
+      "winnerId": "t1",
+      "pointsAwarded": {
+        "t1": 161,
+        "t2": 139
+      },
+      "juryVotes": {},
+      "externalResult": true,
+      "externalUnit": "R$"
+    },
+    {
+      "id": "p8",
+      "name": "8ª Venda das Rifas",
+      "timer": 0,
+      "points": 600,
+      "day": 1,
+      "finalized": true,
+      "winnerId": "t2",
+      "pointsAwarded": {
+        "t1": 290,
+        "t2": 310
+      },
+      "juryVotes": {},
+      "externalResult": true,
+      "externalUnit": "unidades"
+    },
+    {
+      "id": "p9",
+      "name": "6ª Teatro",
+      "timer": 480,
+      "points": 300,
+      "day": 1,
+      "finalized": false,
+      "winnerId": null,
+      "pointsAwarded": {}
+    },
+    {
+      "id": "p10",
+      "name": "Instagram",
+      "timer": 0,
+      "points": 0,
+      "day": 1,
+      "finalized": false,
+      "winnerId": null,
+      "pointsAwarded": {},
+      "externalResult": true,
+      "externalUnit": "visualizações"
+    }
+  ],
+  "jurados": [
+    {
+      "id": "j1782737825363",
+      "name": "Ana Claudia",
+      "pin": "d884d675b95c5ad1a5ab9898066d887e:f04375f0fff75e8feee095fdbeb9cb070ba927d305bc78502f83adc97c03e3d7248ccdf8d1283adbe8df9c97111978e410bca52296c700fedf8f07b692065fb9"
+    },
+    {
+      "id": "j1782737834683",
+      "name": "Wesliany",
+      "pin": "610c626eed563ee10deab0dce38b3888:84a94b9b6952deed4d801b43d89bc0b308640686a7b03f84d2c639c71cffcfa24502c998f2317ab4e3f33b673ae348f3006e7dd3f97175f2f52ae3cb2a2181d6"
+    }
+  ],
+  "scores": {
+    "p2": {
+      "t2": {
+        "publicVotes": 137,
+        "j1": 1,
+        "j2": 1
+      },
+      "t1": {
+        "publicVotes": 159,
+        "j1": 0,
+        "j2": 0
+      }
+    },
+    "p1": {
+      "t1": {
+        "publicVotes": 241,
+        "j1": 1,
+        "j2": 1
+      },
+      "t2": {
+        "publicVotes": 186,
+        "j1": 0,
+        "j2": 0
+      }
+    },
+    "p3": {
+      "t1": {
+        "publicVotes": 297,
+        "j1": 0,
+        "j2": 1
+      },
+      "t2": {
+        "publicVotes": 187,
+        "j1": 1,
+        "j2": 0
+      }
+    },
+    "p4": {
+      "t2": {
+        "publicVotes": 213,
+        "j1": 0,
+        "j2": 0
+      },
+      "t1": {
+        "publicVotes": 271,
+        "j1": 1,
+        "j2": 1
+      }
+    },
+    "p5": {
+      "t2": {
+        "publicVotes": 170,
+        "j1": 0,
+        "j2": 0
+      },
+      "t1": {
+        "publicVotes": 272,
+        "j1": 1,
+        "j2": 1
+      }
+    },
+    "p6": {
+      "t1": {
+        "publicVotes": 238,
+        "j1": 1,
+        "j2": 1
+      },
+      "t2": {
+        "publicVotes": 150,
+        "j1": 0,
+        "j2": 0
+      }
+    },
+    "p7": {
+      "t1": {
+        "publicVotes": 0,
+        "j1": 0,
+        "j2": 0,
+        "externalValue": 888
+      },
+      "t2": {
+        "publicVotes": 0,
+        "j1": 0,
+        "j2": 0,
+        "externalValue": 769
+      }
+    },
+    "p8": {
+      "t1": {
+        "publicVotes": 0,
+        "j1": 0,
+        "j2": 0,
+        "externalValue": 496
+      },
+      "t2": {
+        "publicVotes": 0,
+        "j1": 0,
+        "j2": 0,
+        "externalValue": 530
+      }
+    }
+  },
+  "showJuradoNames": false
+}
