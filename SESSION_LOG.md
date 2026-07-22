@@ -439,4 +439,56 @@ ssh root@<IP> "systemctl start cloudflared"
 
 ### Estado Final do Servidor (Hetzner)
 - Dia 2: 10 provas, todas finalizadas
+- Placar final disponível em `/final`
 - Próximo passo: resultado final e cerimônia de encerramento
+
+## Session 2026-07-21 — Backup e Desativação
+
+### Mudanças
+
+- **Backup completo dos dados de produção** baixado do Hetzner VPS:
+  - `gincana-state.json` — 18 provas (8 Dia 1 + 10 Dia 2), todas finalizadas
+  - `resultados.json` — votos públicos + escolhas dos jurados (17 provas registradas)
+  - `backup-seguimento.json` — backup automático do seguimento
+  - `.env.local` — credenciais (admin, Turnstile)
+
+- **Oracle VPS** verificada: dados desatualizados (pré-Dia-2, 0 provas finalizadas)
+
+- **Branch `backup-gincana-completo`** criada no GitHub com os dados de produção
+- **`gincana-complete-backup-2026-07-21.tar.gz`** — cópia local extra com `.env.local`
+- **`RESTORE.md`** — instruções completas de restore e configuração
+
+- **Hetzner VPS desativado:**
+  - PM2 parado e deletado
+  - Nginx parado e desabilitado
+  - Cloudflare Tunnel parado e desabilitado
+  - `www.institutoeducacionallogos.online` offline
+
+### Placar Final
+| Equipe | Dia 1 | Dia 2 | Total |
+|--------|-------|-------|-------|
+| VERDE  | 1.566 | 1.479 | 3.045 |
+| AMARELO| 1.234 | 1.662 | 2.896 |
+
+**Campeã: VERDE** 🏆 (por 149 pontos)
+
+### Jurados
+- Wenchelys
+- Wesliany
+
+### Key Files Changed
+- `SESSION_LOG.md` — este log
+- `RESTORE.md` — novo, instruções de restore
+
+### Para Restaurar no Futuro
+```bash
+git clone https://github.com/amakurt/gincana-arrai-el.git
+git checkout backup-gincana-completo
+npm install && npm run build
+# Criar .env.local com credenciais (ver RESTORE.md)
+npm start -p 3000
+```
+
+### Histórico de Conversas
+- `historico_conversa.jsonl` contém todo o histórico das sessões com o opencode.
+- Última sessão: 2026-07-21 (Backup e desativação).
